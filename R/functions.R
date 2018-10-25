@@ -1,3 +1,4 @@
+
 se_comb <- function(weightvec, covmat){
   #' qgcomp::se_comb
   #'
@@ -112,12 +113,12 @@ print.qgcompfit <- function(x, ...){
   #' dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
   #' qgcomp.noboot(y ~ z + x1 + x2, expcoefs=c(0,1,1), data=dat, q=2)
   fam <- x$fit$family$family
-  cat(paste0("Scaled effect size (positive direction, sum of positive coefficients =", signif(x$psize, 3) , ")\n"))
+  cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$psize, 3) , ")\n"))
   if (length(x$pweights) > 0) {
     print(x$pweights, digits = 3)
   } else cat("None\n")
   cat("\n")
-  cat(paste0("Scaled effect size (negative direction, sum of negative coefficients =", signif(-x$nsize, 3) , ")\n"))
+  cat(paste0("Scaled effect size (negative direction, sum of negative coefficients = ", signif(-x$nsize, 3) , ")\n"))
   if (length(x$nweights) > 0) {
     print(x$nweights, digits = 3)
   } else cat("None\n")
