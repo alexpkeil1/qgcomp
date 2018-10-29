@@ -87,10 +87,21 @@ qgcomp.noboot <- function(f, data, expcoefs=NULL, q=4, alpha=0.05, ...){
     poscoef <- which(wcoef > 0)
     pweights <- abs(wcoef[poscoef]) / sum(abs(wcoef[poscoef]))
     nweights <- abs(wcoef[-poscoef]) / sum(abs(wcoef[-poscoef]))
+    # 'post-hoc' positive and negative estimators 
+    # similar to constrained gWQS
+    pos.gamma <- sum(wcoef[poscoef])
+    neg.gamma <- sum(wcoef[-poscoef])
+    se.pos.gamma <- se_comb(expcoefs*(fit$coefficients>0), covmat = mod$cov.scaled)
+    se.neg.gamma <- se_comb(expcoefs*(fit$coefficients<0), covmat = mod$cov.scaled)
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
-    res <- list(qx = qx, fit = fit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
-                tstat = tstat, df = df, pval = pval,
+    res <- list(
+      qx = qx, fit = fit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
+      pos.gamma = pos.gamma, var.pos.gamma = se.pos.gamma^2,
+      neg.gamma = neg.gamma, var.neg.gamma = se.neg.gamma^2,
+                if(fit$family$family=='gaussian') tstat = tstat, df = df, 
+                if(fit$family$family=='binomial') zstat = estb/seb, 
+                pval = pval,
                 pweights = sort(pweights, decreasing = TRUE),
                 nweights = sort(nweights, decreasing = TRUE), 
                 psize = sum(abs(wcoef[poscoef])),

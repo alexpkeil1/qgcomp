@@ -4,14 +4,14 @@ Version: 0.5.1
 Authors@R: c(person("Alexander", "Keil", role = c("aut", "cre"),
                      email = "akeil@unc.edu"))
 Description: G-computation for a set of time-fixed exposures with quantile-based basis functions under linearity and homogeneity assumptions. This approach estimates a regression line corresponding to the expected change in the outcome (on the link basis) given a simultaneous increase in the quantile-based category for all exposures.
-Depends: R (>= 3.0), stats (>= 3.0), knitr (>= 1.0), ggplot2 (>= 2.5), grid, gridExtra
+Depends: R (>= 3.0), stats (>= 3.0), ggplot2 (>= 2.5), grid, gridExtra
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-Date: Thu Oct 25 14:36:57 2018
+Date: Sat Oct 27 21:19:19 2018
 Author: Alexander Keil [aut, cre]
 Maintainer: Alexander Keil <akeil@unc.edu>
-Suggests: gWQS (>= 1.1)
+Suggests: gWQS (>= 1.1), knitr (>= 1.0)
 VignetteBuilder: knitr
 RemoteUrl: 
 RemoteType: 

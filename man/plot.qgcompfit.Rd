@@ -4,7 +4,7 @@
 \alias{plot.qgcompfit}
 \title{qgcomp::plot.qgcompfit}
 \usage{
-plot.qgcompfit(x, ...)
+\method{plot}{qgcompfit}(x, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp.noboot` function}
