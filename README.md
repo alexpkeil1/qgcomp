@@ -1,3 +1,5 @@
+QGcomp: an alternative to weighted least squares that does not assume effects of all exposures go in the same direction. Works for linear and logistic models.
+
 Quick start
 
     install.packages("devtools")
