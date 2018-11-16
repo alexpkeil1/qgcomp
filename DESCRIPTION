@@ -8,7 +8,7 @@ Depends: R (>= 3.0), stats (>= 3.0), ggplot2 (>= 2.5), grid, gridExtra
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-Date: Sat Oct 27 21:19:19 2018
+Date: Thu Nov 15 21:41:49 2018
 Author: Alexander Keil [aut, cre]
 Maintainer: Alexander Keil <akeil@unc.edu>
 Suggests: gWQS (>= 1.1), knitr (>= 1.0)

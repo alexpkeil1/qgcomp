@@ -55,7 +55,7 @@ qgcomp.noboot <- function(f, data, expcoefs=NULL, q=4, alpha=0.05, ...){
   #' @param f R style formula
   #' @param data data frame
   #' @param expcoefs logical/numeric vector that points to variables in the
-  #' formula that should be considered part of the 'mixture'
+  #' formula that should be considered part of the 'mixture' (not counting intercept!)
   #' @param q number of quantiles used to create quantile indicator variables
   #' representing the exposure variables
   #' @param alpha alpha level for confidence limit calculation
@@ -80,6 +80,7 @@ qgcomp.noboot <- function(f, data, expcoefs=NULL, q=4, alpha=0.05, ...){
     tstat <- estb / seb
     df <- mod$df.null - sum(expcoefs)
     pval <- 2 - 2 * pt(abs(tstat), df = df)
+    pvalz <- 2 - 2 * pnorm(abs(tstat))
     ci <- c(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
     # 'weights'
     wcoef <- fit$coefficients[which(as.logical(expcoefs))]
@@ -99,14 +100,20 @@ qgcomp.noboot <- function(f, data, expcoefs=NULL, q=4, alpha=0.05, ...){
       qx = qx, fit = fit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
       pos.gamma = pos.gamma, var.pos.gamma = se.pos.gamma^2,
       neg.gamma = neg.gamma, var.neg.gamma = se.neg.gamma^2,
-                if(fit$family$family=='gaussian') tstat = tstat, df = df, 
-                if(fit$family$family=='binomial') zstat = estb/seb, 
-                pval = pval,
                 pweights = sort(pweights, decreasing = TRUE),
                 nweights = sort(nweights, decreasing = TRUE), 
                 psize = sum(abs(wcoef[poscoef])),
                 nsize = sum(abs(wcoef[-poscoef]))
                 )
+      if(fit$family$family=='gaussian'){
+        res$tstat = tstat
+        res$df = df
+        res$pval = pval
+      }
+      if(fit$family$family=='binomial'){
+        res$zstat = tstat
+        res$pval = pvalz
+      }
     attr(res, "class") <- "qgcompfit"
     res
 }
@@ -134,12 +141,20 @@ print.qgcompfit <- function(x, ...){
     print(x$nweights, digits = 3)
   } else cat("None\n")
   cat("\n")
-  if (fam == "binomial") cat("Mixture log(OR):\n")
-  if (fam == "gaussian") cat("Mixture slope:\n")
-  cat(paste0("gamma (CI): ", signif(x$gamma, 3), " (",
+  if (fam == "binomial"){
+    cat("Mixture log(OR):\n")
+    cat(paste0("gamma (CI): ", signif(x$gamma, 3), " (",
+             signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), z=",
+             signif(x$zstat, 3), ", p=",
+             signif(x$pval, 3), "\n"))
+  }
+  if (fam == "gaussian"){
+    cat("Mixture slope:\n")
+    cat(paste0("gamma (CI): ", signif(x$gamma, 3), " (",
              signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), t=",
              signif(x$tstat, 3), ", df=", x$df, ", p=",
              signif(x$pval, 3), "\n"))
+  }
 }
 
 plot.qgcompfit <- function(x, ...){
@@ -206,7 +221,9 @@ plot.qgcompfit <- function(x, ...){
     coord_flip(ylim=c(0,1)) + 
     theme_butterfly_l
   
-    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0)
+    maxstr = max(mapply(nchar, c(names(x$nweights), names(x$pweights))))
+    lw = 1+maxstr/20
+    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
     grid::grid.newpage()
     grid::grid.draw(p1)
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))

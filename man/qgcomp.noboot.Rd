@@ -12,7 +12,7 @@ qgcomp.noboot(f, data, expcoefs = NULL, q = 4, alpha = 0.05, ...)
 \item{data}{data frame}
 
 \item{expcoefs}{logical/numeric vector that points to variables in the
-formula that should be considered part of the 'mixture'}
+formula that should be considered part of the 'mixture' (not counting intercept!)}
 
 \item{q}{number of quantiles used to create quantile indicator variables
 representing the exposure variables}
