@@ -20,8 +20,6 @@ Quick start
     # continuous outcome
     results = qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian())
     print(results)
-    plot(results)
-![Results 1](fig/res1.png)
 
     
     > Scaled effect size (positive direction, sum of positive coefficients = 1.91)
@@ -35,12 +33,12 @@ Quick start
     > Mixture slope:
     > gamma (CI): 1.49 (1.29,1.69), t=14.4, df=465, p=0
     
+    plot(results)
+![Results 1](fig/res1.png)
     
     # binary outcome
     results2 = qgcomp.noboot(disease_state~.,dat=wqs_data[,c(Xnm, 'disease_state')], family=binomial())
     print(results2)
-    plot(results2)
-![Results 1](fig/res2.png)
     
     > Scaled effect size (positive direction, sum of positive coefficients = 1.69)
     > log_LBX156LA log_LBX194LA log_LBX105LA log_LBX138LA log_LBXF09LA log_LBXHXCLA log_LBXD02LA log_LBXF08LA log_LBXD04LA log_LBXD01LA log_LBXF05LA log_LBXPCBLA log_LBX118LA log_LBX153LA log_LBX189LA log_LBXF01LA log_LBX157LA log_LBX180LA log_LBXF03LA log_LBXD05LA log_LBX187LA 
@@ -53,6 +51,8 @@ Quick start
     > Mixture log(OR):
     > gamma (CI): -0.0581 (-0.472,0.356), t=-0.275, df=465, p=0.784
     
+    plot(results2)
+![Results 2](fig/res2.png)
     
     # adjusting for covariate(s)
     results3 = qgcomp.noboot(y~ sex + 
