@@ -7,7 +7,7 @@
 \method{plot}{qgcompfit}(x, ...)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.noboot` function}
+\item{x}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
 
 \item{...}{unused}
 }
@@ -15,8 +15,12 @@
 plot quantile g-computation object
 }
 \examples{
-dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-qgcomp.noboot(y ~ z + x1 + x2, expcoefs=c(0,1,1), data=dat, q=2)
+set.seed(12)
+dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
+ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+plot(ft)
+ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+plot(ft2)
 }
 \keyword{mixtures}
 \keyword{variance,}

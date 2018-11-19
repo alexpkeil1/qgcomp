@@ -4,10 +4,10 @@
 \alias{se_comb}
 \title{qgcomp::se_comb}
 \usage{
-se_comb(weightvec, covmat)
+se_comb(expnms, covmat)
 }
 \arguments{
-\item{weightvec}{a logical index of which columns are used to create
+\item{expnms}{a logical index of which columns are used to create
 composite effect estimate}
 
 \item{covmat}{covariance matrix from a glm fit}
@@ -19,7 +19,7 @@ calculate standard error of weighted linear combination of random variables
 \examples{
 dat = data.frame(y=runif(10), x=runif(10))
 lmfit = glm(y ~ x, data=dat, family='gaussian')
-qgcomp:::se_comb(weightvec=c(0,1), covmat=summary(lmfit)$cov.scaled)
+qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
 }
 \keyword{mixtures}
 \keyword{variance,}

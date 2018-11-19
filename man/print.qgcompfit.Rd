@@ -16,8 +16,10 @@ carry out quantile g-computation
 by quantiles
 }
 \examples{
-dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-qgcomp.noboot(y ~ z + x1 + x2, expcoefs=c(0,1,1), data=dat, q=2)
+set.seed(50)
+dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
 }
 \keyword{mixtures}
 \keyword{variance,}

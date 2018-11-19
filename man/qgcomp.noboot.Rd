@@ -4,15 +4,14 @@
 \alias{qgcomp.noboot}
 \title{qgcomp::qgcomp.noboot}
 \usage{
-qgcomp.noboot(f, data, expcoefs = NULL, q = 4, alpha = 0.05, ...)
+qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
 }
 \arguments{
 \item{f}{R style formula}
 
 \item{data}{data frame}
 
-\item{expcoefs}{logical/numeric vector that points to variables in the
-formula that should be considered part of the 'mixture' (not counting intercept!)}
+\item{expnms}{character vector of exposures of interest}
 
 \item{q}{number of quantiles used to create quantile indicator variables
 representing the exposure variables}
@@ -26,8 +25,9 @@ create variables representing indicator functions with cutpoints defined
 by quantiles
 }
 \examples{
-dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-qgcomp.noboot(y ~ z + x1 + x2, expcoefs=c(0,1,1), data=dat, q=2)
+set.seed(50)
+dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 }
 \keyword{mixtures}
 \keyword{variance,}

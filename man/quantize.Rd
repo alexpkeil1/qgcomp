@@ -4,13 +4,10 @@
 \alias{quantize}
 \title{qgcomp::quantize}
 \usage{
-quantize(data, expcoefs, expnms, q)
+quantize(data, expnms, q)
 }
 \arguments{
 \item{data}{a data frame}
-
-\item{expcoefs}{a logical index of which columns contain the columns to be
-quantized}
 
 \item{expnms}{a character vector with the names of  the columns to be
 quantized}
@@ -23,7 +20,7 @@ by quantiles
 }
 \examples{
 dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-qdata = quantize(data=dat, expcoefs=c(0,1,1,0), expnms=c("x1", "x2"), q=2)
+qdata = quantize(data=dat, expnms=c("x1", "x2"), q=2)
 }
 \keyword{mixtures}
 \keyword{variance,}

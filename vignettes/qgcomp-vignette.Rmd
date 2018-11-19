@@ -93,7 +93,7 @@ gcompmod = qgcomp.noboot(disease_state~sex+log_LBX074LA+log_LBX099LA+log_LBX105L
                            log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD02LA+log_LBXD03LA+log_LBXD04LA+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
-                         expcoefs=c(0, rep(1, 34)),
+                         expnms=Xnm,
                          wqs_data[,c(Xnm, "sex", 'disease_state')], family=binomial(), q=4)
 wqsmod = gwqs(disease_state ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
      validation = 0.6, b = 3, b1_pos = F, b1_constr = F, family='binomial', seed=125)
