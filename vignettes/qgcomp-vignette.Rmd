@@ -112,7 +112,7 @@ wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4,
      validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=TRUE)
 
 ```
-Note the following: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`.
+Note the following: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction). In contrast, the lower tail of the `gcompmod2` is based on predicted risk at low joint exposures across all individuals. The two smoothed lines should not, in general, be expected to overlap. The `gcompmod2` plot reflects how population average outcomes are expected to change with joint exposure changes (on the quantile basis), whereas the `qwqs` reflects how average outcomes might change with a change to the exposure index, which is constrained in one direction of effect.
 
 ## References
 

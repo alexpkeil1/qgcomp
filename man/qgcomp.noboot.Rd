@@ -30,8 +30,9 @@ a qgcompfit object, which contains information about the effect
 }
 \description{
 This function mimics the output of a weighted quantile sums regression in 
-large samples. 
-
+large samples.
+}
+\details{
 For continuous outcomes, under a linear model with no 
 interaction terms, this is equivalent to g-computation of the effect of
 increasing every exposure by 1 quantile. For binary outcomes
@@ -48,7 +49,7 @@ dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 }
 \seealso{
-[qgcomp.boot()], and [qgcomp()]
+[gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
 }
 \keyword{mixtures}
 \keyword{variance,}

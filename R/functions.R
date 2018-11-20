@@ -74,7 +74,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' @description This function mimics the output of a weighted quantile sums regression in 
   #' large samples. 
   #' 
-  #' For continuous outcomes, under a linear model with no 
+  #' @details For continuous outcomes, under a linear model with no 
   #' interaction terms, this is equivalent to g-computation of the effect of
   #' increasing every exposure by 1 quantile. For binary outcomes
   #' outcomes, this yields a conditional log odds ratio representing the 
@@ -91,7 +91,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' representing the exposure variables
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso [qgcomp.boot()], and [qgcomp()]
+  #' @seealso [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -163,13 +163,11 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
 
 
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, ...){
-  #' @title estimation of quantile g-computation fit, using bootstrap confidence
-  #'  intervals
+  #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
-  #'  @description This function yields population average effect estimates for both continuous
-  #'  and binary outcomes
+  #' @description This function yields population average effect estimates for both continuous and binary outcomes
   #'  
-  #'  @details Estimates correspond to the average expected change in the
+  #' @details Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures 
   #'  in `expnms'. Test statistics and confidence intervals are based on 
   #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -185,7 +183,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' @param B integer: number of bootstrap iterations
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso [qgcomp.noboot()], and [qgcomp()]
+  #' @seealso [gqcomp::qgcomp.noboot()], and [gqcomp::qgcomp()]
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -279,7 +277,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
-  #' @seealso [qgcomp.noboot()] and [qgcomp.boot()]
+  #' @seealso [gqcomp::qgcomp.noboot()] and [gqcomp::qgcomp.boot()]
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and possibly information on the 
@@ -324,7 +322,7 @@ print.qgcompfit <- function(x, ...){
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
   #' @param ... unused
-  #' @seealso [qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
+  #' @seealso [gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
   #' @keywords variance, mixtures
   #' @export
   #' @examples
@@ -381,7 +379,7 @@ plot.qgcompfit <- function(x, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param ... unused
-  #' @seealso [qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
+  #' @seealso [gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
   #' @import ggplot2 grid gridExtra
   #' @export
   #' @examples
