@@ -464,7 +464,7 @@ plot.qgcompfit <- function(x, ...){
        p <- p + geom_jitter(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index),
                             width=0.1, height=0.1, size=1) 
      }
-     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam') + 
+     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula = y ~ s(x, bs = "cs")) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      theme_classic()
