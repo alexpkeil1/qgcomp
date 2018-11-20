@@ -44,6 +44,10 @@ quantize <- function (data, expnms, q) {
 msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
   #' quantized exposures
+  #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp}},
+  #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+  #'  but is documented here for clarity. Generally, users will not need to call
+  #'  this function directly.
   #' @details This function first computes expected outcomes under hypothetical
   #' interventions to simultaneously set all exposures to a specific quantile. These
   #' predictions are based on g-computation, where the exposures are `quantized',
@@ -61,9 +65,10 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
   #' @param expnms a character vector with the names of  the columns to be
   #' quantized
   #' @param q integer, number of quantiles used in creating quantized variables
-  #' @param rr logical, estimate log(risk ratio) (family='binary' only)
+  #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (gamma)
   #'  and expected outcomes under g-computation and the MSM
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @keywords variance, mixtures
   #' @import stats
     # conditional outcome regression fit
@@ -274,7 +279,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
       expnms=expnms, q=q,
       pos.gamma = NULL, var.pos.gamma = NULL,neg.gamma = NULL, var.neg.gamma = NULL,
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
-      y.expected=msmfit$Ya, index=msmfit$A
+      y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A
     )
       if(msmfit$fit$family$family=='gaussian'){
         res$tstat = tstat
@@ -489,20 +494,25 @@ plot.qgcompfit <- function(x, ...){
        #prediction interval (large sample estimator under normal assumption)
        resvar = summary(x$fit)$dispersion
        gammavar = x$var.gamma
-       yup = x$y.expected + qnorm(.975)*sqrt(resvar+gammavar)
-       ydo = x$y.expected + qnorm(.025)*sqrt(resvar+gammavar)
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax), data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
+       yup = x$y.expectedmsm + qnorm(.975)*sqrt(resvar+gammavar)
+       ydo = x$y.expectedmsm + qnorm(.025)*sqrt(resvar+gammavar)
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"),
+                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
      if(x$msmfit$family$family=='binomial'){
        resvar = x$y.expected*(1-x$y.expected)
        gammavar = x$var.gamma
-       yup = x$y.expected + qnorm(.975)*sqrt(resvar+gammavar)
-       ydo = x$y.expected + qnorm(.025)*sqrt(resvar+gammavar)
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax), data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
+       yup = x$y.expectedmsm + qnorm(.975)*sqrt(resvar+gammavar)
+       ydo = x$y.expectedmsm + qnorm(.025)*sqrt(resvar+gammavar)
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"), 
+                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
-     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula=y~s(x, k=4,fx=TRUE)) + 
+     p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),data=data.frame(y=x$y.expected, x=x$index), 
+                          method = 'gam', formula=y~s(x, k=4,fx=TRUE)) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
+     scale_fill_discrete(name="") + 
+     scale_colour_discrete(name="") + 
      theme_classic()
    print(p)
   }

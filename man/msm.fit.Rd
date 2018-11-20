@@ -16,7 +16,7 @@ exposures and covariates}
 \item{expnms}{a character vector with the names of  the columns to be
 quantized}
 
-\item{rr}{logical, estimate log(risk ratio) (family='binary' only)}
+\item{rr}{logical, estimate log(risk ratio) (family='binomial' only)}
 
 \item{main}{logical, internal use: produce estimates of exposure effect (gamma)
 and expected outcomes under g-computation and the MSM}
@@ -24,8 +24,10 @@ and expected outcomes under g-computation and the MSM}
 \item{data}{a data frame}
 }
 \description{
-fitting marginal structural model (MSM) based on g-computation with
-quantized exposures
+this is an internal function called by \code{\link[qgcomp]{qgcomp}},
+ \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+ but is documented here for clarity. Generally, users will not need to call
+ this function directly.
 }
 \details{
 This function first computes expected outcomes under hypothetical
@@ -39,6 +41,9 @@ the intervention value of the exposures (the quantile integer) as the exposure.
 Under causal identification assumptions and correct model specification,
 the MSM yields a causal exposure-response representing the incremental
 change in the expected outcome given a joint intervention on all exposures.
+}
+\seealso{
+\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
 \keyword{mixtures}
 \keyword{variance,}

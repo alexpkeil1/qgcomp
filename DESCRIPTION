@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: quantile-g-computation
 Version: 0.6.12
-Date: Tue Nov 20 12:22:29 2018
+Date: Tue Nov 20 12:45:05 2018
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
