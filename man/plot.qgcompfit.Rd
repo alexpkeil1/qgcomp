@@ -22,9 +22,9 @@ every exposure')
 \examples{
 set.seed(12)
 dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
-ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
 plot(ft)
-ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
 plot(ft2)
 }
 \keyword{mixtures}

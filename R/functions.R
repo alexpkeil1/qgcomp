@@ -119,12 +119,13 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
     wcoef <- fit$coefficients[expnms]
     names(wcoef) <- gsub("_q", "", names(wcoef))
     poscoef <- which(wcoef > 0)
+    negcoef <- which(wcoef <= 0)
     pweights <- abs(wcoef[poscoef]) / sum(abs(wcoef[poscoef]))
-    nweights <- abs(wcoef[-poscoef]) / sum(abs(wcoef[-poscoef]))
+    nweights <- abs(wcoef[negcoef]) / sum(abs(wcoef[negcoef]))
     # 'post-hoc' positive and negative estimators 
     # similar to constrained gWQS
     pos.gamma <- sum(wcoef[poscoef])
-    neg.gamma <- sum(wcoef[-poscoef])
+    neg.gamma <- sum(wcoef[negcoef])
     nmpos = names(pweights)
     nmneg = names(nweights)
     se.pos.gamma <- se_comb(nmpos, covmat = mod$cov.scaled)
@@ -139,7 +140,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
                 pweights = sort(pweights, decreasing = TRUE),
                 nweights = sort(nweights, decreasing = TRUE), 
                 psize = sum(abs(wcoef[poscoef])),
-                nsize = sum(abs(wcoef[-poscoef])),
+                nsize = sum(abs(wcoef[negcoef])),
                 bootstrap=FALSE
                 )
       if(fit$family$family=='gaussian'){
@@ -340,9 +341,9 @@ plot.qgcompfit <- function(x, ...){
   #' @examples
   #' set.seed(12)
   #' dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
-  #' ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+  #' ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
   #' plot(ft)
-  #' ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=2)
+  #' ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
   #' plot(ft2)
 
   theme_butterfly_l <- list(theme(
@@ -396,12 +397,15 @@ plot.qgcompfit <- function(x, ...){
     geom_hline(aes(yintercept=0)) + 
     coord_flip(ylim=c(0,1)) + 
     theme_butterfly_l
-  
-    maxstr = max(mapply(nchar, c(names(x$nweights), names(x$pweights))))
-    lw = 1+maxstr/20
-    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
-    grid::grid.newpage()
-    grid::grid.draw(p1)
+    if(length(x$pweights)==0) print(pleft)
+    if(length(x$nweights)==0) print(pright)
+    if((length(x$nweights)>0 & length(x$pweights)>0)){
+      maxstr = max(mapply(nchar, c(names(x$nweights), names(x$pweights))))
+      lw = 1+maxstr/20
+      p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+      grid::grid.newpage()
+      grid::grid.draw(p1)
+    }
   }
   if(x$bootstrap){
    # default plot for bootstrap results (no weights obtained)
