@@ -10,7 +10,7 @@ msm.fit(f, qdata, q, expnms, rr = TRUE, main = TRUE, ...)
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
 exposures and covariates. Interaction terms that include exposure variables
-should be represented via the \code{\link[base]{Asis}} function}
+should be represented via the \code{\link[base]{I}} function}
 
 \item{qdata}{a data frame with quantized exposures}
 
@@ -23,6 +23,8 @@ the exposures of interest (main terms only!)}
 
 \item{main}{logical, internal use: produce estimates of exposure effect (gamma)
 and expected outcomes under g-computation and the MSM}
+
+\item{...}{arguments to glm (e.g. family)}
 }
 \description{
 this is an internal function called by \code{\link[qgcomp]{qgcomp}},
@@ -42,6 +44,15 @@ the intervention value of the exposures (the quantile integer) as the exposure.
 Under causal identification assumptions and correct model specification,
 the MSM yields a causal exposure-response representing the incremental
 change in the expected outcome given a joint intervention on all exposures.
+}
+\examples{
+set.seed(50)
+dat <- data.frame(y=runif(200), x1=runif(200), x2=runif(200), z=runif(200))
+X <- c('x1', 'x2')
+qdat <- quantize(dat, X, q=4)
+mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2), expnms = c('x1', 'x2'), qdata=qdat, q=4)
+summary(mod$fit) # outcome regression model
+summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

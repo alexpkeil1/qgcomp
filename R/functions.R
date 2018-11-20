@@ -61,7 +61,7 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
   #' change in the expected outcome given a joint intervention on all exposures.
   #' @param f an r formula representing the conditional model for the outcome, given all
   #' exposures and covariates. Interaction terms that include exposure variables
-  #' should be represented via the \code{\link[base]{Asis}} function
+  #' should be represented via the \code{\link[base]{I}} function
   #' @param qdata a data frame with quantized exposures
   #' @param expnms a character vector with the names of the columns in qdata that represent
   #' the exposures of interest (main terms only!)
@@ -69,9 +69,18 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
   #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (gamma)
   #'  and expected outcomes under g-computation and the MSM
+  #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @keywords variance, mixtures
   #' @import stats
+  #' @examples
+  #' set.seed(50)
+  #' dat <- data.frame(y=runif(200), x1=runif(200), x2=runif(200), z=runif(200))
+  #' X <- c('x1', 'x2')
+  #' qdat <- quantize(dat, X, q=4)
+  #' mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2), expnms = c('x1', 'x2'), qdata=qdat, q=4)
+  #' summary(mod$fit) # outcome regression model
+  #' summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
     # conditional outcome regression fit
     fit <- glm(f, data = qdata, ...)
     if(fit$family$family=="gaussian") rr=FALSE
@@ -92,6 +101,7 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
     msmdat <- data.frame(
       Ya = unlist(predmat),
       gamma = rep(0:q, each=nobs))
+    # to do: allow functional form variations for the MSM via specifying the model formula
     if(!rr) suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat,...))
     if(rr)  suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat, family=binomial(link='log')))
     res = list(fit=fit, msmfit=msmfit)
@@ -139,7 +149,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' @export
   #' @examples
   #' set.seed(50)
-  #' dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
     if (is.null(expnms)) {
       cat("Including all model terms as exposures of interest")
@@ -232,7 +242,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' @examples
   #' set.seed(30)
   #' # continuous outcome
-  #' dat = data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
+  #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
   #' #Conditional linear slope
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' #Marginal linear slope (population average slope, for a purely linear, additive model this will equal the conditional)
@@ -240,7 +250,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' #Population average mixture slope which accounts for non-linearity and interactions
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
   #' # binary outcome
-  #' dat = data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' #Conditional mixture OR
   #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2)
   #' #Marginal mixture OR (population average OR - in general, this will not equal the conditional mixture OR due to non-collapsibility of the OR)
@@ -325,13 +335,13 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' @export
   #' @examples
   #' set.seed(50)
-  #' dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will 
-  #' dat = data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100, family=binomial())
   #' # automatically selects appropriate method
@@ -364,9 +374,9 @@ print.qgcompfit <- function(x, ...){
   #' @export
   #' @examples
   #' set.seed(50)
-  #' dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' obj1 = qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' obj2 = qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+  #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
   #' # does not need to be explicitly called, but included here for clarity
   #' print(obj1)
   #' print(obj2)
@@ -421,10 +431,10 @@ plot.qgcompfit <- function(x, ...){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
-  #' ft = qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+  #' dat <- data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
+  #' ft <- qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
   #' plot(ft)
-  #' ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+  #' ft2 <- qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
   #' plot(ft2)
 
   theme_butterfly_l <- list(theme(

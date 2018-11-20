@@ -46,7 +46,7 @@ Estimates correspond to the average expected change in the
 \examples{
 set.seed(30)
 # continuous outcome
-dat = data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
+dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 #Conditional linear slope
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 #Marginal linear slope (population average slope, for a purely linear, additive model this will equal the conditional)
@@ -54,7 +54,7 @@ qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gauss
 #Population average mixture slope which accounts for non-linearity and interactions
 qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
 # binary outcome
-dat = data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
+dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 #Conditional mixture OR
 qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2)
 #Marginal mixture OR (population average OR - in general, this will not equal the conditional mixture OR due to non-collapsibility of the OR)
