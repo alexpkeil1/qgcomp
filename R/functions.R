@@ -139,7 +139,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
     names(qx) <- paste0(names(qx), "_q")
     res <- list(
       qx = qx, fit = fit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
-      expnms=expnms,
+      expnms=expnms, q=q,
       pos.gamma = pos.gamma, var.pos.gamma = se.pos.gamma^2,
       neg.gamma = neg.gamma, var.neg.gamma = se.neg.gamma^2,
                 pweights = sort(pweights, decreasing = TRUE),
@@ -242,7 +242,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
     qx <- qdata[, expnms]
     res <- list(
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
-      expnms=expnms,
+      expnms=expnms, q=q,
       pos.gamma = NULL, var.pos.gamma = NULL,neg.gamma = NULL, var.neg.gamma = NULL,
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
       y.expected=msmfit$Ya, index=msmfit$A
@@ -457,14 +457,21 @@ plot.qgcompfit <- function(x, ...){
    # default plot for bootstrap results (no weights obtained)
    p <- ggplot() 
      if(x$msmfit$family$family=='gaussian'){
-       p <- p + geom_point(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) + 
-       geom_boxplot(aes(x=x,y=y, group=x), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) 
+       #prediction interval (large sample estimator under normal assumption)
+       resvar = summary(x$fit)$dispersion
+       gammavar = x$var.gamma
+       yup = x$y.expected + qnorm(.975)*sqrt(resvar+gammavar)
+       ydo = x$y.expected + qnorm(.025)*sqrt(resvar+gammavar)
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax), data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
      if(x$msmfit$family$family=='binomial'){
-       p <- p + geom_jitter(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index),
-                            width=0.1, height=0.1, size=1) 
+       resvar = x$y.expected*(1-x$y.expected)
+       gammavar = x$var.gamma
+       yup = x$y.expected + qnorm(.975)*sqrt(resvar+gammavar)
+       ydo = x$y.expected + qnorm(.025)*sqrt(resvar+gammavar)
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax), data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
-     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula = y ~ s(x, bs = "cs")) + 
+     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula=y~s(x, k=x$q,fx=TRUE)) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      theme_classic()

@@ -300,6 +300,11 @@ plot(gcompmod)
 plot(gcompmod2)
 ```
 
+```
+## Warning: Computation failed in `stat_smooth()`:
+## A term has fewer unique covariate combinations than specified maximum degrees of freedom
+```
+
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-2.png)
 
 Compare with the `gwqs` output plots, which allows effects only in a single direction
