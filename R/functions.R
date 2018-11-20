@@ -59,11 +59,12 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
   #' Under causal identification assumptions and correct model specification,
   #' the MSM yields a causal exposure-response representing the incremental
   #' change in the expected outcome given a joint intervention on all exposures.
-  #' @param f an r function representing the conditional model for the outcome, given all
-  #' exposures and covariates
-  #' @param data a data frame
-  #' @param expnms a character vector with the names of  the columns to be
-  #' quantized
+  #' @param f an r formula representing the conditional model for the outcome, given all
+  #' exposures and covariates. Interaction terms that include exposure variables
+  #' should be represented via the \code{\link[base]{Asis}} function
+  #' @param qdata a data frame with quantized exposures
+  #' @param expnms a character vector with the names of the columns in qdata that represent
+  #' the exposures of interest (main terms only!)
   #' @param q integer, number of quantiles used in creating quantized variables
   #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (gamma)

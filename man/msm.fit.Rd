@@ -8,20 +8,21 @@ quantized exposures}
 msm.fit(f, qdata, q, expnms, rr = TRUE, main = TRUE, ...)
 }
 \arguments{
-\item{f}{an r function representing the conditional model for the outcome, given all
-exposures and covariates}
+\item{f}{an r formula representing the conditional model for the outcome, given all
+exposures and covariates. Interaction terms that include exposure variables
+should be represented via the \code{\link[base]{Asis}} function}
+
+\item{qdata}{a data frame with quantized exposures}
 
 \item{q}{integer, number of quantiles used in creating quantized variables}
 
-\item{expnms}{a character vector with the names of  the columns to be
-quantized}
+\item{expnms}{a character vector with the names of the columns in qdata that represent
+the exposures of interest (main terms only!)}
 
 \item{rr}{logical, estimate log(risk ratio) (family='binomial' only)}
 
 \item{main}{logical, internal use: produce estimates of exposure effect (gamma)
 and expected outcomes under g-computation and the MSM}
-
-\item{data}{a data frame}
 }
 \description{
 this is an internal function called by \code{\link[qgcomp]{qgcomp}},
