@@ -42,6 +42,30 @@ quantize <- function (data, expnms, q) {
 
 
 msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
+  #' @title fitting marginal structural model (MSM) based on g-computation with
+  #' quantized exposures
+  #' @details This function first computes expected outcomes under hypothetical
+  #' interventions to simultaneously set all exposures to a specific quantile. These
+  #' predictions are based on g-computation, where the exposures are `quantized',
+  #' meaning that they take on ordered integer values according to their ranks,
+  #' and the integer values are determined by the number of quantile cutpoints used.
+  #' The function then takes these expected outcomes and fits an additional model
+  #' (a marginal structural model) with the expected outcomes as the outcome and
+  #' the intervention value of the exposures (the quantile integer) as the exposure.
+  #' Under causal identification assumptions and correct model specification,
+  #' the MSM yields a causal exposure-response representing the incremental
+  #' change in the expected outcome given a joint intervention on all exposures.
+  #' @param f an r function representing the conditional model for the outcome, given all
+  #' exposures and covariates
+  #' @param data a data frame
+  #' @param expnms a character vector with the names of  the columns to be
+  #' quantized
+  #' @param q integer, number of quantiles used in creating quantized variables
+  #' @param rr logical, estimate log(risk ratio) (family='binary' only)
+  #' @param main logical, internal use: produce estimates of exposure effect (gamma)
+  #'  and expected outcomes under g-computation and the MSM
+  #' @keywords variance, mixtures
+  #' @import stats
     # conditional outcome regression fit
     fit <- glm(f, data = qdata, ...)
     if(fit$family$family=="gaussian") rr=FALSE
@@ -50,15 +74,15 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
     if(is.null(q)){
       q = length(table(qdata[expnms[1]]))
     }
-    predmat <- as.list(1:(q+1))
-    nobs <- dim(qdata)[1]
-    for(idx in 1:(q+1)){
+    predit <- function(idx){
       newdata <- qdata
       newdata[,expnms] <- idx-1
-      suppressWarnings(predmat[[idx]] <- predict(fit, newdata=newdata, type='response'))
+      suppressWarnings(predict(fit, newdata=newdata, type='response'))
     }
+    predmat = lapply(1:(q+1), predit)
     # fit MSM using g-computation estimates of expected outcomes under joint 
     #  intervention
+    nobs <- dim(qdata)[1]
     msmdat <- data.frame(
       Ya = unlist(predmat),
       gamma = rep(0:q, each=nobs))
@@ -66,7 +90,8 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
     if(rr)  suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat, family=binomial(link='log')))
     res = list(fit=fit, msmfit=msmfit)
     if(main) {
-      res$Ya = msmdat$Ya   # expected outcome under joint exposure
+      res$Ya = msmdat$Ya   # expected outcome under joint exposure, by gcomp
+      res$Yamsm = predict(msmfit, type='response')
       res$A =  msmdat$gamma # joint exposure (1 = all exposures set to first quantile)
     }
     res
@@ -97,7 +122,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' representing the exposure variables
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
+  #' @seealso \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -189,7 +214,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' @param B integer: number of bootstrap iterations
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso [gqcomp::qgcomp.noboot()], and [gqcomp::qgcomp()]
+  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, and \code{\link[gqcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -283,7 +308,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
-  #' @seealso [gqcomp::qgcomp.noboot()] and [gqcomp::qgcomp.boot()]
+  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}} and \code{\link[gqcomp]{qgcomp.boot}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and possibly information on the 
@@ -328,7 +353,7 @@ print.qgcompfit <- function(x, ...){
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
   #' @param ... unused
-  #' @seealso [gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
+  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
   #' @keywords variance, mixtures
   #' @export
   #' @examples
@@ -385,7 +410,7 @@ plot.qgcompfit <- function(x, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param ... unused
-  #' @seealso [gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
+  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
   #' @import ggplot2 grid gridExtra
   #' @export
   #' @examples

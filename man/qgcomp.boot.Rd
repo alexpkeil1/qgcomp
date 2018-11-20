@@ -63,7 +63,7 @@ qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)
 }
 \seealso{
-[gqcomp::qgcomp.noboot()], and [gqcomp::qgcomp()]
+\code{\link[gqcomp]{qgcomp.noboot}}, and \code{\link[gqcomp]{qgcomp}}
 }
 \keyword{mixtures}
 \keyword{variance,}

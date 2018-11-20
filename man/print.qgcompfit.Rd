@@ -31,7 +31,7 @@ print(obj1)
 print(obj2)
 }
 \seealso{
-[gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
+\code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
 }
 \keyword{mixtures}
 \keyword{variance,}

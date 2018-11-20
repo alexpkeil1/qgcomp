@@ -28,5 +28,5 @@ ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
 plot(ft2)
 }
 \seealso{
-[gqcomp::qgcomp.noboot()], [gqcomp::qgcomp.boot()], and [gqcomp::qgcomp()]
+\code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
 }
