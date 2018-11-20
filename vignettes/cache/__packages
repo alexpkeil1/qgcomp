@@ -1,0 +1,9 @@
+base
+ggplot2
+gridExtra
+devtools
+usethis
+roxygen2
+knitr
+qgcomp
+gWQS

@@ -416,7 +416,7 @@ plot.qgcompfit <- function(x, ...){
      }
      if(x$msmfit$family$family=='binomial'){
        p <- p + geom_jitter(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index),
-                            width=0.1, height=0.1, size=2) 
+                            width=0.1, height=0.1, size=1) 
      }
      p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam') + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
