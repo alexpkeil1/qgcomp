@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{print.qgcompfit}
 \alias{print.qgcompfit}
-\title{print.qgcompfit}
+\title{print.qgcompfit: default printing method for a qgcompfit object}
 \usage{
 \method{print}{qgcompfit}(x, ...)
 }
@@ -13,7 +13,13 @@ function}
 \item{...}{unused}
 }
 \description{
-default print method for qgcomfit objects
+Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
+is called. For `qgcomp.noboot` will output final estimate of joint exposure
+effect (similar to the 'index' effect in weighted quantile sums), as well
+as estimates of the 'weights' (standardized coefficients). For `qgcomp.boot`,
+the marginal effect is given, but no weights are reported since this approach
+generally incorporates non-linear models with interaction terms among exposures,
+which preclude weights with any useful interpretation.
 }
 \examples{
 set.seed(50)

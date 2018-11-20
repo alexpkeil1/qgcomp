@@ -14,7 +14,7 @@ composite effect estimate}
 }
 \description{
 calculate standard error of weighted linear combination of random variables
- given a vector of weights and a covariance matrix
+ given a vector of weights and a covariance matrix (not exported)
 }
 \examples{
 dat = data.frame(y=runif(10), x=runif(10))

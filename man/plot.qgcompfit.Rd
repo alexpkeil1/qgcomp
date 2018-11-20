@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{plot.qgcompfit}
 \alias{plot.qgcompfit}
-\title{plot.qgcompfit}
+\title{plot.qgcompfit: default plotting method for a qgcompfit object}
 \usage{
 \method{plot}{qgcompfit}(x, ...)
 }

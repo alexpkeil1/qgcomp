@@ -2,11 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp}
 \alias{qgcomp}
-\title{qgcomp: estimation of quantile g-computation fit, 
- automatically selects between qgcomp.noboot and qgcomp.boot
- to select the most efficient approach to estimate the average expected 
- change in the (log) outcome per quantile increase in the joint 
- exposure to all exposures in `expnms'}
+\title{qgcomp: estimation of quantile g-computation fit}
 \usage{
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
@@ -27,8 +23,7 @@ effect}
 \item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q)}
 }
 \description{
-qgcomp: estimation of quantile g-computation fit, 
- automatically selects between qgcomp.noboot and qgcomp.boot
+This function automatically selects between qgcomp.noboot and qgcomp.boot
  to select the most efficient approach to estimate the average expected 
  change in the (log) outcome per quantile increase in the joint 
  exposure to all exposures in `expnms'

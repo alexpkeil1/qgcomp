@@ -3,10 +3,15 @@
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
 \title{qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
- intervals, yielding population average effect estimates for both continuous
+ intervals
+ 
+ This function yields population average effect estimates for both continuous
  and binary outcomes, which correspond to the average expected change in the
  (log) outcome per quantile increase in the joint exposure to all exposures 
- in `expnms'}
+ in `expnms'. Test statistics and confidence intervals are based on 
+ a non-parametric bootstrap, using the standard deviation of the bootstrap
+ estimates to estimate the standard error. The bootstrap standard error is 
+ then used to estimate Wald-type confidence intervals.}
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 200,
   rr = TRUE, ...)
@@ -31,10 +36,15 @@ representing the exposure variables}
 }
 \description{
 qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
- intervals, yielding population average effect estimates for both continuous
+ intervals
+ 
+ This function yields population average effect estimates for both continuous
  and binary outcomes, which correspond to the average expected change in the
  (log) outcome per quantile increase in the joint exposure to all exposures 
- in `expnms'
+ in `expnms'. Test statistics and confidence intervals are based on 
+ a non-parametric bootstrap, using the standard deviation of the bootstrap
+ estimates to estimate the standard error. The bootstrap standard error is 
+ then used to estimate Wald-type confidence intervals.
 }
 \examples{
 set.seed(30)

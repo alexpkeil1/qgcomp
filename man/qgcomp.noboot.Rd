@@ -22,8 +22,16 @@ representing the exposure variables}
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
-create variables representing indicator functions with cutpoints defined
-by quantiles
+This function mimics the output of a weighted quantile sums regression in 
+large samples. For continuous outcomes, under a linear model with no 
+interaction terms, this is equivalent to g-computation of the effect of
+increasing every exposure by 1 quantile. For binary outcomes
+outcomes, this yields a conditional log odds ratio representing the 
+change in the expected conditional odds (conditional on covariates)
+from increasing every exposure by 1 quantile. In general, the latter 
+quantity is not equivalent to g-computation estimates. Hypothesis test
+statistics and 95% confidence intervals are based on using the delta
+estimate variance of a linear combination of random variables.
 }
 \examples{
 set.seed(50)

@@ -3,7 +3,7 @@ se_comb <- function(expnms, covmat){
   #' se_comb
   #'
   #' calculate standard error of weighted linear combination of random variables
-  #'  given a vector of weights and a covariance matrix
+  #'  given a vector of weights and a covariance matrix (not exported)
   #' @param expnms a logical index of which columns are used to create
   #' composite effect estimate
   #' @param covmat covariance matrix from a glm fit
@@ -84,8 +84,17 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' qgcomp.noboot: estimation of quantile g-computation fit (continuous outcome)
   #'  or conditional quantile odds ratio (binary outcome)
   #'
-  #' create variables representing indicator functions with cutpoints defined
-  #' by quantiles
+  #' This function mimics the output of a weighted quantile sums regression in 
+  #' large samples. For continuous outcomes, under a linear model with no 
+  #' interaction terms, this is equivalent to g-computation of the effect of
+  #' increasing every exposure by 1 quantile. For binary outcomes
+  #' outcomes, this yields a conditional log odds ratio representing the 
+  #' change in the expected conditional odds (conditional on covariates)
+  #' from increasing every exposure by 1 quantile. In general, the latter 
+  #' quantity is not equivalent to g-computation estimates. Hypothesis test
+  #' statistics and 95% confidence intervals are based on using the delta
+  #' estimate variance of a linear combination of random variables.
+  #' 
   #' @param f R style formula
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
@@ -160,10 +169,15 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
 
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, ...){
   #' qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
-  #'  intervals, yielding population average effect estimates for both continuous
+  #'  intervals
+  #'  
+  #'  This function yields population average effect estimates for both continuous
   #'  and binary outcomes, which correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures 
-  #'  in `expnms'
+  #'  in `expnms'. Test statistics and confidence intervals are based on 
+  #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
+  #'  estimates to estimate the standard error. The bootstrap standard error is 
+  #'  then used to estimate Wald-type confidence intervals.
   #'
   #' @param f R style formula
   #' @param data data frame
@@ -245,8 +259,10 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
-  #' qgcomp: estimation of quantile g-computation fit, 
-  #'  automatically selects between qgcomp.noboot and qgcomp.boot
+  #' qgcomp: estimation of quantile g-computation fit
+  #' 
+  #'   
+  #'  This function automatically selects between qgcomp.noboot and qgcomp.boot
   #'  to select the most efficient approach to estimate the average expected 
   #'  change in the (log) outcome per quantile increase in the joint 
   #'  exposure to all exposures in `expnms'
@@ -287,9 +303,15 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
 }
 
 print.qgcompfit <- function(x, ...){
-  #' print.qgcompfit
-  #'
-  #' default print method for qgcomfit objects
+  #' print.qgcompfit: default printing method for a qgcompfit object
+  #' 
+  #' Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
+  #' is called. For `qgcomp.noboot` will output final estimate of joint exposure
+  #' effect (similar to the 'index' effect in weighted quantile sums), as well
+  #' as estimates of the 'weights' (standardized coefficients). For `qgcomp.boot`,
+  #' the marginal effect is given, but no weights are reported since this approach
+  #' generally incorporates non-linear models with interaction terms among exposures,
+  #' which preclude weights with any useful interpretation.
   #' 
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
@@ -339,7 +361,7 @@ print.qgcompfit <- function(x, ...){
 
 
 plot.qgcompfit <- function(x, ...){
-  #' plot.qgcompfit
+  #' plot.qgcompfit: default plotting method for a qgcompfit object
   #'
   #' plot quantile g-computation object. For qgcomp.noboot, this function will
   #' createa butterfly plot of weights. For qgcomp.boot, this function will create
