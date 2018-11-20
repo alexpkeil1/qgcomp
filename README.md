@@ -1,6 +1,6 @@
-QGcomp: an alternative to weighted least squares that does not assume effects of all exposures go in the same direction. Works for linear and logistic models.
+#### QGcomp: an alternative to weighted least squares that does not assume effects of all exposures go in the same direction. Works for linear and logistic models.
 
-Quick start
+### Quick start
 
     install.packages("devtools")
     devtools::install_github("alexpkeil1/qgcomp")
@@ -54,7 +54,7 @@ Quick start
     plot(results2)
 ![Results 2](fig/res2.png)
     
-    # adjusting for covariate(s)
+### adjusting for covariate(s)
     results3 = qgcomp.noboot(y~ sex + 
                               log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
                               log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
@@ -64,7 +64,7 @@ Quick start
                               log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
                               log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
                             dat=wqs_data[,c(Xnm, 'y', 'sex')], 
-                            expcoefs = c(FALSE, rep(TRUE, length(Xnm))), family=gaussian())
+                            expnms = Xnm, family=gaussian())
     print(results3)
     
     > Scaled effect size (positive direction, sum of positive coefficients = 1.91)
@@ -84,3 +84,23 @@ Quick start
     >         sex 
     > -0.04602814 
 
+
+### Bootstrapping to get population average risk ratio via g-computation
+    results4 = qgcomp.boot(disease_state~sex + 
+                              log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
+                              log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
+                              log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
+                              log_LBX199LA + log_LBXD01LA + log_LBXD02LA + log_LBXD03LA + log_LBXD04LA + 
+                              log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
+                              log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
+                              log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
+                              dat=wqs_data, expnms = Xnm, family=binomial(), rr=TRUE, B=200)
+    print(results4)
+    
+    > Mixture log(RR) (bootstrap CI):
+    > gamma (CI): -0.0376 (-0.123,0.048), z=-0.861, p=0.389
+
+    # checking whether model fit seems appropriate (the fit does look approximately linear in this case
+    #  but mainly because it looks null)
+    plot(results4)
+![Results 4](fig/res4.png)

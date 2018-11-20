@@ -409,10 +409,16 @@ plot.qgcompfit <- function(x, ...){
   }
   if(x$bootstrap){
    # default plot for bootstrap results (no weights obtained)
-   p <- ggplot() + 
-     #geom_point(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) + 
-     geom_boxplot(aes(x=x,y=y, group=x), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) + 
-     geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam') + 
+   p <- ggplot() 
+     if(x$msmfit$family$family=='gaussian'){
+       p <- p + geom_point(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) + 
+       geom_boxplot(aes(x=x,y=y, group=x), data=data.frame(y=as.numeric(x$fit$y), x=x$index)) 
+     }
+     if(x$msmfit$family$family=='binomial'){
+       p <- p + geom_jitter(aes(x=x,y=y), data=data.frame(y=as.numeric(x$fit$y), x=x$index),
+                            width=0.1, height=0.1, size=2) 
+     }
+     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam') + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      theme_classic()
