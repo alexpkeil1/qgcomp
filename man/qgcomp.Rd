@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp}
 \alias{qgcomp}
-\title{qgcomp: estimation of quantile g-computation fit}
+\title{estimation of quantile g-computation fit}
 \usage{
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
@@ -21,6 +21,13 @@ OR will be estimated, which cannot be interpreted as a population average
 effect}
 
 \item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q)}
+}
+\value{
+a qgcompfit object, which contains information about the effect
+ measure of interest (gamma) and associated variance (var.gamma), as well
+ as information on the model fit (fit) and possibly information on the 
+ marginal structural model (msmfit) used to estimate the final effect
+ estimates (qgcomp.boot only). If appropriate, weights are also reported.
 }
 \description{
 This function automatically selects between qgcomp.noboot and qgcomp.boot
@@ -42,6 +49,9 @@ qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100, famil
 # automatically selects appropriate method
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
+}
+\seealso{
+[qgcomp.noboot()] and [qgcomp.boot()]
 }
 \keyword{mixtures}
 \keyword{variance,}

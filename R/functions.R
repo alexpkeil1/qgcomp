@@ -1,19 +1,8 @@
 
 se_comb <- function(expnms, covmat){
-  #' se_comb
-  #'
-  #' calculate standard error of weighted linear combination of random variables
-  #'  given a vector of weights and a covariance matrix (not exported)
-  #' @param expnms a logical index of which columns are used to create
-  #' composite effect estimate
-  #' @param covmat covariance matrix from a glm fit
-  #' @keywords variance, mixtures
-  #' @examples
-  #' dat = data.frame(y=runif(10), x=runif(10))
-  #' lmfit = glm(y ~ x, data=dat, family='gaussian')
-  #' # function not exported
-  #' qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
-
+  #calculate standard error of weighted linear combination of random variables
+  # given a vector of weights and a covariance matrix (not exported)
+  # usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
   #calculate standard error of weighted linear combination of random variables
   weightvec = rep(0, dim(covmat)[1])
   weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] = 1
@@ -23,9 +12,7 @@ se_comb <- function(expnms, covmat){
 }
 
 quantize <- function (data, expnms, q) {
-  #' quantize
-  #'
-  #' create variables representing indicator functions with cutpoints defined
+  #' @title create variables representing indicator functions with cutpoints defined
   #' by quantiles
   #' @param data a data frame
   #' @param expnms a character vector with the names of  the columns to be
@@ -81,11 +68,13 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
 
 
 qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
-  #' qgcomp.noboot: estimation of quantile g-computation fit (continuous outcome)
+  #' @title estimation of quantile g-computation fit (continuous outcome)
   #'  or conditional quantile odds ratio (binary outcome)
   #'
-  #' This function mimics the output of a weighted quantile sums regression in 
-  #' large samples. For continuous outcomes, under a linear model with no 
+  #' @description This function mimics the output of a weighted quantile sums regression in 
+  #' large samples. 
+  #' 
+  #' For continuous outcomes, under a linear model with no 
   #' interaction terms, this is equivalent to g-computation of the effect of
   #' increasing every exposure by 1 quantile. For binary outcomes
   #' outcomes, this yields a conditional log odds ratio representing the 
@@ -102,6 +91,12 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' representing the exposure variables
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
+  #' @seealso [qgcomp.boot()], and [qgcomp()]
+  #' @return a qgcompfit object, which contains information about the effect
+  #'  measure of interest (gamma) and associated variance (var.gamma), as well
+  #'  as information on the model fit (fit) and information on the 
+  #'  weights/standardized coefficients in the positive (pweights) and 
+  #'  negative (nweight) directions.
   #' @keywords variance, mixtures
   #' @import stats
   #' @export
@@ -168,11 +163,13 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
 
 
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, ...){
-  #' qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+  #' @title estimation of quantile g-computation fit, using bootstrap confidence
   #'  intervals
   #'  
-  #'  This function yields population average effect estimates for both continuous
-  #'  and binary outcomes, which correspond to the average expected change in the
+  #'  @description This function yields population average effect estimates for both continuous
+  #'  and binary outcomes
+  #'  
+  #'  @details Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures 
   #'  in `expnms'. Test statistics and confidence intervals are based on 
   #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -188,6 +185,12 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' @param B integer: number of bootstrap iterations
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio
   #' @param ... arguments to glm (e.g. family)
+  #' @seealso [qgcomp.noboot()], and [qgcomp()]
+  #' @return a qgcompfit object, which contains information about the effect
+  #'  measure of interest (gamma) and associated variance (var.gamma), as well
+  #'  as information on the model fit (fit) and information on the 
+  #'  marginal structural model (msmfit) used to estimate the final effect
+  #'  estimates.
   #' @keywords variance, mixtures
   #' @import stats
   #' @export
@@ -259,10 +262,9 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
-  #' qgcomp: estimation of quantile g-computation fit
+  #' @title estimation of quantile g-computation fit
   #' 
-  #'   
-  #'  This function automatically selects between qgcomp.noboot and qgcomp.boot
+  #' @description This function automatically selects between qgcomp.noboot and qgcomp.boot
   #'  to select the most efficient approach to estimate the average expected 
   #'  change in the (log) outcome per quantile increase in the joint 
   #'  exposure to all exposures in `expnms'
@@ -277,6 +279,12 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
+  #' @seealso [qgcomp.noboot()] and [qgcomp.boot()]
+  #' @return a qgcompfit object, which contains information about the effect
+  #'  measure of interest (gamma) and associated variance (var.gamma), as well
+  #'  as information on the model fit (fit) and possibly information on the 
+  #'  marginal structural model (msmfit) used to estimate the final effect
+  #'  estimates (qgcomp.boot only). If appropriate, weights are also reported.
   #' @keywords variance, mixtures
   #' @import stats
   #' @export
@@ -303,9 +311,9 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
 }
 
 print.qgcompfit <- function(x, ...){
-  #' print.qgcompfit: default printing method for a qgcompfit object
+  #' @title default printing method for a qgcompfit object
   #' 
-  #' Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
+  #' @description Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
   #' is called. For `qgcomp.noboot` will output final estimate of joint exposure
   #' effect (similar to the 'index' effect in weighted quantile sums), as well
   #' as estimates of the 'weights' (standardized coefficients). For `qgcomp.boot`,
@@ -316,6 +324,7 @@ print.qgcompfit <- function(x, ...){
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
   #' @param ... unused
+  #' @seealso [qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
   #' @keywords variance, mixtures
   #' @export
   #' @examples
@@ -361,17 +370,18 @@ print.qgcompfit <- function(x, ...){
 
 
 plot.qgcompfit <- function(x, ...){
-  #' plot.qgcompfit: default plotting method for a qgcompfit object
+  #' @title plot.qgcompfit: default plotting method for a qgcompfit object
   #'
-  #' plot quantile g-computation object. For qgcomp.noboot, this function will
+  #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
   #' createa butterfly plot of weights. For qgcomp.boot, this function will create
   #' a box plot with smoothed line overlaying that represents a non-parametric
   #' fit of a model to the expected outcomes in the population at each quantile
   #' of the joint exposures (e.g. '1' represents 'at the first quantile for
   #' every exposure')
+  #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param ... unused
-  #' @keywords variance, mixtures
+  #' @seealso [qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
   #' @import ggplot2 grid gridExtra
   #' @export
   #' @examples
@@ -462,3 +472,5 @@ plot.qgcompfit <- function(x, ...){
   }
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))
 }
+
+# todo: predict methods

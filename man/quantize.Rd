@@ -2,7 +2,8 @@
 % Please edit documentation in R/functions.R
 \name{quantize}
 \alias{quantize}
-\title{quantize}
+\title{create variables representing indicator functions with cutpoints defined
+by quantiles}
 \usage{
 quantize(data, expnms, q)
 }

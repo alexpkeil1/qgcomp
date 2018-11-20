@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{print.qgcompfit}
 \alias{print.qgcompfit}
-\title{print.qgcompfit: default printing method for a qgcompfit object}
+\title{default printing method for a qgcompfit object}
 \usage{
 \method{print}{qgcompfit}(x, ...)
 }
@@ -29,6 +29,9 @@ obj2 = qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100
 # does not need to be explicitly called, but included here for clarity
 print(obj1)
 print(obj2)
+}
+\seealso{
+[qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
 }
 \keyword{mixtures}
 \keyword{variance,}

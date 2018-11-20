@@ -3,7 +3,7 @@
 ### Quick start
 
     install.packages("devtools")
-    devtools::install_github("alexpkeil1/qgcomp")
+    devtools::install_github("alexpkeil1/qgcomp", build_vignettes = TRUE)
     library("qgcomp")
     data("wqs_data", package="gWQS")
     

@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{qgcomp.noboot: estimation of quantile g-computation fit (continuous outcome)
+\title{estimation of quantile g-computation fit (continuous outcome)
  or conditional quantile odds ratio (binary outcome)}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
@@ -21,9 +21,18 @@ representing the exposure variables}
 
 \item{...}{arguments to glm (e.g. family)}
 }
+\value{
+a qgcompfit object, which contains information about the effect
+ measure of interest (gamma) and associated variance (var.gamma), as well
+ as information on the model fit (fit) and information on the 
+ weights/standardized coefficients in the positive (pweights) and 
+ negative (nweight) directions.
+}
 \description{
 This function mimics the output of a weighted quantile sums regression in 
-large samples. For continuous outcomes, under a linear model with no 
+large samples. 
+
+For continuous outcomes, under a linear model with no 
 interaction terms, this is equivalent to g-computation of the effect of
 increasing every exposure by 1 quantile. For binary outcomes
 outcomes, this yields a conditional log odds ratio representing the 
@@ -37,6 +46,9 @@ estimate variance of a linear combination of random variables.
 set.seed(50)
 dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+}
+\seealso{
+[qgcomp.boot()], and [qgcomp()]
 }
 \keyword{mixtures}
 \keyword{variance,}

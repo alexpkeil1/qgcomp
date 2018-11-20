@@ -12,7 +12,7 @@
 \item{...}{unused}
 }
 \description{
-plot quantile g-computation object. For qgcomp.noboot, this function will
+Plot a quantile g-computation object. For qgcomp.noboot, this function will
 createa butterfly plot of weights. For qgcomp.boot, this function will create
 a box plot with smoothed line overlaying that represents a non-parametric
 fit of a model to the expected outcomes in the population at each quantile
@@ -27,5 +27,6 @@ plot(ft)
 ft2 = qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
 plot(ft2)
 }
-\keyword{mixtures}
-\keyword{variance,}
+\seealso{
+[qgcomp.noboot()], [qgcomp.boot()], and [qgcomp()]
+}

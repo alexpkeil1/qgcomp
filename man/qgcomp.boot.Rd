@@ -2,11 +2,13 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+\title{estimation of quantile g-computation fit, using bootstrap confidence
  intervals
  
- This function yields population average effect estimates for both continuous
- and binary outcomes, which correspond to the average expected change in the
+ @description This function yields population average effect estimates for both continuous
+ and binary outcomes
+ 
+ @details Estimates correspond to the average expected change in the
  (log) outcome per quantile increase in the joint exposure to all exposures 
  in `expnms'. Test statistics and confidence intervals are based on 
  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -34,12 +36,21 @@ representing the exposure variables}
 
 \item{...}{arguments to glm (e.g. family)}
 }
+\value{
+a qgcompfit object, which contains information about the effect
+ measure of interest (gamma) and associated variance (var.gamma), as well
+ as information on the model fit (fit) and information on the 
+ marginal structural model (msmfit) used to estimate the final effect
+ estimates.
+}
 \description{
-qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+estimation of quantile g-computation fit, using bootstrap confidence
  intervals
  
- This function yields population average effect estimates for both continuous
- and binary outcomes, which correspond to the average expected change in the
+ @description This function yields population average effect estimates for both continuous
+ and binary outcomes
+ 
+ @details Estimates correspond to the average expected change in the
  (log) outcome per quantile increase in the joint exposure to all exposures 
  in `expnms'. Test statistics and confidence intervals are based on 
  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -64,6 +75,9 @@ qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=d
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, B=10)
 #Population average mixture RR
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)
+}
+\seealso{
+[qgcomp.noboot()], and [qgcomp()]
 }
 \keyword{mixtures}
 \keyword{variance,}
