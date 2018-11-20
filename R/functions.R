@@ -122,7 +122,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
   #' representing the exposure variables
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -214,7 +214,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, .
   #' @param B integer: number of bootstrap iterations
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, and \code{\link[gqcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and information on the 
@@ -308,7 +308,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
-  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}} and \code{\link[gqcomp]{qgcomp.boot}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (gamma) and associated variance (var.gamma), as well
   #'  as information on the model fit (fit) and possibly information on the 
@@ -353,7 +353,7 @@ print.qgcompfit <- function(x, ...){
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
   #' @param ... unused
-  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @keywords variance, mixtures
   #' @export
   #' @examples
@@ -410,7 +410,7 @@ plot.qgcompfit <- function(x, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param ... unused
-  #' @seealso \code{\link[gqcomp]{qgcomp.noboot}}, \code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @import ggplot2 grid gridExtra
   #' @export
   #' @examples

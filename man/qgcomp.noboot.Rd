@@ -49,7 +49,7 @@ dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 }
 \seealso{
-\code{\link[gqcomp]{qgcomp.boot}}, and \code{\link[gqcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
 \keyword{mixtures}
 \keyword{variance,}

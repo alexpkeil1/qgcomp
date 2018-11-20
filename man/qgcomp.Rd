@@ -51,7 +51,7 @@ qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
 }
 \seealso{
-\code{\link[gqcomp]{qgcomp.noboot}} and \code{\link[gqcomp]{qgcomp.boot}}
+\code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
 }
 \keyword{mixtures}
 \keyword{variance,}
