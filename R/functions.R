@@ -523,7 +523,7 @@ plot.qgcompfit <- function(x, ...){
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      scale_fill_discrete(name="") + 
-     scale_colour_discrete(name="") + 
+     scale_colour_grey(name="") + 
      theme_classic()
    print(p)
   }
