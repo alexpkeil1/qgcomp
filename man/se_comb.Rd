@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{se_comb}
 \alias{se_comb}
-\title{qgcomp::se_comb}
+\title{se_comb}
 \usage{
 se_comb(expnms, covmat)
 }
@@ -19,6 +19,7 @@ calculate standard error of weighted linear combination of random variables
 \examples{
 dat = data.frame(y=runif(10), x=runif(10))
 lmfit = glm(y ~ x, data=dat, family='gaussian')
+# function not exported
 qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
 }
 \keyword{mixtures}

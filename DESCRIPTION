@@ -1,6 +1,6 @@
 Package: qgcomp
 Title: quantile-g-computation
-Version: 0.6.0
+Version: 0.6.1
 Authors@R: c(person("Alexander", "Keil", role = c("aut", "cre"),
                        email = "akeil@unc.edu"))
 Description: G-computation for a set of time-fixed exposures with quantile-based basis functions under linearity and homogeneity assumptions. This approach estimates a regression line corresponding to the expected change in the outcome (on the link basis) given a simultaneous increase in the quantile-based category for all exposures.
@@ -8,7 +8,7 @@ Depends: R (>= 3.0), stats (>= 3.0), ggplot2 (>= 2.5), grid, gridExtra
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
-Date: Mon Nov 19 16:53:12 2018
+Date: Mon Nov 19 20:42:56 2018
 Author: Alexander Keil [aut, cre]
 Maintainer: Alexander Keil <akeil@unc.edu>
 Suggests: gWQS (>= 1.1), knitr (>= 1.0)

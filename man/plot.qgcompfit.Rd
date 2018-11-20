@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{plot.qgcompfit}
 \alias{plot.qgcompfit}
-\title{qgcomp::plot.qgcompfit}
+\title{plot.qgcompfit}
 \usage{
 \method{plot}{qgcompfit}(x, ...)
 }
@@ -12,7 +12,12 @@
 \item{...}{unused}
 }
 \description{
-plot quantile g-computation object
+plot quantile g-computation object. For qgcomp.noboot, this function will
+createa butterfly plot of weights. For qgcomp.boot, this function will create
+a box plot with smoothed line overlaying that represents a non-parametric
+fit of a model to the expected outcomes in the population at each quantile
+of the joint exposures (e.g. '1' represents 'at the first quantile for
+every exposure')
 }
 \examples{
 set.seed(12)

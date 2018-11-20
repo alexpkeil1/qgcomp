@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{qgcomp::qgcomp.noboot}
+\title{qgcomp.noboot}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
 }

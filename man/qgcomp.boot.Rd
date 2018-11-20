@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{qgcomp::qgcomp.boot: bootstrap estimation of quantile g-computation fit}
+\title{qgcomp.boot: bootstrap estimation of quantile g-computation fit}
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 100,
   rr = TRUE, ...)
@@ -26,7 +26,7 @@ representing the exposure variables}
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
-qgcomp::qgcomp.boot: bootstrap estimation of quantile g-computation fit
+qgcomp.boot: bootstrap estimation of quantile g-computation fit
 }
 \examples{
 set.seed(30)

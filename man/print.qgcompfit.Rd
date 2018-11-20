@@ -2,24 +2,27 @@
 % Please edit documentation in R/functions.R
 \name{print.qgcompfit}
 \alias{print.qgcompfit}
-\title{qgcomp::print.qgcompfit}
+\title{print.qgcompfit}
 \usage{
 \method{print}{qgcompfit}(x, ...)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.noboot` function}
+\item{x}{"qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
+function}
 
 \item{...}{unused}
 }
 \description{
-carry out quantile g-computation
-by quantiles
+default print method for qgcomfit objects
 }
 \examples{
 set.seed(50)
 dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+obj1 = qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+obj2 = qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+# does not need to be explicitly called, but included here for clarity
+print(obj1)
+print(obj2)
 }
 \keyword{mixtures}
 \keyword{variance,}

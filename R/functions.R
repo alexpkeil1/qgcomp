@@ -1,6 +1,6 @@
 
 se_comb <- function(expnms, covmat){
-  #' qgcomp::se_comb
+  #' se_comb
   #'
   #' calculate standard error of weighted linear combination of random variables
   #'  given a vector of weights and a covariance matrix
@@ -11,6 +11,7 @@ se_comb <- function(expnms, covmat){
   #' @examples
   #' dat = data.frame(y=runif(10), x=runif(10))
   #' lmfit = glm(y ~ x, data=dat, family='gaussian')
+  #' # function not exported
   #' qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
 
   #calculate standard error of weighted linear combination of random variables
@@ -22,7 +23,7 @@ se_comb <- function(expnms, covmat){
 }
 
 quantize <- function (data, expnms, q) {
-  #' qgcomp::quantize
+  #' quantize
   #'
   #' create variables representing indicator functions with cutpoints defined
   #' by quantiles
@@ -80,7 +81,7 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
 
 
 qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
-  #' qgcomp::qgcomp.noboot
+  #' qgcomp.noboot
   #'
   #' create variables representing indicator functions with cutpoints defined
   #' by quantiles
@@ -156,7 +157,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
 
 
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=100, rr=TRUE, ...){
-  #' qgcomp::qgcomp.boot: bootstrap estimation of quantile g-computation fit
+  #' qgcomp.boot: bootstrap estimation of quantile g-computation fit
   #'
   #' @param f R style formula
   #' @param data data frame
@@ -238,7 +239,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=100, rr=TRUE, .
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=FALSE,...){
-  #' qgcomp::qgcomp: estimation of quantile g-computation fit
+  #' qgcomp: estimation of quantile g-computation fit
   #'
   #' @param f R style formula
   #' @param data data frame
@@ -253,6 +254,15 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=FALSE,...){
   #' dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' # automatically selects appropriate method
+  #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' # note for binary outcome this will 
+  #' dat = data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100, family=binomial())
+  #' # automatically selects appropriate method
+  #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
   terms = attr(terms(f,data=data), 'term.labels')
   doboot = ifelse(isTRUE(grep("I\\(", terms)>0), TRUE, FALSE)
   if(rr | doboot){
@@ -262,19 +272,23 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=FALSE,...){
 }
 
 print.qgcompfit <- function(x, ...){
-  #' qgcomp::print.qgcompfit
+  #' print.qgcompfit
   #'
-  #' carry out quantile g-computation
-  #' by quantiles
-  #' @param x "qgcompfit" object from `qgcomp.noboot` function
+  #' default print method for qgcomfit objects
+  #' 
+  #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
+  #' function
   #' @param ... unused
   #' @keywords variance, mixtures
   #' @export
   #' @examples
   #' set.seed(50)
   #' dat = data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' obj1 = qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' obj2 = qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' # does not need to be explicitly called, but included here for clarity
+  #' print(obj1)
+  #' print(obj2)
   fam <- x$fit$family$family
   if(!is.null(x$psize)) {
     cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$psize, 3) , ")\n"))
@@ -292,7 +306,7 @@ print.qgcompfit <- function(x, ...){
   }
   if (fam == "binomial"){
     estimand = 'OR'
-    if(x$bootstrap && x$msmfit$family$link=='logit') estimand = 'RR'
+    if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
     cat(paste0("gamma (CI): ", signif(x$gamma, 3), " (",
              signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), z=",
@@ -310,9 +324,14 @@ print.qgcompfit <- function(x, ...){
 
 
 plot.qgcompfit <- function(x, ...){
-  #' qgcomp::plot.qgcompfit
+  #' plot.qgcompfit
   #'
-  #' plot quantile g-computation object
+  #' plot quantile g-computation object. For qgcomp.noboot, this function will
+  #' createa butterfly plot of weights. For qgcomp.boot, this function will create
+  #' a box plot with smoothed line overlaying that represents a non-parametric
+  #' fit of a model to the expected outcomes in the population at each quantile
+  #' of the joint exposures (e.g. '1' represents 'at the first quantile for
+  #' every exposure')
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param ... unused
   #' @keywords variance, mixtures

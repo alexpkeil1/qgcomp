@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{quantize}
 \alias{quantize}
-\title{qgcomp::quantize}
+\title{quantize}
 \usage{
 quantize(data, expnms, q)
 }
