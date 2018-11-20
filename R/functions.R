@@ -44,18 +44,18 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
     if(is.null(q)){
       q = length(table(qdata[expnms[1]]))
     }
-    predmat <- as.list(1:q)
+    predmat <- as.list(1:(q+1))
     nobs <- dim(qdata)[1]
-    for(idx in 1:q){
+    for(idx in 1:(q+1)){
       newdata <- qdata
-      newdata[,expnms] <- idx
+      newdata[,expnms] <- idx-1
       suppressWarnings(predmat[[idx]] <- predict(fit, newdata=newdata, type='response'))
     }
     # fit MSM using g-computation estimates of expected outcomes under joint 
     #  intervention
     msmdat <- data.frame(
       Ya = unlist(predmat),
-      gamma = rep(1:q, each=nobs))
+      gamma = rep(0:q, each=nobs))
     if(!rr) suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat,...))
     if(rr)  suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat, family=binomial(link='log')))
     res = list(fit=fit, msmfit=msmfit)
@@ -471,7 +471,7 @@ plot.qgcompfit <- function(x, ...){
        ydo = x$y.expected + qnorm(.025)*sqrt(resvar+gammavar)
        p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax), data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
-     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula=y~s(x, k=x$q,fx=TRUE)) + 
+     p <- p + geom_smooth(aes(x=x,y=y),data=data.frame(y=x$y.expected, x=x$index), method = 'gam', formula=y~s(x, k=4,fx=TRUE)) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      theme_classic()
