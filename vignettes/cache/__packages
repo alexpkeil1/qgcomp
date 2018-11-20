@@ -1,9 +1,9 @@
 base
-ggplot2
-gridExtra
 devtools
 usethis
 roxygen2
 knitr
+ggplot2
+gridExtra
 qgcomp
 gWQS
