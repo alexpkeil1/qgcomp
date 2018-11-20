@@ -1,4 +1,4 @@
-#### QGcomp: an alternative to weighted least squares that does not assume effects of all exposures go in the same direction. Works for linear and logistic models.
+#### QGcomp (quantile g-computation): an alternative to weighted quantile sums for estimating the effects of an exposure mixture that does not assume effects of all exposures go in the same direction. Works for continuous and binary outcomes.
 
 ### Quick start
 
@@ -85,7 +85,7 @@
     > -0.04602814 
 
 
-### Bootstrapping to get population average risk ratio via g-computation
+### Bootstrapping to get population average risk ratio via g-computation using qgcomp.boot
     results4 = qgcomp.boot(disease_state~sex + 
                               log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
                               log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
@@ -104,3 +104,21 @@
     #  but mainly because it looks null)
     plot(results4)
 ![Results 4](fig/res4.png)
+
+### Allowing for interactions and non-linear terms using qgcomp.boot
+
+    results5 = qgcomp.boot(y~ sex + I(log_LBX170LA*log_LBX170LA)+ I(log_LBX170LA*log_LBXD02LA) +
+                              log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
+                              log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
+                              log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
+                              log_LBX199LA + log_LBXD01LA + log_LBXD02LA + log_LBXD03LA + log_LBXD04LA + 
+                              log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
+                              log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
+                              log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
+                            dat=wqs_data[,c(Xnm, 'y', 'sex')], 
+                            expnms = Xnm, family=gaussian())
+    print(results5)
+    
+    # not much difference from original estimate of 1.49 (1.29,1.69)
+    > Mixture slope (bootstrap CI):
+    > gamma (CI): 1.52 (1.19,1.85), t=9.03, df=461, p=0

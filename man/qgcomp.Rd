@@ -2,9 +2,13 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp}
 \alias{qgcomp}
-\title{qgcomp: estimation of quantile g-computation fit}
+\title{qgcomp: estimation of quantile g-computation fit, 
+ automatically selects between qgcomp.noboot and qgcomp.boot
+ to select the most efficient approach to estimate the average expected 
+ change in the (log) outcome per quantile increase in the joint 
+ exposure to all exposures in `expnms'}
 \usage{
-qgcomp(f, data = data, family = gaussian(), rr = FALSE, ...)
+qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -13,12 +17,21 @@ qgcomp(f, data = data, family = gaussian(), rr = FALSE, ...)
 
 \item{family}{`gaussian()` or `binomial()`}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio}
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
+estimate risk ratio rather than odds ratio. Note, to get population average 
+effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
+of interest as population average effects, so if rr=FALSE then a conditional
+OR will be estimated, which cannot be interpreted as a population average
+effect}
 
 \item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q)}
 }
 \description{
-qgcomp: estimation of quantile g-computation fit
+qgcomp: estimation of quantile g-computation fit, 
+ automatically selects between qgcomp.noboot and qgcomp.boot
+ to select the most efficient approach to estimate the average expected 
+ change in the (log) outcome per quantile increase in the joint 
+ exposure to all exposures in `expnms'
 }
 \examples{
 set.seed(50)

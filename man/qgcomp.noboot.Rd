@@ -2,7 +2,8 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{qgcomp.noboot}
+\title{qgcomp.noboot: estimation of quantile g-computation fit (continuous outcome)
+ or conditional quantile odds ratio (binary outcome)}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
 }

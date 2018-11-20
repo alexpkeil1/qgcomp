@@ -69,7 +69,7 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
     msmdat <- data.frame(
       Ya = unlist(predmat),
       gamma = rep(1:q, each=nobs))
-    if(!rr) msmfit <- glm(Ya ~ gamma, data=msmdat,...)
+    if(!rr) suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat,...))
     if(rr)  suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat, family=binomial(link='log')))
     res = list(fit=fit, msmfit=msmfit)
     if(main) {
@@ -81,7 +81,8 @@ msm.fit <- function(f, qdata, q, expnms, rr=TRUE, main=TRUE, ...){
 
 
 qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
-  #' qgcomp.noboot
+  #' qgcomp.noboot: estimation of quantile g-computation fit (continuous outcome)
+  #'  or conditional quantile odds ratio (binary outcome)
   #'
   #' create variables representing indicator functions with cutpoints defined
   #' by quantiles
@@ -157,8 +158,12 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, alpha=0.05, ...){
 }
 
 
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=100, rr=TRUE, ...){
-  #' qgcomp.boot: bootstrap estimation of quantile g-computation fit
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=200, rr=TRUE, ...){
+  #' qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+  #'  intervals, yielding population average effect estimates for both continuous
+  #'  and binary outcomes, which correspond to the average expected change in the
+  #'  (log) outcome per quantile increase in the joint exposure to all exposures 
+  #'  in `expnms'
   #'
   #' @param f R style formula
   #' @param data data frame
@@ -239,13 +244,22 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, alpha=0.05, B=100, rr=TRUE, .
 }
 
 
-qgcomp <- function(f,data=data,family=gaussian(),rr=FALSE,...){
-  #' qgcomp: estimation of quantile g-computation fit
+qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
+  #' qgcomp: estimation of quantile g-computation fit, 
+  #'  automatically selects between qgcomp.noboot and qgcomp.boot
+  #'  to select the most efficient approach to estimate the average expected 
+  #'  change in the (log) outcome per quantile increase in the joint 
+  #'  exposure to all exposures in `expnms'
   #'
   #' @param f R style formula
   #' @param data data frame
   #' @param family `gaussian()` or `binomial()`
-  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio
+  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
+  #' estimate risk ratio rather than odds ratio. Note, to get population average 
+  #' effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
+  #' of interest as population average effects, so if rr=FALSE then a conditional
+  #' OR will be estimated, which cannot be interpreted as a population average
+  #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
   #' @keywords variance, mixtures
   #' @import stats

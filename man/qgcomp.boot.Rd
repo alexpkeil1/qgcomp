@@ -2,9 +2,13 @@
 % Please edit documentation in R/functions.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{qgcomp.boot: bootstrap estimation of quantile g-computation fit}
+\title{qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+ intervals, yielding population average effect estimates for both continuous
+ and binary outcomes, which correspond to the average expected change in the
+ (log) outcome per quantile increase in the joint exposure to all exposures 
+ in `expnms'}
 \usage{
-qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 100,
+qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 200,
   rr = TRUE, ...)
 }
 \arguments{
@@ -26,7 +30,11 @@ representing the exposure variables}
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
-qgcomp.boot: bootstrap estimation of quantile g-computation fit
+qgcomp.boot: estimation of quantile g-computation fit, using bootstrap confidence
+ intervals, yielding population average effect estimates for both continuous
+ and binary outcomes, which correspond to the average expected change in the
+ (log) outcome per quantile increase in the joint exposure to all exposures 
+ in `expnms'
 }
 \examples{
 set.seed(30)
