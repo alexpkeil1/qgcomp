@@ -19,9 +19,16 @@ quantized}
 create variables representing indicator functions with cutpoints defined
 by quantiles
 }
+\details{
+This function vectorized version of `quantile_f` from the `gWQS` package
+}
 \examples{
-dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-qdata = quantize(data=dat, expnms=c("x1", "x2"), q=2)
+set.seed(1232)
+dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
+qdata = quantize(data=dat, expnms=c("x1", "x2"), q=4)
+table(qdata$x1)
+table(qdata$x2)
+summary(dat[c('y', 'z')]);summary(qdata[c('y', 'z')]) # not touched
 }
 \keyword{mixtures}
 \keyword{variance,}

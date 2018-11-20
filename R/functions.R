@@ -14,6 +14,7 @@ se_comb <- function(expnms, covmat){
 quantize <- function (data, expnms, q) {
   #' @title create variables representing indicator functions with cutpoints defined
   #' by quantiles
+  #' @details This function vectorized version of `quantile_f` from the `gWQS` package
   #' @param data a data frame
   #' @param expnms a character vector with the names of  the columns to be
   #' quantized
@@ -22,15 +23,20 @@ quantize <- function (data, expnms, q) {
   #' @import stats
   #' @export
   #' @examples
-  #' dat = data.frame(y=runif(10), x1=runif(10), x2=runif(10), z=runif(10))
-  #' qdata = quantize(data=dat, expnms=c("x1", "x2"), q=2)
-    Xnms <- names(data[, expnms])
-    for (i in 1:length(Xnms)) {
-        dat_num <- as.numeric(unlist(data[, Xnms[i]]))
-        data[[Xnms[i]]] <- cut(dat_num, breaks = unique(quantile(dat_num,
+  #' set.seed(1232)
+  #' dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
+  #' qdata = quantize(data=dat, expnms=c("x1", "x2"), q=4)
+  #' table(qdata$x1)
+  #' table(qdata$x2)
+  #' summary(dat[c('y', 'z')]);summary(qdata[c('y', 'z')]) # not touched
+    qt <- function(i){
+      # not exported
+        datmat <- as.numeric(unlist(data[, expnms[i]]))
+        cut(datmat, breaks = unique(quantile(datmat,
              probs = seq(0, 1, by = 1 / q), na.rm = TRUE)), labels = FALSE,
              include.lowest = TRUE) - 1
     }
+    data[, expnms] = sapply(1:length(expnms), qt)
     return(data)
 }
 
