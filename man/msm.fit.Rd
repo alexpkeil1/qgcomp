@@ -5,7 +5,7 @@
 \title{fitting marginal structural model (MSM) based on g-computation with
 quantized exposures}
 \usage{
-msm.fit(f, qdata, q, expnms, rr = TRUE, main = TRUE, ...)
+msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -14,7 +14,8 @@ should be represented via the \code{\link[base]{I}} function}
 
 \item{qdata}{a data frame with quantized exposures}
 
-\item{q}{integer, number of quantiles used in creating quantized variables}
+\item{intvals}{integer, the number of integer values that the joint exposure 
+is 'set' to for estimating the msm. For quantile g-computation, this is just}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
 the exposures of interest (main terms only!)}
@@ -49,8 +50,9 @@ change in the expected outcome given a joint intervention on all exposures.
 set.seed(50)
 dat <- data.frame(y=runif(200), x1=runif(200), x2=runif(200), z=runif(200))
 X <- c('x1', 'x2')
-qdat <- quantize(dat, X, q=4)
-mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2), expnms = c('x1', 'x2'), qdata=qdat, q=4)
+qdat <- quantize(dat, X, q=4)$data
+mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2), 
+        expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4)
 summary(mod$fit) # outcome regression model
 summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
 }

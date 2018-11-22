@@ -5,7 +5,8 @@
 \title{estimation of quantile g-computation fit (continuous outcome)
  or conditional quantile odds ratio (binary outcome)}
 \usage{
-qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
+qgcomp.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
+  alpha = 0.05, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -14,8 +15,15 @@ qgcomp.noboot(f, data, expnms = NULL, q = 4, alpha = 0.05, ...)
 
 \item{expnms}{character vector of exposures of interest}
 
-\item{q}{number of quantiles used to create quantile indicator variables
-representing the exposure variables}
+\item{q}{NULL or number of quantiles used to create quantile indicator variables
+representing the exposure variables. If NULL, then gcomp proceeds with untrasformed
+version of exposures in the input datasets (useful if data are already transformed,
+or for performing standard g-computation)}
+
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
+characterize the minimum value of each category for which to 
+break up the variables named in expnms. This is an alternative to using 'q'
+to define cutpoints.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 

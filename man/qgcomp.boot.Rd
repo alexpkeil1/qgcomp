@@ -4,8 +4,8 @@
 \alias{qgcomp.boot}
 \title{estimation of quantile g-computation fit, using bootstrap confidence intervals}
 \usage{
-qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 200,
-  rr = TRUE, ...)
+qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
+  alpha = 0.05, B = 200, rr = TRUE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -14,14 +14,22 @@ qgcomp.boot(f, data, expnms = NULL, q = 4, alpha = 0.05, B = 200,
 
 \item{expnms}{character vector of exposures of interest}
 
-\item{q}{number of quantiles used to create quantile indicator variables
-representing the exposure variables}
+\item{q}{NULL or number of quantiles used to create quantile indicator variables
+representing the exposure variables. If NULL, then gcomp proceeds with untrasformed
+version of exposures in the input datasets (useful if data are already transformed,
+or for performing standard g-computation)}
+
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
+characterize the minimum value of each category for which to 
+break up the variables named in expnms. This is an alternative to using 'q'
+to define cutpoints.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
 \item{B}{integer: number of bootstrap iterations}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will estimate risk ratio rather than odds ratio}
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
+estimate risk ratio rather than odds ratio}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -33,7 +41,8 @@ a qgcompfit object, which contains information about the effect
  estimates.
 }
 \description{
-This function yields population average effect estimates for both continuous and binary outcomes
+This function yields population average effect estimates for 
+  both continuous and binary outcomes
 }
 \details{
 Estimates correspond to the average expected change in the
@@ -41,7 +50,9 @@ Estimates correspond to the average expected change in the
  in `expnms'. Test statistics and confidence intervals are based on 
  a non-parametric bootstrap, using the standard deviation of the bootstrap
  estimates to estimate the standard error. The bootstrap standard error is 
- then used to estimate Wald-type confidence intervals.
+ then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+ is done on estimated quantiles of exposure, so these are treated as fixed
+ quantities
 }
 \examples{
 set.seed(30)
@@ -49,15 +60,19 @@ set.seed(30)
 dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 #Conditional linear slope
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
-#Marginal linear slope (population average slope, for a purely linear, additive model this will equal the conditional)
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian(), B=10) #increase B to at least 200 in actual examples
+# Marginal linear slope (population average slope, for a purely linear, 
+#  additive model this will equal the conditional)
+qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+family=gaussian(), B=10) #increase B to at least 200 in actual examples
 #Population average mixture slope which accounts for non-linearity and interactions
-qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
+qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
+ expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
 # binary outcome
 dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 #Conditional mixture OR
 qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2)
-#Marginal mixture OR (population average OR - in general, this will not equal the conditional mixture OR due to non-collapsibility of the OR)
+#Marginal mixture OR (population average OR - in general, this will not equal the 
+# conditional mixture OR due to non-collapsibility of the OR)
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, B=10)
 #Population average mixture RR
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)

@@ -5,7 +5,7 @@
 \title{create variables representing indicator functions with cutpoints defined
 by quantiles}
 \usage{
-quantize(data, expnms, q)
+quantize(data, expnms, q = 4, breaks = NULL)
 }
 \arguments{
 \item{data}{a data frame}
@@ -14,20 +14,25 @@ quantize(data, expnms, q)
 quantized}
 
 \item{q}{integer, number of quantiles used in creating quantized variables}
+
+\item{breaks}{(optional) list of (equal length) numeric vectors that 
+characterize the minimum value of each category for which to 
+break up the variables named in expnms. This is an alternative to using 'q'
+to define cutpoints.}
 }
 \description{
 create variables representing indicator functions with cutpoints defined
 by quantiles
 }
 \details{
-This function vectorized version of `quantile_f` from the `gWQS` package
+This function is a vectorized version of `quantile_f` from the `gWQS` package that also allows the use of externally defined breaks
 }
 \examples{
 set.seed(1232)
 dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
 qdata = quantize(data=dat, expnms=c("x1", "x2"), q=4)
-table(qdata$x1)
-table(qdata$x2)
+table(qdata$data$x1)
+table(qdata$data$x2)
 summary(dat[c('y', 'z')]);summary(qdata[c('y', 'z')]) # not touched
 }
 \keyword{mixtures}
