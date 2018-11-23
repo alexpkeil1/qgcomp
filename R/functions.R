@@ -296,7 +296,14 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, B=10)
   #' #Population average mixture RR
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)
-    # character names of exposure mixture components
+  #' #Population average mixture RR, indicator variable representation of x2
+  #' # note that I(x==...) operates on the quantile-based category of x,
+  #' # rather than the raw value
+  #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
+  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
+  #' res$fit  
+  #' plot(res)
+      # character names of exposure mixture components
     if (is.null(expnms)) {
       cat("Including all model terms as exposures of interest")
       expnms <- attr(terms(f, data = data), "term.labels")
@@ -564,7 +571,7 @@ plot.qgcompfit <- function(x, ...){
                             data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),data=data.frame(y=x$y.expected, x=x$index), 
-                          method = 'gam', formula=y~s(x, k=4,fx=TRUE)) + 
+                          method = 'gam', formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      scale_fill_discrete(name="") + 

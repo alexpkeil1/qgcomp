@@ -76,6 +76,13 @@ qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=d
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, B=10)
 #Population average mixture RR
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)
+#Population average mixture RR, indicator variable representation of x2
+# note that I(x==...) operates on the quantile-based category of x,
+# rather than the raw value
+res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
+  family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
+res$fit  
+plot(res)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
