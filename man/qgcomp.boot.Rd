@@ -62,7 +62,7 @@ dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 # Marginal linear slope (population average slope, for a purely linear, 
 #  additive model this will equal the conditional)
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
 family=gaussian(), B=10) #increase B to at least 200 in actual examples
 #Population average mixture slope which accounts for non-linearity and interactions
 qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 

@@ -282,7 +282,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear, 
   #' #  additive model this will equal the conditional)
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
   #' family=gaussian(), B=10) #increase B to at least 200 in actual examples
   #' #Population average mixture slope which accounts for non-linearity and interactions
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
@@ -316,11 +316,11 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
     estb <- msmfit$msmfit$coefficients['gamma']
     #bootstrap to get std. error
     nobs = dim(qdata)[1]
-    gamma.only <- function(i=1, f=f, qdata=qdata, q=q, expnms=expnms, rr=rr, nobs=nobs, ...){
+    gamma.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, nobs=nobs, ...){
       set.seed(i)
-      msm.fit(f, qdata[sample(1:nobs, nobs, replace = TRUE),], q, expnms, rr, ...)$msmfit$coefficients['gamma']
+      msm.fit(f, qdata=qdata[sample(1:nobs, nobs, replace = TRUE),], intvals, expnms, rr, ...)$msmfit$coefficients['gamma']
     }
-    bootsamps = sapply(X=1:B, FUN=gamma.only,f=f, qdata=qdata, q=q, expnms=expnms, nobs=nobs)
+    bootsamps = sapply(X=1:B, FUN=gamma.only,f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, nobs=nobs)
     seb <- sd(bootsamps)
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 2 # df based on obs - gcomp terms - msm terms
@@ -582,7 +582,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
   #' in a new set of data based on teh qgcomfit object. Note that when making predictions
   #' from an object from qgcomp.boot, the predictions are made from the g-computation
   #' model rather than the marginal structural model. Predictions from the marginal
-  #' structural model can be obtained via \code{\link[qgcomp]{msmpredict}}
+  #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}
   #' 
   #' @param object "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param expnms character vector of exposures of interest
@@ -612,7 +612,6 @@ msm.predict <- function(object, newdata=NULL){
   #' \code{\link[qgcomp]{qgcomp.boot}}
   #' 
   #' @param object "qgcompfit" object from `qgcomp.boot` function
-  #' @param expnms character vector of exposures of interest
   #' @param newdata (optional) new set of data (data frame) with a variable 
   #' called `gamma` representing the joint exposure level of all exposures
   #' under consideration

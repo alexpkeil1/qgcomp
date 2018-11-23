@@ -18,8 +18,6 @@ obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, 
 dat2 <- data.frame(gamma=seq(1,4, by=0.1))
 summary(msm.predict(obj))
 summary(msm.predict(obj, newdata=dat2))}
-
-\item{expnms}{character vector of exposures of interest}
 }
 \description{
 get predicted values from a qgcompfit object from
