@@ -114,6 +114,39 @@ wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4,
 ```
 Note the following: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction). In contrast, the lower tail of the `gcompmod2` is based on predicted risk at low joint exposures across all individuals. The two smoothed lines should not, in general, be expected to overlap. The `gcompmod2` plot reflects how population average outcomes are expected to change with joint exposure changes (on the quantile basis), whereas the `qwqs` reflects how average outcomes might change with a change to the exposure index, which is constrained in one direction of effect.
 
+Let's close with one more feature of qgcomp: handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function
+
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+
+gcompmod3 <- qgcomp(y~sex+
+                           I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
+                           log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
+                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
+                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD03LA+log_LBXD04LA+
+                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
+                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+                         expnms=Xnm,
+                         wqs_data, family=gaussian(), q=4, B=100)
+plot(gcompmod3)
+```
+
+Note that allowing for a non-linear effect of log_LBXD02LA induces an apparent non-linear trend in the overall exposure effect. The smoothed regression line is still well within the prediction intervals of the marginal linear model (by default, the overall effect of joint exposure is assumed linear, though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, as follows.
+
+
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+
+gcompmod4 <- qgcomp(y~sex+
+                           I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
+                           log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
+                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
+                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD03LA+log_LBXD04LA+
+                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
+                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+                         expnms=Xnm,
+                         wqs_data, family=gaussian(), q=4, B=100, degree=2)
+plot(gcompmod4)
+```
+
 ## References
 
 

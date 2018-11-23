@@ -5,7 +5,7 @@
 \title{estimation of quantile g-computation fit, using bootstrap confidence intervals}
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  alpha = 0.05, B = 200, rr = TRUE, ...)
+  alpha = 0.05, B = 200, rr = TRUE, degree = 1, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -30,6 +30,10 @@ to define cutpoints.}
 
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio}
+
+\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+allows that the relationship between the whole exposure mixture and the outcome
+is quadratic.}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -83,6 +87,12 @@ res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
 res$fit  
 plot(res)
+# now add in a non-linear MSM
+res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
+  family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10, 
+  degree=2)
+res2$fit  
+plot(res2)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}

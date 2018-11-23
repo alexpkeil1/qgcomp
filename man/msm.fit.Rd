@@ -5,7 +5,8 @@
 \title{fitting marginal structural model (MSM) based on g-computation with
 quantized exposures}
 \usage{
-msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE, ...)
+msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
+  degree = 1, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -24,6 +25,10 @@ the exposures of interest (main terms only!)}
 
 \item{main}{logical, internal use: produce estimates of exposure effect (gamma)
 and expected outcomes under g-computation and the MSM}
+
+\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+allows that the relationship between the whole exposure mixture and the outcome
+is quadratic. Default=1)}
 
 \item{...}{arguments to glm (e.g. family)}
 }

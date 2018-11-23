@@ -55,7 +55,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 }
 
 
-msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, ...){
+msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
   #' quantized exposures
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp}},
@@ -85,6 +85,9 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, ...){
   #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (gamma)
   #'  and expected outcomes under g-computation and the MSM
+  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #'  allows that the relationship between the whole exposure mixture and the outcome
+  #'  is quadratic. Default=1)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @keywords variance, mixtures
@@ -119,8 +122,8 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, ...){
       Ya = unlist(predmat),
       gamma = rep(intvals, each=nobs))
     # to do: allow functional form variations for the MSM via specifying the model formula
-    if(!rr) suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat,...))
-    if(rr)  suppressWarnings(msmfit <- glm(Ya ~ gamma, data=msmdat, family=binomial(link='log')))
+    if(!rr) suppressWarnings(msmfit <- glm(Ya ~ poly(gamma, degree=degree, raw=TRUE), data=msmdat,...))
+    if(rr)  suppressWarnings(msmfit <- glm(Ya ~ poly(gamma, degree=degree, raw=TRUE), data=msmdat, family=binomial(link='log')))
     res = list(fit=fit, msmfit=msmfit)
     if(main) {
       res$Ya = msmdat$Ya   # expected outcome under joint exposure, by gcomp
@@ -211,7 +214,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
     names(qx) <- paste0(names(qx), "_q")
     res <- list(
       qx = qx, fit = fit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
-      expnms=expnms, q=q, breaks=br,
+      expnms=expnms, q=q, breaks=br, degree=1,
       pos.gamma = pos.gamma, var.pos.gamma = se.pos.gamma^2,
       neg.gamma = neg.gamma, var.neg.gamma = se.neg.gamma^2,
                 pweights = sort(pweights, decreasing = TRUE),
@@ -234,7 +237,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
 }
 
 
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=200, rr=TRUE, ...){
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
   #' @description This function yields population average effect estimates for 
@@ -264,6 +267,9 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' @param B integer: number of bootstrap iterations
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
   #'   estimate risk ratio rather than odds ratio
+  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #'  allows that the relationship between the whole exposure mixture and the outcome
+  #'  is quadratic.
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
@@ -303,6 +309,12 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
   #' res$fit  
   #' plot(res)
+  #' # now add in a non-linear MSM
+  #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
+  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10, 
+  #'   degree=2)
+  #' res2$fit  
+  #' plot(res2)
       # character names of exposure mixture components
     if (is.null(expnms)) {
       cat("Including all model terms as exposures of interest")
@@ -318,28 +330,32 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       intvals=NULL
     }
     ###
-    msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE, ...)
+    msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, ...)
     # main estimate  
-    estb <- msmfit$msmfit$coefficients['gamma']
+    estb <- as.numeric(msmfit$msmfit$coefficients[-1])
     #bootstrap to get std. error
     nobs = dim(qdata)[1]
-    gamma.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, nobs=nobs, ...){
+    gamma.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nobs=nobs, ...){
       set.seed(i)
-      msm.fit(f, qdata=qdata[sample(1:nobs, nobs, replace = TRUE),], intvals, expnms, rr, ...)$msmfit$coefficients['gamma']
+      as.numeric(
+        msm.fit(f, qdata=qdata[sample(1:nobs, nobs, replace = TRUE),], 
+                intvals, expnms, rr, degree=degree, ...)$msmfit$coefficients[-1])
     }
-    bootsamps = sapply(X=1:B, FUN=gamma.only,f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, nobs=nobs)
-    seb <- sd(bootsamps)
+    bootsamps = sapply(X=1:B, FUN=gamma.only,f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nobs=nobs)
+    if(is.null(dim(bootsamps))) {
+      seb <- sd(bootsamps)
+    }else seb <- apply(bootsamps, 1, sd)
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 2 # df based on obs - gcomp terms - msm terms
     pval <- 2 - 2 * pt(abs(tstat), df = df)
     pvalz <- 2 - 2 * pnorm(abs(tstat))
-    ci <- c(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
+    ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
     # 'weights' not applicable in this setting, generally (i.e. if using this function for non-linearity, 
     #   then weights will vary with level of exposure)
     qx <- qdata[, expnms]
     res <- list(
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
-      expnms=expnms, q=q, breaks=br,
+      expnms=expnms, q=q, breaks=br, degree=degree,
       pos.gamma = NULL, var.pos.gamma = NULL,neg.gamma = NULL, var.neg.gamma = NULL,
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
       y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A
@@ -553,7 +569,7 @@ plot.qgcompfit <- function(x, ...){
   if(x$bootstrap){
    # default plot for bootstrap results (no weights obtained)
    p <- ggplot() 
-     if(x$msmfit$family$family=='gaussian'){
+     if(x$msmfit$family$family=='gaussian' & x$degree==1){
        #prediction interval (large sample estimator under normal assumption)
        resvar = summary(x$fit)$dispersion
        gammavar = x$var.gamma
@@ -562,7 +578,7 @@ plot.qgcompfit <- function(x, ...){
        p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"),
                             data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
-     if(x$msmfit$family$family=='binomial'){
+     if(x$msmfit$family$family=='binomial' & x$degree==1){
        resvar = x$y.expected*(1-x$y.expected)
        gammavar = x$var.gamma
        yup = x$y.expectedmsm + qnorm(.975)*sqrt(resvar+gammavar)
