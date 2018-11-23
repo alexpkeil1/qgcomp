@@ -94,7 +94,7 @@
                               log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
                               log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
                               log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
-                              dat=wqs_data, expnms = Xnm, family=binomial(), rr=TRUE, B=200)
+                              dat=wqs_data, expnms = Xnm, family=binomial(), rr=TRUE, B=200, seed=125)
     print(results4)
     
     > Mixture log(RR) (bootstrap CI):
@@ -107,7 +107,8 @@
 
 ### Allowing for interactions and non-linear terms using qgcomp.boot
 
-    results5 = qgcomp.boot(y~ sex + I(log_LBX170LA*log_LBX170LA)+ I(log_LBX170LA*log_LBXD02LA) +
+    results5 = qgcomp.boot(y~ sex + I(log_LBX170LA==1) + I(log_LBX170LA==2) + I(log_LBX170LA==3)+ 
+                              I(log_LBX170LA*log_LBXD02LA) +
                               log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
                               log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
                               log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
@@ -116,9 +117,14 @@
                               log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
                               log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
                             dat=wqs_data[,c(Xnm, 'y', 'sex')], 
-                            expnms = Xnm, family=gaussian())
+                            expnms = Xnm, family=gaussian(), B=200, seed=125, degree=2)
+
     print(results5)
     
-    # not much difference from original estimate of 1.49 (1.29,1.69)
-    > Mixture slope (bootstrap CI):
-    > gamma (CI): 1.52 (1.19,1.85), t=9.03, df=461, p=0
+    > Mixture slope parameters (bootstrap CI):
+    > gamma (CI): 1.23 (0.449,-0.0998), t=3.09, df=458, p=0.00216
+    > gamma (CI): 0.056 (0.449,-0.0998), t=0.705, df=458, p=0.481
+
+    # not much apparent non-linearity
+    plot(results5)
+![Results 5](fig/res5.png)

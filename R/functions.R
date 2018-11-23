@@ -265,7 +265,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
   #' @param alpha alpha level for confidence limit calculation
-  #' @param B integer: number of bootstrap iterations
+  #' @param B integer: number of bootstrap iterations (this should typically be
+  #' >=200, though it is set lower in examples to improve run-time).
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
   #'   estimate risk ratio rather than odds ratio
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
@@ -349,7 +350,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       seb <- sd(bootsamps)
     }else seb <- apply(bootsamps, 1, sd)
     tstat <- estb / seb
-    df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 2 # df based on obs - gcomp terms - msm terms
+    df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
     pval <- 2 - 2 * pt(abs(tstat), df = df)
     pvalz <- 2 - 2 * pnorm(abs(tstat))
     ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
@@ -476,7 +477,7 @@ print.qgcompfit <- function(x, ...){
              signif(x$pval, 3), "\n"))
   }
   if (fam == "gaussian"){
-    cat(paste0("Mixture slope", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
+    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
     cat(paste0("gamma (CI): ", signif(x$gamma, 3), " (",
              signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), t=",
              signif(x$tstat, 3), ", df=", x$df, ", p=",
@@ -582,6 +583,7 @@ plot.qgcompfit <- function(x, ...){
                             data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
      if(x$msmfit$family$family=='binomial' & x$degree==1){
+       y = x$y.expectedmsm
        p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index)) 
      }

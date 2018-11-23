@@ -26,7 +26,8 @@ to define cutpoints.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{B}{integer: number of bootstrap iterations}
+\item{B}{integer: number of bootstrap iterations (this should typically be
+>=200, though it is set lower in examples to improve run-time).}
 
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio}
