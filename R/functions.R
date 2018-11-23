@@ -271,6 +271,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic.
+  #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
@@ -317,7 +318,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' res2$fit  
   #' plot(res2)
       # character names of exposure mixture components
-    if(is.null(seed)) seed = round(runif(1, min=0, max=1e16))
+    if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
     if (is.null(expnms)) {
       cat("Including all model terms as exposures of interest")
       expnms <- attr(terms(f, data = data), "term.labels")
@@ -407,13 +408,13 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will 
   #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100, family=binomial())
+  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, family=binomial())
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
@@ -446,7 +447,7 @@ print.qgcompfit <- function(x, ...){
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' # does not need to be explicitly called, but included here for clarity
   #' print(obj1)
   #' print(obj2)
@@ -617,7 +618,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=100)
+  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' set.seed(52)
   #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' summary(predict(obj1, expnms = c('x1', 'x2'), newdata=dat2))
@@ -644,7 +645,7 @@ msm.predict <- function(object, newdata=NULL){
   #' under consideration
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=100)
+  #' obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
   #' dat2 <- data.frame(gamma=seq(1,4, by=0.1))
   #' summary(msm.predict(obj))
   #' summary(msm.predict(obj, newdata=dat2))

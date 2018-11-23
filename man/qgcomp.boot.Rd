@@ -35,6 +35,8 @@ estimate risk ratio rather than odds ratio}
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic.}
 
+\item{seed}{integer or NULL: random number seed for replicable bootstrap results}
+
 \item{...}{arguments to glm (e.g. family)}
 }
 \value{
