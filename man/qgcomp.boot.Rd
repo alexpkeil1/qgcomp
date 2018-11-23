@@ -5,7 +5,7 @@
 \title{estimation of quantile g-computation fit, using bootstrap confidence intervals}
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  alpha = 0.05, B = 200, rr = TRUE, degree = 1, ...)
+  alpha = 0.05, B = 200, rr = TRUE, degree = 1, seed = NULL, ...)
 }
 \arguments{
 \item{f}{R style formula}

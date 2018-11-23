@@ -51,8 +51,8 @@ results <- qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian())
 # Compare a qgcomp.noboot fit:
 gcompmod <- qgcomp.noboot(disease_state~., expnms=Xnm, data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), q=4)
 
-# and a qgcomp.boot fit:
-gcompmod2 <- qgcomp.boot(disease_state~., expnms=Xnm, data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), q=4, B=200)
+# and a qgcomp.boot fit (B should be 200+, in practice):
+gcompmod2 <- qgcomp.boot(disease_state~., expnms=Xnm, data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), q=4, B=10, seed=125)
 
 
 # with a gwqs fit:
@@ -89,7 +89,7 @@ gcompmod2 <- qgcomp.boot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=200)
+                         wqs_data, family=gaussian(), q=4, B=20, seed=125)
 wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
      validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=FALSE)
      
@@ -105,16 +105,17 @@ plot(gcompmod)
 plot(gcompmod2)
 ```
 
-Compare with the `gwqs` output plots, which allows effects only in a single direction
+Compare with the `gwqs` output plots, which allows effects only in a single direction (the 'directional homogeneity' assumption)
 
 ```{r, echo=F, results='markup', message=FALSE, fig.height=7, fig.width=6}
 wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
      validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=TRUE)
 
 ```
-Note the following: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction). In contrast, the lower tail of the `gcompmod2` is based on predicted risk at low joint exposures across all individuals. The two smoothed lines should not, in general, be expected to overlap. The `gcompmod2` plot reflects how population average outcomes are expected to change with joint exposure changes (on the quantile basis), whereas the `qwqs` reflects how average outcomes might change with a change to the exposure index, which is constrained in one direction of effect.
 
-Let's close with one more feature of qgcomp: handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function
+There is a key difference between the plotted output from `gwqs` and the `qgcomp` functions: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at observed levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction), but are nonetheless influential in the behavior of the smoothing function at low exposures. In contrast, the lower tail of the `gcompmod2` is based on predicted risk  across all individuals *had they, in fact experienced low joint exposures*. The two smoothed lines should not, in general, be expected to overlap at the tails but may have similar trends.
+
+Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function by including the code `I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3)` in the formula.
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
 
@@ -126,7 +127,7 @@ gcompmod3 <- qgcomp(y~sex+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=100)
+                         wqs_data, family=gaussian(), q=4, B=20, seed=125)
 plot(gcompmod3)
 ```
 
@@ -142,9 +143,10 @@ gcompmod4 <- qgcomp(y~sex+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=100, degree=2)
+                         wqs_data, family=gaussian(), q=4, B=20, degree=2, seed=125)
 plot(gcompmod4)
 ```
+
 Note the prediction interval has been replaced by actual model predictions. Ideally, the smooth fit will look very similar to the model prediction regression line.
 
 ## References

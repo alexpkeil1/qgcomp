@@ -32,8 +32,9 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' qdata = quantize(data=dat, expnms=c("x1", "x2"), q=4)
   #' table(qdata$data$x1)
   #' table(qdata$data$x2)
-  #' summary(dat[c('y', 'z')]);summary(qdata[c('y', 'z')]) # not touched
-    retbr = list()
+  #' summary(dat[c('y', 'z')]);summary(qdata$data[c('y', 'z')]) # not touched
+    e = new.env()
+    e$retbr = list()
     qt <- function(i){
       # not exported
         datmat <- as.numeric(unlist(data[, expnms[i]]))
@@ -41,17 +42,17 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
           br = unique(quantile(datmat, probs = seq(0, 1, by = 1 / q), na.rm = TRUE))
           br[1] = -1e64
           br[length(br)] = 1e64
-          retbr[[i]] <<- br # todo: refactor to avoid <<-
+          e$retbr[[i]] <- br # todo: refactor to avoid <<-
         } else{
           # can supply breaks as a list
           br  <- breaks[[i]]
-          retbr[[i]] <<- breaks[[i]] # todo: refactor to avoid <<-
+          e$retbr[[i]] <<- breaks[[i]] # todo: refactor to avoid <<-
         }
         cut(datmat, breaks = br, labels = FALSE,
              include.lowest = TRUE) - 1
     }
     data[, expnms] = sapply(1:length(expnms), qt)
-    return(list(data=data, breaks=retbr))
+    return(list(data=data, breaks=e$retbr))
 }
 
 
@@ -237,7 +238,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
 }
 
 
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, ...){
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
   #' @description This function yields population average effect estimates for 
@@ -316,6 +317,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' res2$fit  
   #' plot(res2)
       # character names of exposure mixture components
+    if(is.null(seed)) seed = round(runif(1, min=0, max=1e16))
     if (is.null(expnms)) {
       cat("Including all model terms as exposures of interest")
       expnms <- attr(terms(f, data = data), "term.labels")
@@ -336,7 +338,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
     #bootstrap to get std. error
     nobs = dim(qdata)[1]
     gamma.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nobs=nobs, ...){
-      set.seed(i)
+      set.seed(i+seed)
       as.numeric(
         msm.fit(f, qdata=qdata[sample(1:nobs, nobs, replace = TRUE),], 
                 intvals, expnms, rr, degree=degree, ...)$msmfit$coefficients[-1])
@@ -579,12 +581,8 @@ plot.qgcompfit <- function(x, ...){
                             data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
      if(x$msmfit$family$family=='binomial' & x$degree==1){
-       resvar = x$y.expected*(1-x$y.expected)
-       gammavar = x$var.gamma
-       yup = x$y.expectedmsm + qnorm(.975)*sqrt(resvar+gammavar)
-       ydo = x$y.expectedmsm + qnorm(.025)*sqrt(resvar+gammavar)
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"), 
-                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
+       p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
+                            data=data.frame(y=y, x=x$index)) 
      }
      if(x$degree>1){
        #prediction interval (large sample estimator under normal assumption)

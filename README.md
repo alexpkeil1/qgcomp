@@ -2,8 +2,8 @@
 
 ### Quick start
 
-    install.packages("devtools")
-    devtools::install_github("alexpkeil1/qgcomp", build_opts = c("--no-resave-data", "--no-manual", "--build-vignettes")
+    #install.packages("devtools") # if devtools package not already installed, uncomment this line
+    devtools::install_github("alexpkeil1/qgcomp", build_opts = c("--no-resave-data", "--no-manual", "--build-vignettes"))
     library("qgcomp")
     data("wqs_data", package="gWQS")
     
