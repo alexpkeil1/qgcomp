@@ -1,125 +1,181 @@
 ---
-title: "How to use qgcomp package"
+title: "The qgcomp package: g-computation on exposure quantiles"
 author: "Alexander Keil"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{How to use qgcomp package}
+  %\VignetteIndexEntry{The qgcomp package: g-computation on exposure quantiles}
   %\VignetteEngine{knitr::knitr}
   \usepackage[utf8]{inputenc}
 ---
 
 ## Introduction
+`qgcomp` is a package to implement g-computation for analyzing the effects of exposure
+mixtures. The implementation in `qgcomp` is based on a generalization of weighted
+quantile sums (WQS) regression, which estimates the expected change in an outcome
+under a hypothetical intervention to increase all exposures in the mixture by
+one quantile. In the case in which all exposures have linear, additive effects 
+on the quantile scale (i.e. after transforming all exposures into categorical
+variables defined by quantiles) `qgcomp` and WQS regression
+are asymptotically equivalent in the case in which all variables have effects in
+the same direction (the 'directional homogeneity' assumption of WQS). In moderate
+samples when underlying assumptions are not met exactly, 
+WQS will tend to yield more biased effect estimates due to the assumption
+of directional homogeneity, and may also have lower precision due to the use
+of sample splitting. In cases in which the assumptions
+underlying WQS are met,`qgcomp` provides valid estimates of WQS 'weights',
+which estimate the relative contribution of each exposure to the overall 
+mixture effect. Thus, `qgcomp` will provide valid effect estimates of
+the entire exposure mixture in general cases, while also allowing deviations
+from linearity and additivity assumptions. 
 
 ## How to use the `qgcomp` package
+Here we use a running example from `wqs_data` dataset from the from the package 
+`gQWS` to demonstrate some similarities and differences between the two approaches. 
 
-### Example 1
-
-Here are some observations from  `wqs_data` dataset from the from the package `gQWS`. 
 These data will be used as an ongoing example to demonstrate features of the
 `qgcomp` package. Parallel examples can be seen in the `gQWS` help files.
 
-```{r, echo=FALSE, results='markup', message=FALSE}
+```{r, echo=TRUE, results='markup', message=FALSE}
 library(gWQS)
 library(qgcomp)
 library(knitr)
+data("wqs_data", package="gWQS")
 head(wqs_data[, c(37, 36, 35, 1:34)], 10)
 ```
 
-qgcomp with a continuous outcome:
-This script calls a qgcomp model for a continuous outcome using the function `qgcomp.noboot`.
-Compare with call to `gqws` from the package `gQWS`.
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+### Example 1: linear model
 
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 # we save the names of the mixture variables in the variable "Xnm"
-data("wqs_data", package="gWQS")
-
-Xnm <- c("log_LBX074LA", "log_LBX099LA", "log_LBX105LA", "log_LBX118LA",
-"log_LBX138LA", "log_LBX153LA", "log_LBX156LA", "log_LBX157LA", "log_LBX167LA",
-"log_LBX170LA", "log_LBX180LA", "log_LBX187LA", "log_LBX189LA", "log_LBX194LA",
-"log_LBX196LA", "log_LBX199LA", "log_LBXD01LA", "log_LBXD02LA", "log_LBXD03LA",
-"log_LBXD04LA", "log_LBXD05LA", "log_LBXD07LA", "log_LBXF01LA", "log_LBXF02LA",
-"log_LBXF03LA", "log_LBXF04LA", "log_LBXF05LA", "log_LBXF06LA", "log_LBXF07LA",
-"log_LBXF08LA", "log_LBXF09LA", "log_LBXPCBLA", "log_LBXTCDLA", "log_LBXHXCLA")
-
-
-# Run the model and save the results in the variable "results"
-results <- qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian())
+Xnm <- c(
+   "log_LBX074LA", "log_LBX099LA", "log_LBX105LA", "log_LBX118LA",
+   "log_LBX138LA", "log_LBX153LA", "log_LBX156LA", "log_LBX157LA", "log_LBX167LA",
+   "log_LBX170LA", "log_LBX180LA", "log_LBX187LA", "log_LBX189LA", "log_LBX194LA",
+   "log_LBX196LA", "log_LBX199LA", "log_LBXD01LA", "log_LBXD02LA", "log_LBXD03LA",
+   "log_LBXD04LA", "log_LBXD05LA", "log_LBXD07LA", "log_LBXF01LA", "log_LBXF02LA",
+   "log_LBXF03LA", "log_LBXF04LA", "log_LBXF05LA", "log_LBXF06LA", "log_LBXF07LA",
+   "log_LBXF08LA", "log_LBXF09LA", "log_LBXPCBLA", "log_LBXTCDLA", "log_LBXHXCLA"
+)
 
 
-# Compare a qgcomp.noboot fit:
-gcompmod <- qgcomp.noboot(disease_state~., expnms=Xnm, data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), q=4)
+# Example 1: linear model
+# Run the model and save the results "qgcomp_fit"
+system.time(qgcomp_fit <- qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian()))
 
-# and a qgcomp.boot fit (B should be 200+, in practice):
-gcompmod2 <- qgcomp.boot(disease_state~., expnms=Xnm, data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), q=4, B=10, seed=125)
+# Compare with weighted quantile sums fit
+system.time(suppressWarnings(wqs_fit <- gwqs(y ~ 1, mix_name = Xnm, data = wqs_data, 
+                                 q = 4, validation = 0.6, b = 3, b1_pos = T, 
+                                 b1_constr = F, family='gaussian', seed=125)))
 
+#first note that qgcomp is much faster to run
 
-# with a gwqs fit:
-suppressWarnings(wqsmod <- gwqs(disease_state ~ 1, mix_name = Xnm, data = wqs_data, q = 4, validation = 0.6, b = 3, b1_pos = F, b1_constr = F, family='binomial', seed=125))
-     
+# Compare results: standardized coefficients/weights and statistical inference about
+# mixture effect
+qgcomp_fit
 
-# WQS fit (with reduced number of bootstraps to save time)
-wqsmod$final_weights
-wqsmod$fit
-# conditional OR fit, similar to WQS
-gcompmod
-# population average RR with bootstrap confidence intervals
-gcompmod2
-
-
+#qwqs requires more than 3 bootstrap iterations to get accurate estimates
+# of the weights, a step which is omitted here (weights will be much more similar
+# between the methods in that case).
+wqs_fit$final_weights
+summary(wqs_fit$fit)
 ```
 
-### Example 2
+Note that the weights from `gwqs` are fairly similar to those from `qgcomp.noboot`,
+though more bootstrap iterations should be run in practice. 
+This is a result of most of the exposure coefficients being on the same side of 
+the null (sum of positive coefficients = 1.91 vs. sum of negative coefficients = -0.419).
+Thus the directional homogeneity assumption does not seem unreasonable in this case,
+but note that `gwqs` yields estimates which are biased away from the null, relative
+to those from `qgcomp.noboot` (which are based on a linear model fit and thus
+are unbiased and efficient). The `qgcomp.noboot` estimate (95% confidence interval) 
+is 1.49 (1.29,1.69), whereas it is 1.59 (1.36, 1.82) for `gwqs` (when run with 100
+bootstrap iterations, which is advisable but takes several minutes compared with
+a 0.02 seconds for `qgcomp.noboot` and 4 seconds for `gwqs` with 3 iterations).
 
-In the following code we run an adjusted linear regression (`family = "gaussian"`)...
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
 
-gcompmod <- qgcomp.noboot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
+This example introduces the use of a binary outcome in `qgcomp` via the 
+`qgcomp.noboot` function, which yields a conditional odds ratio or the
+`qgcomp.boot`, which yields a marginal odds ratio or risk/prevalence ratio. These
+will not equal each other when there are non-exposure covariates (e.g. 
+confonders) included in the model because the odds ratio is not collapsible (both
+are still valid). Marginal parameters will yield estimates of the population
+average exposure effect, which is often of more interest due to better 
+interpretability over conditional odds ratios. Further, odds ratios are not
+generally of interest when risk ratios can be validly estimated, so `qgcomp.boot`
+will estimate the risk ratio by default for binary data.
+
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+
+qgcomp_fit2 <- qgcomp.noboot(disease_state~., expnms=Xnm, 
+          data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4)
+qgcompboot_fit2 <- qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10, seed=125, rr=FALSE)
+suppressWarnings(wqs_fit2 <- gwqs(disease_state ~ 1, mix_name = Xnm, 
+          data = wqs_data, q = 4, validation = 0.6, b = 3, 
+          b1_pos = F, b1_constr = F, family='binomial', 
+          seed=125))
+
+# Compare a qgcomp.noboot fit:
+qgcomp_fit2
+# and a qgcomp.boot fit:
+qgcompboot_fit2
+# with a gwqs fit:
+summary(wqs_fit2$fit)
+wqs_fit2$final_weights
+```
+
+
+
+### Example 3: adjusting for covariates, plotting estimates
+
+In the following code we run a sex-adjusted linear model with `qgcomp` and `gwqs` (`family = "gaussian"`).
+
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=6, cache=FALSE}
+
+qgcomp_fit3 <- qgcomp.noboot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
                            log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
                            log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD02LA+log_LBXD03LA+log_LBXD04LA+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
                          wqs_data, family=gaussian(), q=4)
-gcompmod2 <- qgcomp.boot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
+plot(qgcomp_fit3)
+qgcompboot_fit3 <- qgcomp.boot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
                            log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
                            log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD02LA+log_LBXD03LA+log_LBXD04LA+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=20, seed=125)
-wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
-     validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=FALSE)
+                         wqs_data, family=gaussian(), q=4, B=10, seed=125)
+plot(qgcompboot_fit3)
+wqs_fit3 <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
+     validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=TRUE)
      
 
 ```
 
 From the first plot we see weights from `qgcomp.noboot` function, which include both
 positive and negative effect directions. Using `qgcomp.boot` also allows us to assess
-linearity of the total exposure effect
+linearity of the total exposure effect. Contrast with the plots from `gwqs`, which
+yield weight estimates under the directional homogeneity assumption.
 
-```{r, results='markup', message=FALSE, fig.height=7, fig.width=6}
-plot(gcompmod)
-plot(gcompmod2)
-```
-
-Compare with the `gwqs` output plots, which allows effects only in a single direction (the 'directional homogeneity' assumption)
-
-```{r, echo=F, results='markup', message=FALSE, fig.height=7, fig.width=6}
-wqsmod <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
-     validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=TRUE)
-
-```
 
 There is a key difference between the plotted output from `gwqs` and the `qgcomp` functions: the plot for `gcompmod2` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the plot `gwqs` gives predictions at observed levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction), but are nonetheless influential in the behavior of the smoothing function at low exposures. In contrast, the lower tail of the `gcompmod2` is based on predicted risk  across all individuals *had they, in fact experienced low joint exposures*. The two smoothed lines should not, in general, be expected to overlap at the tails but may have similar trends.
 
-Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function by including the code `I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3)` in the formula.
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+### Example 4: non-linearity (and non-homogenity)
 
-gcompmod3 <- qgcomp(y~sex+
+Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function by including the code `I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3)` in the formula. Similar approaches could be used to include interaction terms between exposures, as well as between exposures and covariates. In contrast with prior examples we use the `qgcomp` function, which is a convenience function that will choose the best option from between `qgcomp.boot` and `qgcomp.noboot`.
+
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+
+qgcompboot_fit4 <- qgcomp(y~sex+
                            I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
                            log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
                            log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
@@ -127,15 +183,15 @@ gcompmod3 <- qgcomp(y~sex+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=20, seed=125)
-plot(gcompmod3)
+                         wqs_data, family=gaussian(), q=4, B=10, seed=125)
+plot(qgcompboot_fit4)
 ```
 
 Note that allowing for a non-linear effect of log_LBXD02LA induces an apparent non-linear trend in the overall exposure effect. The smoothed regression line is still well within the prediction intervals of the marginal linear model (by default, the overall effect of joint exposure is assumed linear, though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, as follows:
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 
-gcompmod4 <- qgcomp(y~sex+
+qgcompboot_fit5 <- qgcomp(y~sex+
                            I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
                            log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
                            log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
@@ -143,8 +199,8 @@ gcompmod4 <- qgcomp(y~sex+
                            log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
                            log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=20, degree=2, seed=125)
-plot(gcompmod4)
+                         wqs_data, family=gaussian(), q=4, B=10, degree=2, seed=125)
+plot(qgcompboot_fit5)
 ```
 
 Note the prediction interval has been replaced by actual model predictions. Ideally, the smooth fit will look very similar to the model prediction regression line.
