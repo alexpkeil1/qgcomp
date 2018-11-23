@@ -130,8 +130,7 @@ gcompmod3 <- qgcomp(y~sex+
 plot(gcompmod3)
 ```
 
-Note that allowing for a non-linear effect of log_LBXD02LA induces an apparent non-linear trend in the overall exposure effect. The smoothed regression line is still well within the prediction intervals of the marginal linear model (by default, the overall effect of joint exposure is assumed linear, though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, as follows.
-
+Note that allowing for a non-linear effect of log_LBXD02LA induces an apparent non-linear trend in the overall exposure effect. The smoothed regression line is still well within the prediction intervals of the marginal linear model (by default, the overall effect of joint exposure is assumed linear, though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, as follows:
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=TRUE}
 
@@ -146,6 +145,7 @@ gcompmod4 <- qgcomp(y~sex+
                          wqs_data, family=gaussian(), q=4, B=100, degree=2)
 plot(gcompmod4)
 ```
+Note the prediction interval has been replaced by actual model predictions. Ideally, the smooth fit will look very similar to the model prediction regression line.
 
 ## References
 

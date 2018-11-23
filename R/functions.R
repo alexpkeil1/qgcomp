@@ -586,6 +586,12 @@ plot.qgcompfit <- function(x, ...){
        p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"), 
                             data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
      }
+     if(x$degree>1){
+       #prediction interval (large sample estimator under normal assumption)
+       y = x$y.expectedmsm
+       p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
+                            data=data.frame(y=y, x=x$index)) 
+     }
      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),data=data.frame(y=x$y.expected, x=x$index), 
                           method = 'gam', formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
