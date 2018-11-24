@@ -21,11 +21,15 @@ break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 }
 \description{
-create variables representing indicator functions with cutpoints defined
-by quantiles
+This function creates categorical variables in place of the
+exposure variables named in 'expnms.' For example, a continuous exposure
+'x1' will be replaced in the output data by another 'x1' that takes on values
+0:(q-1), where, for example, the value 1 indicates that the original x1 value
+falls between the first and the second quantile.
 }
 \details{
-This function is a vectorized version of `quantile_f` from the `gWQS` package that also allows the use of externally defined breaks
+This function is a vectorized version of `quantile_f` from the `gWQS` 
+package that also allows the use of externally defined breaks
 }
 \examples{
 set.seed(1232)

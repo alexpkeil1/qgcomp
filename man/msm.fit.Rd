@@ -15,8 +15,9 @@ should be represented via the \code{\link[base]{I}} function}
 
 \item{qdata}{a data frame with quantized exposures}
 
-\item{intvals}{integer, the number of integer values that the joint exposure 
-is 'set' to for estimating the msm. For quantile g-computation, this is just}
+\item{intvals}{sequence, the sequence of integer values that the joint exposure 
+is 'set' to for estimating the msm. For quantile g-computation, this is just 
+0:(q-1), where q is the number of quantiles of exposure.}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
 the exposures of interest (main terms only!)}

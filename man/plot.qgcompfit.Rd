@@ -21,10 +21,18 @@ every exposure')
 }
 \examples{
 set.seed(12)
-dat <- data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
-ft <- qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),y=runif(100)+x1^2)
+ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 plot(ft)
-ft2 <- qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+
+# using non-linear outcome model
+ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+data=dat, q=4, B=10)
+plot(ft2)
+
+# using non-linear marginal structural model
+ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+data=dat, q=4, B=10, degree=2)
 plot(ft2)
 }
 \seealso{

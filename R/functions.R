@@ -14,7 +14,13 @@ se_comb <- function(expnms, covmat){
 quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' @title create variables representing indicator functions with cutpoints defined
   #' by quantiles
-  #' @details This function is a vectorized version of `quantile_f` from the `gWQS` package that also allows the use of externally defined breaks
+  #' @description This function creates categorical variables in place of the
+  #' exposure variables named in 'expnms.' For example, a continuous exposure
+  #' 'x1' will be replaced in the output data by another 'x1' that takes on values
+  #' 0:(q-1), where, for example, the value 1 indicates that the original x1 value
+  #' falls between the first and the second quantile.
+  #' @details This function is a vectorized version of `quantile_f` from the `gWQS` 
+  #' package that also allows the use of externally defined breaks
   #' @param data a data frame
   #' @param expnms a character vector with the names of  the columns to be
   #' quantized
@@ -80,9 +86,9 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
   #' @param qdata a data frame with quantized exposures
   #' @param expnms a character vector with the names of the columns in qdata that represent
   #' the exposures of interest (main terms only!)
-  #' @param intvals integer, the number of integer values that the joint exposure 
+  #' @param intvals sequence, the sequence of integer values that the joint exposure 
   #' is 'set' to for estimating the msm. For quantile g-computation, this is just 
-  #' 
+  #' 0:(q-1), where q is the number of quantiles of exposure.
   #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (gamma)
   #'  and expected outcomes under g-computation and the MSM
@@ -106,9 +112,9 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
     fit <- glm(f, data = qdata, ...)
     if(fit$family$family=="gaussian") rr=FALSE
     ### 
-    # get predictions (set exposure to 1,2,...,q)
+    # get predictions (set exposure to 0,1,...,q-1)
     if(is.null(intvals)){
-      intvals = 1 + (0:length(table(qdata[expnms[1]])))
+      intvals = (1:length(table(qdata[expnms[1]]))) - 1
     }
     predit <- function(idx){
       newdata <- qdata
@@ -129,7 +135,8 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
     if(main) {
       res$Ya = msmdat$Ya   # expected outcome under joint exposure, by gcomp
       res$Yamsm = predict(msmfit, type='response')
-      res$A =  msmdat$gamma # joint exposure (1 = all exposures set to first quantile)
+      res$A =  msmdat$gamma # joint exposure (0 = all exposures set category with 
+       # upper cut-point as first quantile)
     }
     res
 }
@@ -287,31 +294,41 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' set.seed(30)
   #' # continuous outcome
   #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
-  #' #Conditional linear slope
+  #' # Conditional linear slope
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear, 
   #' #  additive model this will equal the conditional)
   #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
-  #' family=gaussian(), B=10) #increase B to at least 200 in actual examples
-  #' #Population average mixture slope which accounts for non-linearity and interactions
+  #'   family=gaussian(), B=10) #increase B to at least 200 in actual examples
+  #'   
+  #' # Population average mixture slope which accounts for non-linearity and interactions
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
-  #'  expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
+  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=10)
+  #'  
   #' # binary outcome
   #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
-  #' #Conditional mixture OR
-  #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2)
+  #' 
+  #' # Conditional mixture OR
+  #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+  #'   data=dat, q=2)
+  #'   
   #' #Marginal mixture OR (population average OR - in general, this will not equal the 
   #' # conditional mixture OR due to non-collapsibility of the OR)
-  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, B=10)
-  #' #Population average mixture RR
-  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), data=dat, q=2, rr=TRUE, B=10)
-  #' #Population average mixture RR, indicator variable representation of x2
+  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+  #'   data=dat, q=2, B=10)
+  #'   
+  #' # Population average mixture RR
+  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+  #'   data=dat, q=2, rr=TRUE, B=10)
+  #'   
+  #' # Population average mixture RR, indicator variable representation of x2
   #' # note that I(x==...) operates on the quantile-based category of x,
   #' # rather than the raw value
   #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
   #' res$fit  
   #' plot(res)
+  #' 
   #' # now add in a non-linear MSM
   #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10, 
@@ -328,7 +345,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       ql <- quantize(data, expnms, q, breaks)
       qdata <- ql$data
       br <- ql$breaks
-      intvals = 1+(0:q)
+      intvals = (1:q)-1
     } else {
       qdata <- data
       intvals=NULL
@@ -358,7 +375,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
     #   then weights will vary with level of exposure)
     qx <- qdata[, expnms]
     res <- list(
-      qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, gamma = estb, var.gamma = seb ^ 2, ci = ci,
+      qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, gamma = estb, 
+      var.gamma = seb ^ 2, ci = ci,
       expnms=expnms, q=q, breaks=br, degree=degree,
       pos.gamma = NULL, var.pos.gamma = NULL,neg.gamma = NULL, var.neg.gamma = NULL,
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
@@ -503,10 +521,18 @@ plot.qgcompfit <- function(x, ...){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' dat <- data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
-  #' ft <- qgcomp.noboot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+  #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),y=runif(100)+x1^2)
+  #' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
   #' plot(ft)
-  #' ft2 <- qgcomp.boot(y ~ z + x1 + x2, expnms=c('x1','x2'), data=dat, q=8)
+  #' 
+  #' # using non-linear outcome model
+  #' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+  #' data=dat, q=4, B=10)
+  #' plot(ft2)
+  #' 
+  #' # using non-linear marginal structural model
+  #' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+  #' data=dat, q=4, B=10, degree=2)
   #' plot(ft2)
 
   theme_butterfly_l <- list(theme(
@@ -547,14 +573,16 @@ plot.qgcompfit <- function(x, ...){
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!x$bootstrap){
     pright <- ggplot() + 
-    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", data=data.frame(w=x$pweights, v=names(x$pweights))) + 
+    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                  data=data.frame(w=x$pweights, v=names(x$pweights))) + 
     scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
     scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
     geom_hline(aes(yintercept=0)) + 
     coord_flip(ylim=c(0,1)) + 
     theme_butterfly_r
     pleft <- ggplot() + 
-    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", data=data.frame(w=x$nweights, v=names(x$nweights))) + 
+    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                  data=data.frame(w=x$nweights, v=names(x$nweights))) + 
     scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
     scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
     geom_hline(aes(yintercept=0)) + 
@@ -577,10 +605,14 @@ plot.qgcompfit <- function(x, ...){
        #prediction interval (large sample estimator under normal assumption)
        resvar = summary(x$fit)$dispersion
        gammavar = x$var.gamma
-       yup = x$y.expectedmsm + qnorm(.975)*sqrt(resvar+gammavar)
-       ydo = x$y.expectedmsm + qnorm(.025)*sqrt(resvar+gammavar)
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, fill="Model prediction interval"),
-                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) 
+       y = x$y.expectedmsm
+       yup = y + qnorm(.975)*sqrt(resvar+gammavar)
+       ydo = y + qnorm(.025)*sqrt(resvar+gammavar)
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                                fill="Model prediction interval"),
+                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) +
+                    geom_line(aes(x=x,y=y, color="Model fit"),
+                            data=data.frame(y=y, x=x$index))
      }
      if(x$msmfit$family$family=='binomial' & x$degree==1){
        y = x$y.expectedmsm
@@ -593,8 +625,10 @@ plot.qgcompfit <- function(x, ...){
        p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index)) 
      }
-     p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),data=data.frame(y=x$y.expected, x=x$index), 
-                          method = 'gam', formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
+     p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
+                          data=data.frame(y=x$y.expected, x=x$index), 
+                          method = 'gam', 
+                          formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
      scale_fill_discrete(name="") + 
