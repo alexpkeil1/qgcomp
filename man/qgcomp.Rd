@@ -24,7 +24,7 @@ effect}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (gamma) and associated variance (var.gamma), as well
+ measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and possibly information on the 
  marginal structural model (msmfit) used to estimate the final effect
  estimates (qgcomp.boot only). If appropriate, weights are also reported.

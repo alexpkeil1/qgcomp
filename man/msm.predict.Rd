@@ -10,12 +10,12 @@ msm.predict(object, newdata = NULL)
 \item{object}{"qgcompfit" object from `qgcomp.boot` function}
 
 \item{newdata}{(optional) new set of data (data frame) with a variable 
-called `gamma` representing the joint exposure level of all exposures
+called `psi` representing the joint exposure level of all exposures
 under consideration
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
-dat2 <- data.frame(gamma=seq(1,4, by=0.1))
+dat2 <- data.frame(psi=seq(1,4, by=0.1))
 summary(msm.predict(obj))
 summary(msm.predict(obj, newdata=dat2))}
 }

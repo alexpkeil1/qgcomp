@@ -24,7 +24,7 @@ the exposures of interest (main terms only!)}
 
 \item{rr}{logical, estimate log(risk ratio) (family='binomial' only)}
 
-\item{main}{logical, internal use: produce estimates of exposure effect (gamma)
+\item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
