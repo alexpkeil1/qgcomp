@@ -489,17 +489,29 @@ print.qgcompfit <- function(x, ...){
     estimand = 'OR'
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
-    cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
+    if(is.null(dim(x$ci))){
+       cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
              signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), z=",
              signif(x$zstat, 3), ", p=",
              signif(x$pval, 3), "\n"))
+    } else{
+      pdat = cbind(est=x$psi, lowerci=x$ci[1], upperCI=x$ci[2], z=x$zstat, p=x$pval)
+      rownames(pdat) = paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=4)
+    }
   }
   if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
-    cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
+    if(is.null(dim(x$ci))){
+       cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
              signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), t=",
              signif(x$tstat, 3), ", df=", x$df, ", p=",
              signif(x$pval, 3), "\n"))
+    } else{
+      pdat = cbind(est=x$psi, lowerci=x$ci[1], upperCI=x$ci[2], t=x$tstat, p=x$pval)
+      rownames(pdat) = paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=4)
+    }
   }
 }
 
