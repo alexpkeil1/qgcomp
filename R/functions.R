@@ -223,14 +223,13 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
     res <- list(
       qx = qx, fit = fit, psi = estb, var.psi = seb ^ 2, ci = ci,
       expnms=expnms, q=q, breaks=br, degree=1,
-      pos.psi = pos.psi, var.pos.psi = se.pos.psi^2,
-      neg.psi = neg.psi, var.neg.psi = se.neg.psi^2,
-                pweights = sort(pweights, decreasing = TRUE),
-                nweights = sort(nweights, decreasing = TRUE), 
-                psize = sum(abs(wcoef[poscoef])),
-                nsize = sum(abs(wcoef[negcoef])),
-                bootstrap=FALSE
-                )
+      pos.psi = pos.psi, neg.psi = neg.psi,
+      pweights = sort(pweights, decreasing = TRUE),
+      nweights = sort(nweights, decreasing = TRUE), 
+      psize = sum(abs(wcoef[poscoef])),
+      nsize = sum(abs(wcoef[negcoef])),
+      bootstrap=FALSE
+    )
       if(fit$family$family=='gaussian'){
         res$tstat = tstat
         res$df = df
@@ -378,7 +377,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, psi = estb, 
       var.psi = seb ^ 2, ci = ci,
       expnms=expnms, q=q, breaks=br, degree=degree,
-      pos.psi = NULL, var.pos.psi = NULL,neg.psi = NULL, var.neg.psi = NULL,
+      pos.psi = NULL, neg.psi = NULL, 
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
       y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A
     )
@@ -488,29 +487,27 @@ print.qgcompfit <- function(x, ...){
   if (fam == "binomial"){
     estimand = 'OR'
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
-    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
+    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
-       cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
-             signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), z=",
-             signif(x$zstat, 3), ", p=",
-             signif(x$pval, 3), "\n"))
-    } else{
-      pdat = cbind(est=x$psi, lowerci=x$ci[1], upperCI=x$ci[2], z=x$zstat, p=x$pval)
+      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[1], Upper.CI=x$ci[2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=4)
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    } else{
+      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[,1], Upper.CI=x$ci[,2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
+      rownames(pdat) = paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
   }
   if (fam == "gaussian"){
-    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n"))
+    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
-       cat(paste0("psi (CI): ", signif(x$psi, 3), " (",
-             signif(x$ci[1], 3), ",", signif(x$ci[2], 3), "), t=",
-             signif(x$tstat, 3), ", df=", x$df, ", p=",
-             signif(x$pval, 3), "\n"))
-    } else{
-      pdat = cbind(est=x$psi, lowerci=x$ci[1], upperCI=x$ci[2], t=x$tstat, p=x$pval)
+      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[1], Upper.CI=x$ci[2], "T value"=x$tstat, "Pr(>|t|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=4)
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    } else{
+      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[,1], Upper.CI=x$ci[,2], "T value"=x$tstat, "Pr(>|t|)"=x$pval)
+      rownames(pdat) = paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
   }
 }
