@@ -118,7 +118,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
     }
     predit <- function(idx){
       newdata <- qdata
-      newdata[,expnms] <- idx-1
+      newdata[,expnms] <- idx
       suppressWarnings(predict(fit, newdata=newdata, type='response'))
     }
     predmat = lapply(intvals, predit)
