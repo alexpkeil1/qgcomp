@@ -489,11 +489,11 @@ print.qgcompfit <- function(x, ...){
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
-      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[1], Upper.CI=x$ci[2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
+      pdat = cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     } else{
-      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[,1], Upper.CI=x$ci[,2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
+      pdat = cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
@@ -501,11 +501,11 @@ print.qgcompfit <- function(x, ...){
   if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
-      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[1], Upper.CI=x$ci[2], "T value"=x$tstat, "Pr(>|t|)"=x$pval)
+      pdat = cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     } else{
-      pdat = cbind(Estimate=x$psi, Std.Err=sqrt(x$var.psi), Lower.CI=x$ci[,1], Upper.CI=x$ci[,2], "T value"=x$tstat, "Pr(>|t|)"=x$pval)
+      pdat = cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
       rownames(pdat) = paste0('psi',1:length(x$psi))
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
