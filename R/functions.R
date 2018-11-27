@@ -591,6 +591,8 @@ plot.qgcompfit <- function(x, ...){
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!x$bootstrap){
+    if(length(x$pweights)==0) x$pweights = x$nweights*0
+    if(length(x$nweights)==0) x$nweights = x$pweights*0
     pright <- ggplot() + 
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=x$pweights, v=names(x$pweights))) + 
@@ -607,8 +609,6 @@ plot.qgcompfit <- function(x, ...){
     geom_hline(aes(yintercept=0)) + 
     coord_flip(ylim=c(0,1)) + 
     theme_butterfly_l
-    if(length(x$pweights)==0) print(pleft)
-    if(length(x$nweights)==0) print(pright)
     if((length(x$nweights)>0 & length(x$pweights)>0)){
       maxstr = max(mapply(nchar, c(names(x$nweights), names(x$pweights))))
       lw = 1+maxstr/20
