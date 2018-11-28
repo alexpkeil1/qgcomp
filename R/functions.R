@@ -193,7 +193,10 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
       ql <- quantize(data, expnms, q, breaks)
       qdata <- ql$data
       br <- ql$breaks
-    } else qdata <- data
+    } else{
+      qdata <- data
+      br <- breaks
+      }
     fit <- glm(f, data = qdata, ...)
     mod <- summary(fit)
     estb <- sum(mod$coefficients[expnms,1])
