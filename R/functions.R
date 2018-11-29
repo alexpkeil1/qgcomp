@@ -589,7 +589,7 @@ plot.qgcompfit <- function(x, ...){
     plot.margin = unit(c(t=1, r=0.5, b=.75, l=0.0), "cm"),
     panel.border = element_blank()))
 
-  nms = names(sort(c(x$pweights, x$nweights), decreasing = FALSE))
+  nms = unique(names(sort(c(x$pweights, x$nweights), decreasing = FALSE)))
   
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
