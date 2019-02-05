@@ -11,13 +11,18 @@ vignette: >
 
 ## Introduction
 `qgcomp` is a package to implement g-computation for analyzing the effects of exposure
-mixtures. The implementation in `qgcomp` is based on a generalization of weighted
+mixtures. Quantile g-computation yields estimates of the effect of increasing
+all exposures by one quantile, simultaneously. This, it estimates a "mixture
+effect" useful in the study of exposure mixtures such as air pollution, diet,
+and water contamination.
+
+The implementation in `qgcomp` is based on a generalization of weighted
 quantile sums (WQS) regression, which estimates the expected change in an outcome
 under a hypothetical intervention to increase all exposures in the mixture by
 one quantile. In the case in which all exposures have linear, additive effects 
 on the quantile scale (i.e. after transforming all exposures into categorical
 variables defined by quantiles) `qgcomp` and WQS regression
-are asymptotically equivalent in the case in which all variables have effects in
+are asymptotically equivalent when all variables have effects in
 the same direction (the 'directional homogeneity' assumption of WQS). In moderate
 samples when underlying assumptions are not met exactly, 
 WQS will tend to yield more biased effect estimates due to the assumption
@@ -29,19 +34,29 @@ mixture effect. Thus, `qgcomp` will provide valid effect estimates of
 the entire exposure mixture in general cases, while also allowing deviations
 from linearity and additivity assumptions. 
 
-## How to use the `qgcomp` package
-Here we use a running example from `wqs_data` dataset from the from the package 
-`gQWS` to demonstrate some similarities and differences between the two approaches. 
+Using terminology from methods developed for causal effect estimation, quantile 
+g-computation estimates the parameters of a marginal structural model that 
+characterizes the change in the expected potential outcome given a joint intervention
+on all exposures, possibly conditional on confounders. Under the assumptions of
+exchangeability, causal consistency, positivity, no interference, and correct
+model specification, this model yields a causal effect for an intervention
+on the mixture as a whole. While these assumptions may not be met exactly, they
+provide a useful roadmap for how to interpret the results of a qgcomp fit, and
+where efforts should be spent in terms of ensuring accurate model specification
+and selection of exposures that are sufficient to control co-pollutant confounding.
 
-These data will be used as an ongoing example to demonstrate features of the
-`qgcomp` package. Parallel examples can be seen in the `gQWS` help files.
+## How to use the `qgcomp` package
+Here we use a running example from the `metals` dataset from the from the package 
+`qgcomp` to demonstrate some features of the package and method. 
+
+Similar examples can be seen in the `gQWS` package help files, which implements
+WQS regression.
 
 ```{r, echo=TRUE, results='markup', message=FALSE}
-library(gWQS)
 library(qgcomp)
 library(knitr)
-data("wqs_data", package="gWQS")
-head(wqs_data[, c(37, 36, 35, 1:34)], 10)
+data("metals", package="qgcomp")
+head(metals)
 ```
 
 
@@ -50,49 +65,62 @@ head(wqs_data[, c(37, 36, 35, 1:34)], 10)
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 # we save the names of the mixture variables in the variable "Xnm"
 Xnm <- c(
-   "log_LBX074LA", "log_LBX099LA", "log_LBX105LA", "log_LBX118LA",
-   "log_LBX138LA", "log_LBX153LA", "log_LBX156LA", "log_LBX157LA", "log_LBX167LA",
-   "log_LBX170LA", "log_LBX180LA", "log_LBX187LA", "log_LBX189LA", "log_LBX194LA",
-   "log_LBX196LA", "log_LBX199LA", "log_LBXD01LA", "log_LBXD02LA", "log_LBXD03LA",
-   "log_LBXD04LA", "log_LBXD05LA", "log_LBXD07LA", "log_LBXF01LA", "log_LBXF02LA",
-   "log_LBXF03LA", "log_LBXF04LA", "log_LBXF05LA", "log_LBXF06LA", "log_LBXF07LA",
-   "log_LBXF08LA", "log_LBXF09LA", "log_LBXPCBLA", "log_LBXTCDLA", "log_LBXHXCLA"
+    'arsenic','barium','cadmium','calcium','chloride','chromium','copper',
+    'iron','lead','magnesium','manganese','mercury','selenium','silver',
+    'sodium','zinc'
 )
+covars = c('nitrate','nitrite','sulfate','ph', 'total_alkalinity','total_hardness')
+
 
 
 # Example 1: linear model
-# Run the model and save the results "qgcomp_fit"
-system.time(qgcomp_fit <- qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian()))
+# Run the model and save the results "qc.fit"
+system.time(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian()))
+#   user  system elapsed 
+#  0.011   0.002   0.018 
 
-# Compare with weighted quantile sums fit
-system.time(suppressWarnings(wqs_fit <- gwqs(y ~ 1, mix_name = Xnm, data = wqs_data, 
-                                 q = 4, validation = 0.6, b = 3, b1_pos = T, 
-                                 b1_constr = F, family='gaussian', seed=125)))
+# contrasting other methods with computational speed
+# WQS regression
+#system.time(wqs.fit <- gwqs(y~NULL,mix_name=Xnm, data=metals[,c(Xnm, 'y')], family="gaussian"))
+#   user  system elapsed 
+# 35.775   0.124  36.114 
 
-#first note that qgcomp is much faster to run
+# Bayesian kernel machine regression (note that the number of iterations here would 
+#  need to be >5,000, at minimum, so this underestimates the run time by a factor
+#  of 50+
+#system.time(bkmr.fit <- kmbayes(y=metals$y, Z=metals[,Xnm], family="gaussian", iter=100))
+#   user  system elapsed 
+# 81.644   4.194  86.520 
 
-# Compare results: standardized coefficients/weights and statistical inference about
+
+#first note that qgcomp is very fast
+
+# View results: scaled coefficients/weights and statistical inference about
 # mixture effect
-qgcomp_fit
+qc.fit
 
-#qwqs requires more than 3 bootstrap iterations to get accurate estimates
-# of the weights, a step which is omitted here (weights will be much more similar
-# between the methods in that case).
-wqs_fit$final_weights
-summary(wqs_fit$fit)
+
+
 ```
+One advantage of quantile g-computation over other methods that estimate 
+"mixture effects" (the effect of changing all exposures at once), is that it 
+is very computationally efficient. Contrasting methods such as WQS (`gWQS` 
+package) and Bayesian Kernel Machine regression (`bkmr` package), 
+quantile g-computation can provide results many orders of magnitude faster.
+For example, the example above ran 3000X faster for quantile g-computation
+versus WQS regression, and we estimate the speedup would be several
+hundred thousand times versus Bayesian kernel machine regression. 
 
-Note that the weights from `gwqs` are fairly similar to those from `qgcomp.noboot`,
-though more bootstrap iterations should be run in practice. 
-This is a result of most of the exposure coefficients being on the same side of 
-the null (sum of positive coefficients = 1.91 vs. sum of negative coefficients = -0.419).
-Thus the directional homogeneity assumption does not seem unreasonable in this case,
-but note that `gwqs` yields estimates which are biased away from the null, relative
-to those from `qgcomp.noboot` (which are based on a linear model fit and thus
-are unbiased and efficient). The `qgcomp.noboot` estimate (95% confidence interval) 
-is 1.49 (1.29,1.69), whereas it is 1.59 (1.36, 1.82) for `gwqs` (when run with 100
-bootstrap iterations, which is advisable but takes several minutes compared with
-a 0.02 seconds for `qgcomp.noboot` and 4 seconds for `gwqs` with 3 iterations).
+Quantile g-computation yields fixed weights in the estimation procedure, similar
+to WQS regression. However, note that the weights from `qgcomp.noboot` 
+can be negative or positive. When all effects are linear and in the same 
+direction ("directional homogeneity"), quantile g-computation is equivalent to 
+weighted quantile sum regression in large samples.
+
+The overall mixture effect from quatile g-computation (psi1) is interpreted as 
+the effect on the outcome of increasing every exposure by one quantile, possibly
+conditional on covariates. Given the overall exposure effect, the weights are
+considered fixed and so
 
 
 ### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
@@ -101,111 +129,117 @@ This example introduces the use of a binary outcome in `qgcomp` via the
 `qgcomp.noboot` function, which yields a conditional odds ratio or the
 `qgcomp.boot`, which yields a marginal odds ratio or risk/prevalence ratio. These
 will not equal each other when there are non-exposure covariates (e.g. 
-confonders) included in the model because the odds ratio is not collapsible (both
+confounders) included in the model because the odds ratio is not collapsible (both
 are still valid). Marginal parameters will yield estimates of the population
 average exposure effect, which is often of more interest due to better 
 interpretability over conditional odds ratios. Further, odds ratios are not
 generally of interest when risk ratios can be validly estimated, so `qgcomp.boot`
-will estimate the risk ratio by default for binary data.
+will estimate the risk ratio by default for binary data (set rr=FALSE to 
+allow estimation of ORs when using `qgcomp.boot`).
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 
-qgcomp_fit2 <- qgcomp.noboot(disease_state~., expnms=Xnm, 
-          data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), 
+qc.fit2 <- qgcomp.noboot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
           q=4)
-qgcompboot_fit2 <- qgcomp.boot(disease_state~., expnms=Xnm, 
-          data = wqs_data[,c(Xnm, 'disease_state')], family=binomial(), 
-          q=4, B=10, seed=125, rr=FALSE)
-suppressWarnings(wqs_fit2 <- gwqs(disease_state ~ 1, mix_name = Xnm, 
-          data = wqs_data, q = 4, validation = 0.6, b = 3, 
-          b1_pos = F, b1_constr = F, family='binomial', 
-          seed=125))
+qcboot.fit2 <- qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10,# B should be 200-500+ in practice
+          seed=125, rr=FALSE)
+qcboot.fit2b <- qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10,# B should be 200-500+ in practice
+          seed=125, rr=TRUE)
+
 
 # Compare a qgcomp.noboot fit:
-qgcomp_fit2
+qc.fit2
 # and a qgcomp.boot fit:
-qgcompboot_fit2
-# with a gwqs fit:
-summary(wqs_fit2$fit)
-wqs_fit2$final_weights
+qcboot.fit2
+# and a qgcomp.boot fit, where the risk/prevalence ratio is estimated, 
+#  rather than the odds ratio:
+qcboot.fit2b
+
 ```
-
-
 
 ### Example 3: adjusting for covariates, plotting estimates
 
-In the following code we run a sex-adjusted linear model with `qgcomp` and `gwqs` (`family = "gaussian"`).
+In the following code we run a maternal age-adjusted linear model with 
+`qgcomp` (`family = "gaussian"`). 
 
 ```{r, results='markup', fig.show='hold', fig.height=7, fig.width=6, cache=FALSE}
 
-qgcomp_fit3 <- qgcomp.noboot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
-                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
-                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD02LA+log_LBXD03LA+log_LBXD04LA+
-                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
-                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+qc.fit3 <- qgcomp.noboot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
+                           chromium + copper + iron + lead + magnesium + manganese + 
+                           mercury + selenium + silver + sodium + zinc,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4)
-plot(qgcomp_fit3)
-qgcompboot_fit3 <- qgcomp.boot(y~sex+log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
-                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
-                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD02LA+log_LBXD03LA+log_LBXD04LA+
-                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
-                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+                         metals, family=gaussian(), q=4)
+plot(qc.fit3)
+qcboot.fit3 <- qgcomp.boot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
+                           chromium + copper + iron + lead + magnesium + manganese + 
+                           mercury + selenium + silver + sodium + zinc,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=10, seed=125)
-plot(qgcompboot_fit3)
-wqs_fit3 <- gwqs(y ~ sex, mix_name = Xnm, data = wqs_data, q = 4, 
-     validation = 0.6, b = 3, b1_pos = TRUE, b1_constr = F, family='gaussian', seed=125, plots=TRUE)
-     
+                         metals, family=gaussian(), q=4, B=10,# B should be 200-500+ in practice
+                         seed=125)
+plot(qcboot.fit3)
 
 ```
 
 From the first plot we see weights from `qgcomp.noboot` function, which include both
 positive and negative effect directions. Using `qgcomp.boot` also allows us to assess
-linearity of the total exposure effect (the second plot). Contrast with the 3rd and 4th plots, which are from  from `gwqs`. The 3rd plot represents weight estimates under the directional homogeneity assumption, while the 4th plot is a smooth regression fit of the (confounder adjusted) outcome on the exposure index, which is similar to the regression line plot from `qgcomp.boot`.
+linearity of the total exposure effect (the second plot). Similar output is available
+for WQS (`gWQS` package), though WQS results will generally be less interpretable
+when exposure effects are non-linear (see below how to do this with `qgcomp.boot`. 
+
+The plot for the `qcboot.fit3` object (using g-computation with bootstrap variance) 
+gives predictions at the joint intervention levels of exposure. It also displays
+a smoothed (graphical) fit. Generally, we cannot overlay the data over this plot
+since the regression line corresponds to a change in potentially many exposures
+at once. Hence, it is useful to explore non-linearity by fitting models that
+allow for non-linear effects.
 
 
-There is a key difference between the regression line plots output from `gwqs` and the `qgcomp` functions, however. The plot for `qgcompboot_fit3` (using g-computation with bootstrap variance) gives predictions at the joint intervention levels of exposure. In contrast, the regression line plot for `gwqs` gives predictions at observed levels of the exposure "index" which is a weighted sum of all observed exposures, where the weights are estimated via constrained regression in `qwqs`. Notably, at the lower tail of the `qwqs` plot, the 'index' is populated by observations with exposures corresponding to low weights, meaning they have little contribution to the mean outcome (in the positive direction), but are nonetheless influential in the behavior of the smoothing function at low exposures. In contrast, the lower tail of the `gcompmod2` is based on predicted risk  across all individuals *had they, in fact experienced low joint exposures*. The two smoothed lines should not, in general, be expected to overlap at the tails but may have similar trends.
+### Example 4: non-linearity (and non-homogeneity)
 
+Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. 
+Here is an example where we use a feature of the R language for fitting models
+with interaction terms. We use `y~. + .^2` as the model formula, which fits a model
+that allows for quadratic term for every predictor in the model.
 
-### Example 4: non-linearity (and non-homogenity)
+Similar approaches could be used to include interaction terms between exposures, 
+as well as between exposures and covariates. 
 
-Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. Here is an example where we take the strongest (positive) predictor of the outcome in the primary model (log_LBXD02LA) and fit an indicator variable function by including the code `I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3)` in the formula. Similar approaches could be used to include interaction terms between exposures, as well as between exposures and covariates. In contrast with prior examples we use the `qgcomp` function, which is a convenience function that will choose the best option from between `qgcomp.boot` and `qgcomp.noboot`.
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 
-qgcompboot_fit4 <- qgcomp(y~sex+
-                           I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
-                           log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
-                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
-                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD03LA+log_LBXD04LA+
-                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
-                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+qcboot.fit4 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=10, seed=125)
-plot(qgcompboot_fit4)
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, B=10, seed=125)
+plot(qcboot.fit4)
 ```
 
-Note that allowing for a non-linear effect of log_LBXD02LA induces an apparent non-linear trend in the overall exposure effect. The smoothed regression line is still well within the prediction intervals of the marginal linear model (by default, the overall effect of joint exposure is assumed linear, though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, as follows:
+Note that allowing for a non-linear effect of all exposures induces an apparent 
+non-linear trend in the overall exposure effect. The smoothed regression line is 
+still well within the prediction intervals of the marginal linear model 
+(by default, the overall effect of joint exposure is assumed linear, 
+though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, 
+as follows:
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
 
-qgcompboot_fit5 <- qgcomp(y~sex+
-                           I(log_LBXD02LA==1) + I(log_LBXD02LA==2) + I(log_LBXD02LA==3) +
-                           log_LBX074LA+log_LBX099LA+log_LBX105LA+log_LBX118LA+log_LBX138LA+log_LBX153LA+
-                           log_LBX156LA+log_LBX157LA+log_LBX167LA+log_LBX170LA+log_LBX180LA+log_LBX187LA+log_LBX189LA+
-                           log_LBX194LA+log_LBX196LA+log_LBX199LA+log_LBXD01LA+log_LBXD03LA+log_LBXD04LA+
-                           log_LBXD05LA+log_LBXD07LA+log_LBXF01LA+log_LBXF02LA+log_LBXF03LA+log_LBXF04LA+log_LBXF05LA+
-                           log_LBXF06LA+log_LBXF07LA+log_LBXF08LA+log_LBXF09LA+log_LBXPCBLA+log_LBXTCDLA+log_LBXHXCLA,
+qcboot.fit5 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
-                         wqs_data, family=gaussian(), q=4, B=10, degree=2, seed=125)
-plot(qgcompboot_fit5)
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, B=10, seed=125)
+plot(qcboot.fit5)
 ```
 
-Note the prediction interval has been replaced by actual model predictions. Ideally, the smooth fit will look very similar to the model prediction regression line.
+Note the prediction interval has been replaced by actual model predictions. 
+Ideally, the smooth fit will look very similar to the model prediction regression 
+line.
 
 ## References
-
+Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
+Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. In progress. 
 
 ## Acknowledgements
 

@@ -3,128 +3,119 @@
 ### Quick start
 
     #install.packages("devtools") # if devtools package not already installed, uncomment this line
+    # developers version
     devtools::install_github("alexpkeil1/qgcomp", build_opts = c("--no-resave-data", "--no-manual", "--build-vignettes"))
     library("qgcomp")
-    data("wqs_data", package="gWQS")
+    # using data from the qgcomp package
+    data("metals", package="qgcomp")
     
-    Xnm = c(
-    "log_LBX074LA", "log_LBX099LA", "log_LBX105LA", "log_LBX118LA",
-    "log_LBX138LA", "log_LBX153LA", "log_LBX156LA", "log_LBX157LA", "log_LBX167LA",
-    "log_LBX170LA", "log_LBX180LA", "log_LBX187LA", "log_LBX189LA", "log_LBX194LA",
-    "log_LBX196LA", "log_LBX199LA", "log_LBXD01LA", "log_LBXD02LA", "log_LBXD03LA",
-    "log_LBXD04LA", "log_LBXD05LA", "log_LBXD07LA", "log_LBXF01LA", "log_LBXF02LA",
-    "log_LBXF03LA", "log_LBXF04LA", "log_LBXF05LA", "log_LBXF06LA", "log_LBXF07LA",
-    "log_LBXF08LA", "log_LBXF09LA", "log_LBXPCBLA", "log_LBXTCDLA", "log_LBXHXCLA"
+    Xnm <- c(
+    'arsenic','barium','cadmium','calcium','chloride','chromium','copper',
+    'iron','lead','magnesium','manganese','mercury','selenium','silver',
+    'sodium','zinc'
     )
     
     # continuous outcome
-    results = qgcomp.noboot(y~.,dat=wqs_data[,c(Xnm, 'y')], family=gaussian())
+    results = qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian())
     print(results)
 
     
-    > Scaled effect size (positive direction, sum of positive coefficients = 1.91)
-    > log_LBXD02LA log_LBX138LA log_LBXF06LA log_LBXF07LA log_LBX105LA log_LBX157LA log_LBXD04LA log_LBX167LA log_LBX196LA log_LBXHXCLA log_LBXF08LA log_LBXF04LA log_LBX118LA log_LBXD05LA log_LBXD01LA log_LBX153LA log_LBX074LA log_LBXF01LA 
-    >      0.16027      0.14747      0.12395      0.11291      0.09349      0.07107      0.05722      0.04455      0.03811      0.03638      0.03508      0.01873      0.01740      0.01237      0.01025      0.00728      0.00719      0.00628 
-    > 
-    > Scaled effect size (negative direction, sum of negative coefficients = -0.419)
-    > log_LBX170LA log_LBXF03LA log_LBX180LA log_LBX199LA log_LBXTCDLA log_LBX099LA log_LBXD07LA log_LBXF09LA log_LBX187LA log_LBXPCBLA log_LBXF05LA log_LBX194LA log_LBX189LA log_LBX156LA log_LBXD03LA log_LBXF02LA 
-    >      0.21514      0.14089      0.09700      0.08781      0.08724      0.06829      0.06297      0.05360      0.04339      0.04015      0.03784      0.03382      0.01920      0.00525      0.00495      0.00247 
-    > 
-    > Mixture slope:
-    > gamma (CI): 1.49 (1.29,1.69), t=14.4, df=465, p=0
-    
+    >Scaled effect size (positive direction, sum of positive coefficients = 0.118)
+    >  calcium manganese   mercury  chloride      zinc    sodium  selenium 
+    >   0.5974    0.0791    0.0761    0.0739    0.0704    0.0658    0.0373 
+    >
+    >Scaled effect size (negative direction, sum of negative coefficients = -0.0732)
+    >magnesium   cadmium    silver      lead   arsenic    copper  chromium    barium      iron 
+    >   0.2673    0.1758    0.1303    0.1047    0.0872    0.0831    0.0796    0.0584    0.0136 
+    >
+    >Mixture slope parameters (Delta method CI):
+    >
+    >     Estimate Std. Error  Lower CI Upper CI t value Pr(>|t|)
+    >psi1 0.044589   0.019180 0.0069964 0.082182  2.3247  0.02055    
     plot(results)
 ![Results 1](fig/res1.png)
     
     # binary outcome
-    results2 = qgcomp.noboot(disease_state~.,dat=wqs_data[,c(Xnm, 'disease_state')], family=binomial())
+    results2 = qgcomp.noboot(disease_state~., expnms=Xnm, 
+               data = metals[,c(Xnm, 'disease_state')], family=binomial(), q=4)
     print(results2)
     
-    > Scaled effect size (positive direction, sum of positive coefficients = 1.69)
-    > log_LBX156LA log_LBX194LA log_LBX105LA log_LBX138LA log_LBXF09LA log_LBXHXCLA log_LBXD02LA log_LBXF08LA log_LBXD04LA log_LBXD01LA log_LBXF05LA log_LBXPCBLA log_LBX118LA log_LBX153LA log_LBX189LA log_LBXF01LA log_LBX157LA log_LBX180LA log_LBXF03LA log_LBXD05LA log_LBX187LA 
-    >     0.098960     0.094117     0.090794     0.073728     0.071542     0.071025     0.067497     0.066298     0.055614     0.052980     0.051612     0.039568     0.037921     0.028775     0.026268     0.024350     0.024323     0.013647     0.008858     0.001437     0.000685 
-    > 
-    > Scaled effect size (negative direction, sum of negative coefficients = -1.74)
-    > log_LBX170LA log_LBXD07LA log_LBX199LA log_LBXF07LA log_LBX167LA log_LBXF04LA log_LBXF06LA log_LBX099LA log_LBX196LA log_LBXF02LA log_LBXD03LA log_LBX074LA log_LBXTCDLA 
-    >       0.1666       0.1455       0.1442       0.1280       0.1041       0.1021       0.0426       0.0406       0.0302       0.0264       0.0247       0.0241       0.0210 
-    > 
-    > Mixture log(OR):
-    > gamma (CI): -0.0581 (-0.472,0.356), t=-0.275, df=465, p=0.784
-    
+    >Scaled effect size (positive direction, sum of positive coefficients = 1.83)
+    > mercury  arsenic  cadmium selenium   silver   copper chloride   sodium chromium   barium 
+    > 0.41512  0.22194  0.11081  0.11037  0.03762  0.03140  0.02883  0.02714  0.01515  0.00161 
+    >
+    >Scaled effect size (negative direction, sum of negative coefficients = -0.851)
+    >manganese      lead      zinc      iron magnesium   calcium 
+    >   0.5635    0.2145    0.1342    0.0358    0.0307    0.0213 
+    >
+    >Mixture log(OR) (Delta method CI):
+    >
+    >     Estimate Std. Error Lower CI Upper CI Z value Pr(>|z|)
+    >psi1  0.97669    0.37724   0.2373   1.7161   2.589 0.009625
+    >
+        
     plot(results2)
 ![Results 2](fig/res2.png)
     
 ### adjusting for covariate(s)
-    results3 = qgcomp.noboot(y~ sex + 
-                              log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
-                              log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
-                              log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
-                              log_LBX199LA + log_LBXD01LA + log_LBXD02LA + log_LBXD03LA + log_LBXD04LA + 
-                              log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
-                              log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
-                              log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
-                            dat=wqs_data[,c(Xnm, 'y', 'sex')], 
-                            expnms = Xnm, family=gaussian())
+    results3 = qgcomp.noboot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
+                           chromium + copper + iron + lead + magnesium + manganese + 
+                           mercury + selenium + silver + sodium + zinc,
+                         expnms=Xnm,
+                         metals, family=gaussian(), q=4)
     print(results3)
     
-    > Scaled effect size (positive direction, sum of positive coefficients = 1.91)
-    > log_LBXD02LA log_LBX138LA log_LBXF06LA log_LBXF07LA log_LBX105LA log_LBX157LA log_LBXD04LA log_LBX167LA log_LBX196LA log_LBXHXCLA log_LBXF08LA log_LBXF04LA log_LBX118LA log_LBXD05LA log_LBXD01LA log_LBX153LA log_LBX074LA log_LBXF01LA 
-    >      0.16030      0.14719      0.12454      0.11194      0.09385      0.07170      0.05672      0.04484      0.03771      0.03678      0.03608      0.01832      0.01822      0.01200      0.00895      0.00805      0.00669      0.00613 
+    > Scaled effect size (positive direction, sum of positive coefficients = 0.117)
+    >   calcium manganese   mercury  chloride      zinc    sodium  selenium 
+    >    0.5989    0.0800    0.0749    0.0736    0.0681    0.0599    0.0445 
     > 
-    > Scaled effect size (negative direction, sum of negative coefficients = -0.42)
-    > log_LBX170LA log_LBXF03LA log_LBX180LA log_LBXTCDLA log_LBX199LA log_LBX099LA log_LBXD07LA log_LBXF09LA log_LBX187LA log_LBXF05LA log_LBXPCBLA log_LBX194LA log_LBX189LA log_LBXF02LA log_LBXD03LA log_LBX156LA 
-    >      0.21761      0.14170      0.09801      0.08916      0.08640      0.06524      0.05973      0.05362      0.04400      0.03737      0.03666      0.03182      0.02266      0.00669      0.00505      0.00429 
+    > Scaled effect size (negative direction, sum of negative coefficients = -0.0689)
+    > magnesium   cadmium    silver      lead  chromium    copper    barium   arsenic      iron 
+    >    0.2793    0.1454    0.1378    0.0967    0.0930    0.0865    0.0727    0.0647    0.0239 
     > 
-    > Mixture slope:
-    > gamma (CI): 1.49 (1.29,1.69), t=14.4, df=465, p=0
-    
+    > Mixture slope parameters (Delta method CI):
+    > 
+    >      Estimate Std. Error Lower CI Upper CI t value Pr(>|t|)
+    > psi1 0.048393   0.019269 0.010627 0.086159  2.5115  0.01238
     # coefficient for confounder
-    results3$fit$coefficients['sex']
-    
-    >         sex 
-    > -0.04602814 
+    results3$fit$coefficients['mage35']
+    >      mage35 
+    > -0.02099359 
 
 
 ### Bootstrapping to get population average risk ratio via g-computation using qgcomp.boot
-    results4 = qgcomp.boot(disease_state~sex + 
-                              log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
-                              log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
-                              log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
-                              log_LBX199LA + log_LBXD01LA + log_LBXD02LA + log_LBXD03LA + log_LBXD04LA + 
-                              log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
-                              log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
-                              log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
-                              dat=wqs_data, expnms = Xnm, family=binomial(), rr=TRUE, B=200, seed=125)
+    results4 = qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10,# B should be 200-500+ in practice
+          seed=125, rr=TRUE)
     print(results4)
     
     > Mixture log(RR) (bootstrap CI):
-    > gamma (CI): -0.0376 (-0.123,0.048), z=-0.861, p=0.389
+    > 
+    >      Estimate Std. Error Lower CI Upper CI Z value  Pr(>|z|)
+    > psi1  0.31318    0.07747  0.16134  0.46502  4.0426 5.286e-05
 
-    # checking whether model fit seems appropriate (the fit does look approximately linear in this case
-    #  but mainly because it looks null)
+    # checking whether model fit seems appropriate 
     plot(results4)
 ![Results 4](fig/res4.png)
 
 ### Allowing for interactions and non-linear terms using qgcomp.boot
 
-    results5 = qgcomp.boot(y~ sex + I(log_LBX170LA==1) + I(log_LBX170LA==2) + I(log_LBX170LA==3)+ 
-                              I(log_LBX170LA*log_LBXD02LA) +
-                              log_LBX074LA + log_LBX099LA + log_LBX105LA + log_LBX118LA + log_LBX138LA + 
-                              log_LBX153LA + log_LBX156LA + log_LBX157LA + log_LBX167LA + log_LBX170LA + 
-                              log_LBX180LA + log_LBX187LA + log_LBX189LA + log_LBX194LA + log_LBX196LA + 
-                              log_LBX199LA + log_LBXD01LA + log_LBXD02LA + log_LBXD03LA + log_LBXD04LA + 
-                              log_LBXD05LA + log_LBXD07LA + log_LBXF01LA + log_LBXF02LA + log_LBXF03LA + 
-                              log_LBXF04LA + log_LBXF05LA + log_LBXF06LA + log_LBXF07LA + log_LBXF08LA + 
-                              log_LBXF09LA + log_LBXPCBLA + log_LBXTCDLA + log_LBXHXCLA,
-                            dat=wqs_data[,c(Xnm, 'y', 'sex')], 
-                            expnms = Xnm, family=gaussian(), B=200, seed=125, degree=2)
+    results5 = qgcomp(y~. + .^2 + arsenic*cadmium,
+                         expnms=Xnm,
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, B=10, 
+                         seed=125, degree=2)
 
     print(results5)
     
     > Mixture slope parameters (bootstrap CI):
-    > gamma (CI): 1.23 (0.449,-0.0998), t=3.09, df=458, p=0.00216
-    > gamma (CI): 0.056 (0.449,-0.0998), t=0.705, df=458, p=0.481
+    > 
+    >         Estimate  Std. Error Lower CI Upper CI t value Pr(>|t|)
+    > psi1 -0.00090979  0.27733904 -0.54448  0.54266 -0.0033   0.9974
+    > psi2  0.01124374  0.09166007 -0.16841  0.19089  0.1227   0.9024
 
-    # not much apparent non-linearity
+    # some apparent non-linearity, but would require more bootstrap iterations for
+    # proper test of non-linear mixture effect
     plot(results5)
 ![Results 5](fig/res5.png)
+

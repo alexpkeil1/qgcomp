@@ -23,7 +23,7 @@ summary(predict(obj2, expnms = c('x1', 'x2'), newdata=dat2))}
 }
 \description{
 get predicted values from a qgcompfit object, or make predictions
-in a new set of data based on teh qgcomfit object. Note that when making predictions
+in a new set of data based on the qgcomfit object. Note that when making predictions
 from an object from qgcomp.boot, the predictions are made from the g-computation
 model rather than the marginal structural model. Predictions from the marginal
 structural model can be obtained via \code{\link[qgcomp]{msm.predict}}

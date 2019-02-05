@@ -62,7 +62,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 }
 
 
-msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...){
+msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=NULL, ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
   #' quantized exposures
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp}},
@@ -95,6 +95,9 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic. Default=1)
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @keywords variance, mixtures
@@ -108,8 +111,13 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
   #'         expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4)
   #' summary(mod$fit) # outcome regression model
   #' summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
+    if(is.null(id)) {
+      # not yet implemented
+      id = "id__"
+      qdata$id__ = 1:dim(qdata)[1]
+    }
     # conditional outcome regression fit
-    fit <- glm(f, data = qdata, ...)
+    fit <- glm(f, data = qdata[,!(names(qdata) %in% id)], ...)
     if(fit$family$family=="gaussian") rr=FALSE
     ### 
     # get predictions (set exposure to 0,1,...,q-1)
@@ -130,7 +138,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
       psi = rep(intvals, each=nobs))
     # to do: allow functional form variations for the MSM via specifying the model formula
     if(!rr) suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,...))
-    if(rr)  suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, family=binomial(link='log')))
+    if(rr)  suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, family=binomial(link='log'), start=rep(-0.0001, degree+1)))
     res = list(fit=fit, msmfit=msmfit)
     if(main) {
       res$Ya = msmdat$Ya   # expected outcome under joint exposure, by gcomp
@@ -142,7 +150,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, ...
 }
 
 
-qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ...){
+qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, ...){
   #' @title estimation of quantile g-computation fit (continuous outcome)
   #'  or conditional quantile odds ratio (binary outcome)
   #'
@@ -163,13 +171,16 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param q NULL or number of quantiles used to create quantile indicator variables
-  #' representing the exposure variables. If NULL, then gcomp proceeds with untrasformed
+  #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
   #' version of exposures in the input datasets (useful if data are already transformed,
   #' or for performing standard g-computation)
   #' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
   #' characterize the minimum value of each category for which to 
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
@@ -197,7 +208,12 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
       qdata <- data
       br <- breaks
       }
-    fit <- glm(f, data = qdata, ...)
+    if(is.null(id)) {
+      # not yet implemented
+      id = "id__"
+      qdata$id__ = 1:dim(qdata)[1]
+    }
+    fit <- glm(f, data = qdata[,!(names(qdata) %in% id)], ...)
     mod <- summary(fit)
     estb <- sum(mod$coefficients[expnms,1])
     seb <- se_comb(expnms, covmat = mod$cov.scaled)
@@ -247,7 +263,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, ..
 }
 
 
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
   #' @description This function yields population average effect estimates for 
@@ -266,13 +282,16 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param q NULL or number of quantiles used to create quantile indicator variables
-  #' representing the exposure variables. If NULL, then gcomp proceeds with untrasformed
+  #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
   #' version of exposures in the input datasets (useful if data are already transformed,
   #' or for performing standard g-computation)
   #' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
   #' characterize the minimum value of each category for which to 
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -352,19 +371,29 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       qdata <- data
       intvals=NULL
     }
+    if(is.null(id)) {
+      id = "id__"
+      qdata$id__ = 1:dim(qdata)[1]
+    }
     ###
-    msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, ...)
+    msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, ...)
     # main estimate  
     estb <- as.numeric(msmfit$msmfit$coefficients[-1])
     #bootstrap to get std. error
     nobs = dim(qdata)[1]
-    psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nobs=nobs, ...){
-      set.seed(i+seed)
+    nids = length(unique(qdata[,id]))
+    psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...){
+      bootids = data.frame(temp=sort(sample(unique(qdata[,id]), nids, replace = TRUE)))
+      names(bootids) <- id
+      qdata_ = merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
       as.numeric(
-        msm.fit(f, qdata=qdata[sample(1:nobs, nobs, replace = TRUE),], 
-                intvals, expnms, rr, degree=degree, ...)$msmfit$coefficients[-1])
+        msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id,
+                ...)$msmfit$coefficients[-1]
+      )
     }
-    bootsamps = sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nobs=nobs)
+    set.seed(seed)
+    bootsamps = sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+                       expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
     if(is.null(dim(bootsamps))) {
       seb <- sd(bootsamps)
     }else seb <- apply(bootsamps, 1, sd)
@@ -382,7 +411,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, alpha=0.05, B=20
       expnms=expnms, q=q, breaks=br, degree=degree,
       pos.psi = NULL, neg.psi = NULL, 
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
-      y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A
+      y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
+      bootsamps = bootsamps
     )
       if(msmfit$fit$family$family=='gaussian'){
         res$tstat = tstat
@@ -435,7 +465,8 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' # note for binary outcome this will 
   #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, family=binomial())
+  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, 
+  #'   family=binomial())
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
@@ -520,7 +551,7 @@ plot.qgcompfit <- function(x, ...){
   #' @title plot.qgcompfit: default plotting method for a qgcompfit object
   #'
   #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
-  #' createa butterfly plot of weights. For qgcomp.boot, this function will create
+  #' create a butterfly plot of weights. For qgcomp.boot, this function will create
   #' a box plot with smoothed line overlaying that represents a non-parametric
   #' fit of a model to the expected outcomes in the population at each quantile
   #' of the joint exposures (e.g. '1' represents 'at the first quantile for
@@ -533,7 +564,8 @@ plot.qgcompfit <- function(x, ...){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),y=runif(100)+x1+x1^2)
+  #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
+  #'                   y=runif(100)+x1+x1^2)
   #' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
   #' ft
   #' plot(ft)
@@ -556,6 +588,7 @@ plot.qgcompfit <- function(x, ...){
   #' plot(ft3) # the MSM estimates look much closer to the smoothed estimates
   #' # suggesting the non-linear MSM fits the data better and should be used
   #' # for inference about the effect of the exposure
+  ymin <- ymax <- w <- v <- NULL # appease R CMD check
 
   theme_butterfly_l <- list(theme(
     legend.position = c(0,0), 
@@ -665,7 +698,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
   #' @title plot.qgcompfit: default prediction method for a qgcompfit object
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
-  #' in a new set of data based on teh qgcomfit object. Note that when making predictions
+  #' in a new set of data based on the qgcomfit object. Note that when making predictions
   #' from an object from qgcomp.boot, the predictions are made from the g-computation
   #' model rather than the marginal structural model. Predictions from the marginal
   #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}

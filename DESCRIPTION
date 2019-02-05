@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: quantile-g-computation
-Version: 0.7.20
-Date: Wed Nov 28 21:10:50 2018
+Version: 0.8.3
+Date: Tue Feb 5 10:59:45 2019
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -23,13 +23,10 @@ Depends:
     R (>= 3.0),
     stats (>= 3.0)
 Suggests: 
-    gWQS (>= 1.1),
     knitr (>= 1.0)
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
+Language: en-US
 LazyData: true
-RemoteSha: 
-RemoteType: 
-RemoteUrl: 
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

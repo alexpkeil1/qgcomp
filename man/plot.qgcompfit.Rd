@@ -13,7 +13,7 @@
 }
 \description{
 Plot a quantile g-computation object. For qgcomp.noboot, this function will
-createa butterfly plot of weights. For qgcomp.boot, this function will create
+create a butterfly plot of weights. For qgcomp.boot, this function will create
 a box plot with smoothed line overlaying that represents a non-parametric
 fit of a model to the expected outcomes in the population at each quantile
 of the joint exposures (e.g. '1' represents 'at the first quantile for
@@ -21,7 +21,8 @@ every exposure')
 }
 \examples{
 set.seed(12)
-dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),y=runif(100)+x1+x1^2)
+dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
+                  y=runif(100)+x1+x1^2)
 ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 ft
 plot(ft)

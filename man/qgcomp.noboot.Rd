@@ -6,7 +6,7 @@
  or conditional quantile odds ratio (binary outcome)}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  alpha = 0.05, ...)
+  id = NULL, alpha = 0.05, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -16,7 +16,7 @@ qgcomp.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
 \item{expnms}{character vector of exposures of interest}
 
 \item{q}{NULL or number of quantiles used to create quantile indicator variables
-representing the exposure variables. If NULL, then gcomp proceeds with untrasformed
+representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
@@ -24,6 +24,10 @@ or for performing standard g-computation)}
 characterize the minimum value of each category for which to 
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
+
+\item{id}{(optional) NULL, or variable name indexing individual units of 
+observation (only needed if analyzing data with multiple observations per 
+id/cluster)}
 
 \item{alpha}{alpha level for confidence limit calculation}
 

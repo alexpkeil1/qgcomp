@@ -6,7 +6,7 @@
 quantized exposures}
 \usage{
 msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
-  degree = 1, ...)
+  degree = 1, id = NULL, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -30,6 +30,10 @@ and expected outcomes under g-computation and the MSM}
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
+
+\item{id}{(optional) NULL, or variable name indexing individual units of 
+observation (only needed if analyzing data with multiple observations per 
+id/cluster)}
 
 \item{...}{arguments to glm (e.g. family)}
 }
