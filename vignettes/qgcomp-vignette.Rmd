@@ -62,7 +62,7 @@ head(metals)
 
 ### Example 1: linear model
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=10, cache=FALSE}
 # we save the names of the mixture variables in the variable "Xnm"
 Xnm <- c(
     'arsenic','barium','cadmium','calcium','chloride','chromium','copper',
@@ -137,7 +137,7 @@ generally of interest when risk ratios can be validly estimated, so `qgcomp.boot
 will estimate the risk ratio by default for binary data (set rr=FALSE to 
 allow estimation of ORs when using `qgcomp.boot`).
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=10, cache=FALSE}
 
 qc.fit2 <- qgcomp.noboot(disease_state~., expnms=Xnm, 
           data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
@@ -167,7 +167,7 @@ qcboot.fit2b
 In the following code we run a maternal age-adjusted linear model with 
 `qgcomp` (`family = "gaussian"`). 
 
-```{r, results='markup', fig.show='hold', fig.height=7, fig.width=6, cache=FALSE}
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=10, cache=FALSE}
 
 qc.fit3 <- qgcomp.noboot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
                            chromium + copper + iron + lead + magnesium + manganese + 
@@ -210,7 +210,7 @@ Similar approaches could be used to include interaction terms between exposures,
 as well as between exposures and covariates. 
 
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=10, cache=FALSE}
 
 qcboot.fit4 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
@@ -225,7 +225,7 @@ still well within the prediction intervals of the marginal linear model
 though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, 
 as follows:
 
-```{r, results='markup', fig.show='hold', fig.height=5, fig.width=5, cache=FALSE}
+```{r, results='markup', fig.show='hold', fig.height=7, fig.width=10, cache=FALSE}
 
 qcboot.fit5 <- qgcomp(y~. + .^2,
                          expnms=Xnm,

@@ -35,7 +35,7 @@
     >     Estimate Std. Error  Lower CI Upper CI t value Pr(>|t|)
     >psi1 0.044589   0.019180 0.0069964 0.082182  2.3247  0.02055    
     plot(results)
-![Results 1](fig/res1.png)
+![Results 1](inst/fig/res1.png)
     
     # binary outcome
     results2 = qgcomp.noboot(disease_state~., expnms=Xnm, 
@@ -57,7 +57,7 @@
     >
         
     plot(results2)
-![Results 2](fig/res2.png)
+![Results 2](inst/fig/res2.png)
     
 ### adjusting for covariate(s)
     results3 = qgcomp.noboot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
@@ -99,7 +99,7 @@
 
     # checking whether model fit seems appropriate 
     plot(results4)
-![Results 4](fig/res4.png)
+![Results 4](inst/fig/res4.png)
 
 ### Allowing for interactions and non-linear terms using qgcomp.boot
 
@@ -119,5 +119,5 @@
     # some apparent non-linearity, but would require more bootstrap iterations for
     # proper test of non-linear mixture effect
     plot(results5)
-![Results 5](fig/res5.png)
+![Results 5](inst/fig/res5.png)
 
