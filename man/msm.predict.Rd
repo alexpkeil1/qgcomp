@@ -2,7 +2,8 @@
 % Please edit documentation in R/functions.R
 \name{msm.predict}
 \alias{msm.predict}
-\title{plot.qgcompfit: default prediction method for a qgcompfit object}
+\title{msm.predict: secondary prediction method for the MSM within a qgcompfit 
+object.}
 \usage{
 msm.predict(object, newdata = NULL)
 }
@@ -11,15 +12,24 @@ msm.predict(object, newdata = NULL)
 
 \item{newdata}{(optional) new set of data (data frame) with a variable 
 called `psi` representing the joint exposure level of all exposures
-under consideration
+under consideration}
+}
+\description{
+Makes predictions from the MSM (rather than the g-computation 
+model) from a "qgcompfit" object. Generally, this should not be used in 
+favor of the default \code{\link[qgcomp]{predict.qgcompfit}} function. This
+function can only be used following the `qgcomp.boot` function. For the 
+`qgcomp.noboot` function, \code{\link[qgcomp]{predict.qgcompfit}} gives 
+identical inference to predicting from an MSM.
+
+get predicted values from a qgcompfit object from
+\code{\link[qgcomp]{qgcomp.boot}}
+}
+\examples{
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
 dat2 <- data.frame(psi=seq(1,4, by=0.1))
 summary(msm.predict(obj))
-summary(msm.predict(obj, newdata=dat2))}
-}
-\description{
-get predicted values from a qgcompfit object from
-\code{\link[qgcomp]{qgcomp.boot}}
+summary(msm.predict(obj, newdata=dat2))
 }

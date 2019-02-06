@@ -463,7 +463,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will 
-  #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=rbinom(50, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, 
   #'   family=binomial())
@@ -698,8 +698,8 @@ plot.qgcompfit <- function(x, ...){
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))
 }
 
-predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
-  #' @title plot.qgcompfit: default prediction method for a qgcompfit object
+predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
+  #' @title predict.qgcompfit: default prediction method for a qgcompfit object
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
   #' in a new set of data based on the qgcomfit object. Note that when making predictions
@@ -710,6 +710,16 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
   #' @param object "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param expnms character vector of exposures of interest
   #' @param newdata (optional) new set of data with all predictors from "qgcompfit" object
+  #' @param type  (from predict.glm) the type of prediction required. The default 
+  #' is on the scale of the linear predictors; the alternative "response" is on 
+  #' the scale of the response  variable. Thus for a default binomial model the 
+  #' default predictions are of log-odds (probabilities on logit scale) and 
+  #' type = "response" gives the predicted probabilities. The "terms" option 
+  #' returns a matrix giving the fitted values of each term in the model formula 
+  #' on the linear predictor scale.
+  #' @param ... arguments to predict.glm
+  #' @export
+  #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
@@ -719,17 +729,25 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL){
   #' summary(predict(obj1, expnms = c('x1', 'x2'), newdata=dat2))
   #' summary(predict(obj2, expnms = c('x1', 'x2'), newdata=dat2))
  if(is.null(newdata)){
-   pred = predict(object$fit, type='response') 
+   pred = predict(object$fit, type=type, ...) 
   }
  if(!is.null(newdata)){
    newqdata <- quantize(newdata, expnms, q=NULL, object$breaks)$data
-   pred = predict(object$fit, newdata=newqdata, type='response') 
+   pred = predict(object$fit, newdata=newqdata, type=type, ...) 
  }
   return(pred)
 }
 
 msm.predict <- function(object, newdata=NULL){
-  #' @title plot.qgcompfit: default prediction method for a qgcompfit object
+  #' @title msm.predict: secondary prediction method for the MSM within a qgcompfit 
+  #' object. 
+  #' 
+  #' @description Makes predictions from the MSM (rather than the g-computation 
+  #' model) from a "qgcompfit" object. Generally, this should not be used in 
+  #' favor of the default \code{\link[qgcomp]{predict.qgcompfit}} function. This
+  #' function can only be used following the `qgcomp.boot` function. For the 
+  #' `qgcomp.noboot` function, \code{\link[qgcomp]{predict.qgcompfit}} gives 
+  #' identical inference to predicting from an MSM.
   #'
   #' @description get predicted values from a qgcompfit object from
   #' \code{\link[qgcomp]{qgcomp.boot}}
@@ -738,6 +756,8 @@ msm.predict <- function(object, newdata=NULL){
   #' @param newdata (optional) new set of data (data frame) with a variable 
   #' called `psi` representing the joint exposure level of all exposures
   #' under consideration
+  #' @export
+  #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)

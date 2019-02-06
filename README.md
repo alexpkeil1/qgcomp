@@ -1,5 +1,7 @@
 #### QGcomp (quantile g-computation): an alternative to weighted quantile sums for estimating the effects of an exposure mixture that does not assume effects of all exposures go in the same direction. Works for continuous and binary outcomes.
 
+
+
 ### Quick start
 
     #install.packages("devtools") # if devtools package not already installed, uncomment this line
