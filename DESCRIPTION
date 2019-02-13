@@ -1,7 +1,7 @@
 Package: qgcomp
-Title: quantile-g-computation
-Version: 0.8.10
-Date: 2019-02-06
+Title: Quantile G-Computation
+Version: 0.8.11
+Date: 2019-02-12
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -14,7 +14,10 @@ Description: G-computation for a set of time-fixed exposures
     homogeneity assumptions. This approach estimates a regression line
     corresponding to the expected change in the outcome (on the link
     basis) given a simultaneous increase in the quantile-based category
-    for all exposures.
+    for all exposures.  Reference: Alexander P. Keil, Jessie P. Buckley,
+    Katie M. OBrien, Kelly K. Ferguson, Shanshan Zhao Alexandra J. White
+    (2019) A quantile-based g-computation approach to addressing the
+    effects of exposure mixtures; arXiv:1902.04200 [stat.ME].
 License: GPL (>= 2)
 Depends: 
     ggplot2 (>= 2.5),
