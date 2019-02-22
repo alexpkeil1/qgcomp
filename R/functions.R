@@ -355,7 +355,17 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10, 
   #'   degree=2)
   #' res2$fit  
+  #' res2$msmfit  
   #' plot(res2)
+  #' # Log risk ratio per one IQR change in all exposures (not on quantile basis)
+  #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
+  #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
+  #' # note that I(x>...) nowoperates on the untransformed value of x,
+  #' # rather than the raw value
+  #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
+  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
+  #'   degree=2)
+  #' res2
       # character names of exposure mixture components
     if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
     if (is.null(expnms)) {
@@ -369,7 +379,14 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       intvals = (1:q)-1
     } else {
       qdata <- data
-      intvals=NULL
+      # if no transformation is made (no quantiles, no breaks given)
+      # then draw distribution values from quantiles of all the exposures
+      # pooled together
+      # TODO: allow user specification of this
+      cat("\nNote: using quantiles of all exposures combined in order to set 
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)")
+      intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
+      br <- NULL
     }
     if(is.null(id)) {
       id = "id__"
