@@ -100,15 +100,16 @@
     # checking whether model fit seems appropriate 
     plot(results4)
 ![Results 4](inst/fig/res4.png)
-    # Note that the smooth fit differs from the model fit. This is 
-    # a direct result of the difference between modeling risks
-    # and modeling odds when the outcome of interest is not rare
-    # The smoothed fit is based on predictions from the underlying 
-    # logistic model whereas "model fit" is based on predictions
-    # from the marginal model for changes in the exposure mixture.
-    # This result suggests that including interaction terms between
-    # elements of the mixture and/or including a second order psi term
-    # (via `degree=2`) may be useful.
+
+Note that the smooth fit differs from the model fit. This is 
+a direct result of the difference between modeling risks
+and modeling odds when the outcome of interest is not rare.
+The smoothed fit is based on predictions from the underlying 
+logistic model whereas "model fit" is based on predictions
+from the marginal model for changes in the exposure mixture.
+This result suggests that including interaction terms between
+elements of the mixture and/or including a second order psi term
+(via `degree=2`) may be useful.
 
 ### Allowing for interactions and non-linear terms using qgcomp.boot
 
