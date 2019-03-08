@@ -37,7 +37,16 @@ dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
 qdata = quantize(data=dat, expnms=c("x1", "x2"), q=4)
 table(qdata$data$x1)
 table(qdata$data$x2)
-summary(dat[c('y', 'z')]);summary(qdata$data[c('y', 'z')]) # not touched
+summary(dat[c("y", "z")]);summary(qdata$data[c("y", "z")]) # not touched
+dat = data.frame(y=runif(100), x1=runif(100), x2=runif(100), z=runif(100))
+# using 'breaks' requires specifying min and max (the qth quantile)
+# example with theoretical quartiles (could be other relevant values)
+qdata2 = quantize(data=dat, expnms=c("x1", "x2"), 
+   breaks=list(c(-1e64, .25, .5, .75, 1e64), 
+               c(-1e64, .25, .5, .75, 1e64)
+               ))
+table(qdata2$data$x1)
+table(qdata2$data$x2)
 }
 \keyword{mixtures}
 \keyword{variance,}
