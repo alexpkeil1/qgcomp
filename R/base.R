@@ -1,18 +1,45 @@
 
-se_comb <- function(expnms, covmat){
+se_comb <- function(expnms, covmat, grad=NULL){
   #calculate standard error of weighted linear combination of random variables
   # given a vector of weights and a covariance matrix (not exported)
   # usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
   #calculate standard error of weighted linear combination of random variables
+  #This is simple version of the delta method for a linear combination:
+  #  f(x) = x1 + x2 + x3
+  # given gradient vector G = 
+  #   [d(f(x))/dx1 = 1,
+  #   d(f(x))/dx2 = 1,
+  #   d(f(x))/dx3 = 1]
+  # t(G) %*% cov(x) %*% G = delta variance
+  if(!is.matrix(covmat)) {
+    nm <- names(covmat)
+    covmat = matrix(covmat)
+    colnames(covmat) <- nm
+  }
   weightvec <- rep(0, dim(covmat)[1])
   # eventual extension: allow non-zero 'weights' such that the intervention
   # could correspond to 1 unit increases in some variables, and < 1 unit increases
   # in others
-  weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] <- 1
-  wcovmat <- weightvec %*% t(weightvec) * covmat
-  var <- sum(wcovmat)
+  if(is.null(grad)) weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] <- 1
+  if(!is.null(grad)) weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] <- grad
+  var <- weightvec %*% covmat %*% weightvec # delta method
+  #var <- sum(wcovmat)
   sqrt(var)
 }
+
+grad.poly <- function(intvals, degree){
+  # returns matrix with each column referring
+  if(degree==1){
+    mat <- matrix(1, nrow=length(intvals), ncol=1)
+  }else{
+    mat <- matrix(1, nrow=length(intvals), ncol=degree)
+    for(d in 2:degree){
+      mat[,d] <- d*poly(intvals, degree = d-1, simple = TRUE, raw = TRUE)
+    }
+  }
+  mat
+}
+
 
 quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' @title create variables representing indicator functions with cutpoints defined
@@ -251,8 +278,8 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
     res <- list(
-      qx = qx, fit = fit, psi = estb, var.psi = seb ^ 2, ci = ci,
-      expnms=expnms, q=q, breaks=br, degree=1,
+      qx = qx, fit = fit, psi = estb, var.psi = seb ^ 2, covmat.psi = c('psi1' = seb^2), 
+      ci = ci, expnms=expnms, q=q, breaks=br, degree=1,
       pos.psi = pos.psi, neg.psi = neg.psi,
       pweights = sort(pweights, decreasing = TRUE),
       nweights = sort(nweights, decreasing = TRUE), 
@@ -435,7 +462,13 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
                        expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
     if(is.null(dim(bootsamps))) {
       seb <- sd(bootsamps)
-    }else seb <- apply(bootsamps, 1, sd)
+      covmat <- var(bootsamps)
+      names(covmat) <- 'psi1'
+    }else{
+      seb <- apply(bootsamps, 1, sd)
+      covmat <- cov(t(bootsamps))
+      colnames(covmat) <- rownames(covmat) <- paste0("psi", 1:nrow(bootsamps))
+    }
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
     pval <- 2 - 2 * pt(abs(tstat), df = df)
@@ -446,7 +479,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     qx <- qdata[, expnms]
     res <- list(
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, psi = estb, 
-      var.psi = seb ^ 2, ci = ci,
+      var.psi = seb ^ 2, covmat.psi=covmat, ci = ci,
       expnms=expnms, q=q, breaks=br, degree=degree,
       pos.psi = NULL, neg.psi = NULL, 
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
@@ -573,7 +606,7 @@ print.qgcompfit <- function(x, ...){
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
   }
-  if (fam == "gaussian"){
+  if (fam == "gaussian" | fam == "cox"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
       pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
@@ -699,34 +732,63 @@ plot.qgcompfit <- function(x, ...){
     }
   }
   if(x$bootstrap){
-   # default plot for bootstrap results (no weights obtained)
+       # variance based on delta method and knowledge that non-linear
+       #functions will always be polynomials in qgcomp
+
+
+       # default plot for bootstrap results (no weights obtained)
    p <- ggplot() 
-     if(x$msmfit$family$family=='gaussian' & x$degree==1){
-       #prediction interval (large sample estimator under normal assumption)
-       resvar = summary(x$fit)$dispersion
-       psivar = x$var.psi
+     if(x$msmfit$family$family=='gaussian'){
+       #confidence band
        y = x$y.expectedmsm
-       yup = y + qnorm(.975)*sqrt(resvar+psivar)
-       ydo = y + qnorm(.025)*sqrt(resvar+psivar)
+       COV = x$covmat.psi
+       intvals = as.numeric(names(table(x$index)))
+       grad = grad.poly(intvals, x$degree)
+       py = tapply(x$y.expectedmsm, x$index, mean)
+       varpy = 0*py
+       for(i in 1:length(intvals)){
+         varpy[i] = se_comb(expnms = paste0('psi', 1:x$degree), 
+                        covmat=COV, grad = grad[i,])
+       }
+       pyup = py + qnorm(.975)*sqrt(varpy)
+       pydo = py + qnorm(.025)*sqrt(varpy)
        p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
-                                fill="Model prediction interval"),
-                            data=data.frame(ymin=ydo, ymax=yup, x=x$index)) +
+                                fill="Model confidence band"),
+                            data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals))) +
                     geom_line(aes(x=x,y=y, color="Model fit"),
-                            data=data.frame(y=y, x=x$index))
+                            data=data.frame(y=y, x=x$index/max(x$index)))
      }
-     if(x$msmfit$family$family=='binomial' & x$degree==1){
-       y = x$y.expectedmsm
-       p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
-                            data=data.frame(y=y, x=x$index)) 
-     }
-     if(x$degree>1){
-       #prediction interval (large sample estimator under normal assumption)
-       y = x$y.expectedmsm
-       p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
-                            data=data.frame(y=y, x=x$index)) 
+     if(x$msmfit$family$family=='binomial'){
+       y = x$y.expectedmsm # probabilities (not on model scale)
+       #variance/gradient on model scales
+       COV = x$covmat.psi
+       intvals = as.numeric(names(table(x$index)))
+       grad = grad.poly(intvals, x$degree)
+       py = tapply(x$y.expectedmsm, x$index, mean)
+       varpy = 0*py   
+       for(i in 1:length(intvals)){
+         varpy[i] = se_comb(expnms = paste0('psi', 1:x$degree), 
+                        covmat=COV, grad = grad[i,])
+       }
+
+       if(x$msmfit$family$link=='log'){
+         pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
+         pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))       
+
+       }
+       if(x$msmfit$family$link=='logit'){
+         pyup = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(varpy))))
+         pydo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(varpy))))      
+       }
+
+       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                                fill="Model confidence band"),
+                            data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals))) +
+                    geom_line(aes(x=x,y=y, color="Model fit"),
+                            data=data.frame(y=y, x=x$index/max(x$index)))
      }
      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
-                          data=data.frame(y=x$y.expected, x=x$index), 
+                          data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
                           method = 'gam', 
                           formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 

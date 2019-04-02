@@ -239,7 +239,7 @@ line.
 
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
-Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. In progress. 
+Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <arXiv:1902.04200> 
 
 ## Acknowledgements
 
