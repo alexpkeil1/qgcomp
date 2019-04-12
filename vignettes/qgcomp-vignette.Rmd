@@ -220,7 +220,7 @@ plot(qcboot.fit4)
 
 Note that allowing for a non-linear effect of all exposures induces an apparent 
 non-linear trend in the overall exposure effect. The smoothed regression line is 
-still well within the prediction intervals of the marginal linear model 
+still well within the confidence bands of the marginal linear model 
 (by default, the overall effect of joint exposure is assumed linear, 
 though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, 
 as follows:
@@ -233,7 +233,6 @@ qcboot.fit5 <- qgcomp(y~. + .^2,
 plot(qcboot.fit5)
 ```
 
-Note the prediction interval has been replaced by actual model predictions. 
 Ideally, the smooth fit will look very similar to the model prediction regression 
 line.
 

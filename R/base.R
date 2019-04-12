@@ -251,9 +251,9 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
       id = "id__"
       qdata$id__ = 1:dim(qdata)[1]
     }
-    fit <- glm(f, data = qdata[,!(names(qdata) %in% id)], ...)
+    fit <- glm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
     mod <- summary(fit)
-    estb <- sum(mod$coefficients[expnms,1])
+    estb <- sum(mod$coefficients[expnms,1, drop=TRUE])
     seb <- se_comb(expnms, covmat = mod$cov.scaled)
     tstat <- estb / seb
     df <- mod$df.null - length(expnms)
@@ -300,7 +300,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     res
 }
 
-
+#TODO: explain (log) better - here and in the noboot
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
@@ -447,9 +447,9 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     estb <- as.numeric(msmfit$msmfit$coefficients[-1])
     #bootstrap to get std. error
     nobs <- dim(qdata)[1]
-    nids <- length(unique(qdata[,id]))
+    nids <- length(unique(qdata[,id, drop=TRUE]))
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...){
-      bootids <- data.frame(temp=sort(sample(unique(qdata[,id]), nids, replace = TRUE)))
+      bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
       as.numeric(
