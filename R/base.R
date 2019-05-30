@@ -24,7 +24,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
   if(!is.null(grad)) weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] <- grad
   var <- weightvec %*% covmat %*% weightvec # delta method
   #var <- sum(wcovmat)
-  sqrt(var)
+  sqrt(var)[1,,drop=TRUE] # should be a scalar
 }
 
 grad.poly <- function(intvals, degree){
@@ -301,7 +301,8 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
 }
 
 #TODO: explain (log) better - here and in the noboot
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, 
+                        rr=TRUE, degree=1, seed=NULL, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
   #' @description This function yields population average effect estimates for 

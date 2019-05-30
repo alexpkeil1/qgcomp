@@ -6,7 +6,7 @@
 
     # install developers version (requires devtools)
     # install.packages("devtools")
-    # devtools::install_github("alexpkeil1/qgcomp", build_opts = c("--no-resave-data", "--no-manual", "--build-vignettes"))
+    # devtools::install_github("alexpkeil1/qgcomp")
     # or install version from CRAN
     install.packages("qgcomp")
     library("qgcomp")
