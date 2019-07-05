@@ -1,3 +1,4 @@
+#qgcomp_surv.R: quantile g-computation methods for survival analysis
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
                                id=NULL, alpha=0.05,
@@ -44,7 +45,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @import survival
   #' @export
   #' @examples
-  #' none yet
+  #' runif(1)
   if (is.null(expnms)) {
     cat("Including all model terms as exposures of interest")
     expnms <- attr(terms(f, data = data), "term.labels")
@@ -84,8 +85,8 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   neg.psi <- sum(wcoef[negcoef])
   nmpos = names(pweights)
   nmneg = names(nweights)
-  se.pos.psi <- qgcomp:::se_comb(nmpos, covmat = covMat)
-  se.neg.psi <- qgcomp:::se_comb(nmneg, covmat = covMat)
+  se.pos.psi <- se_comb(nmpos, covmat = covMat)
+  se.neg.psi <- se_comb(nmneg, covmat = covMat)
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   res <- list(qx = qx, fit = fit, psi = estb, var.psi = seb^2, 
@@ -103,7 +104,7 @@ coxmsm.fit <- function(
   ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
   #' quantized exposures
-  #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox}},
+  #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
   #'  this function directly.
@@ -137,11 +138,11 @@ coxmsm.fit <- function(
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
   #' @param ... arguments to coxph (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
   #' @keywords variance, mixtures
   #' @import survival
   #' @examples
-  #' # none yet
+  #' runif(1)
     # not yet implemented
   {
     id = "id__"
@@ -159,15 +160,16 @@ coxmsm.fit <- function(
   if(!is.null(f[2][[1]][4][[1]])){
     envar = f[2][[1]][2][[1]]
     exvar = f[2][[1]][3][[1]]
-    entry = as.numeric(with(data, eval(envar)))
+    entry = as.numeric(with(qdata, eval(envar)))
   } else{
     exvar = f[2][[1]][2][[1]]
-    entry = rep(0, nrow(data))
+    entry = rep(0, nrow(qdata))
   }
   # 
   bd = merge(bh[, c('time', 'bh')], qdata)
   bd$lasttime = (bd$time==with(bd, eval(exvar)))
-  bd = dplyr::filter(bd, time>=with(bd, eval(envar)))
+  #bd = dplyr::filter(bd, time>=with(bd, eval(envar)))
+  bd = bd[bd$time>=with(bd, eval(envar)),]
   bd$lhr = predict(fit, newdata = bd, type = 'lp')
   bd$hazard = with(bd, exp(log(bh) + lhr))
   
@@ -229,4 +231,50 @@ coxmsm.fit <- function(
     # upper cut-point as first quantile)
   }
   res
+}
+
+
+qgcomp.cox.boot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
+                               B=10, id=NULL, alpha=0.05,
+          ...) {
+  #' @title estimation of quantile g-computation fit for a survival outcome
+  #'  
+  #'
+  #' @description This function performs quantile g-computation in a survival
+  #' setting. 
+  #' 
+  #' @details For survival outcomes ...
+  #' 
+  #' @param f R style formula
+  #' @param data data frame
+  #' @param expnms character vector of exposures of interest
+  #' @param q NULL or number of quantiles used to create quantile indicator variables
+  #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
+  #' version of exposures in the input datasets (useful if data are already transformed,
+  #' or for performing standard g-computation)
+  #' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
+  #' characterize the minimum value of each category for which to 
+  #' break up the variables named in expnms. This is an alternative to using 'q'
+  #' to define cutpoints.
+  #' @param B Number of bootstrap iterations (default is 10)
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
+  #' @param alpha alpha level for confidence limit calculation
+  #' @param ... arguments to glm (e.g. family)
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}} 
+  #'  for time-fixed outcomes (cross-sectional or cohort design with outcomes measured
+  #'  at the end of follow-up) and \code{\link[qgcomp]{qgcomp.gee.noboot}} for 
+  #'  longitudinal outcomes
+  #' @return a qgcompfit object, which contains information about the effect
+  #'  measure of interest (psi) and associated variance (var.psi), as well
+  #'  as information on the model fit (fit) and information on the 
+  #'  weights/standardized coefficients in the positive (pweights) and 
+  #'  negative (nweight) directions.
+  #' @keywords variance, mixtures
+  #' @import survival
+#  #' @export
+  #' @examples
+  #' runif(1)
+  # dummy function
 }

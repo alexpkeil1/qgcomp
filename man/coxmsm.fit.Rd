@@ -38,7 +38,7 @@ id/cluster)}
 \item{...}{arguments to coxph (e.g. family)}
 }
 \description{
-this is an internal function called by \code{\link[qgcomp]{qgcomp.cox}},
+this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
  \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
  but is documented here for clarity. Generally, users will not need to call
  this function directly.
@@ -57,10 +57,10 @@ the MSM yields a causal exposure-response representing the incremental
 change in the expected outcome given a joint intervention on all exposures.
 }
 \examples{
-# none yet
+runif(1)
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox}}
+\code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
 }
 \keyword{mixtures}
 \keyword{variance,}

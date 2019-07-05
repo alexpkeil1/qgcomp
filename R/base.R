@@ -11,6 +11,14 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #   d(f(x))/dx2 = 1,
   #   d(f(x))/dx3 = 1]
   # t(G) %*% cov(x) %*% G = delta variance
+  #' vcov = rbind(c(1.2, .9),c(.9, 2.0))
+  #' colnames(vcov) <- rownames(vcov) <- expnms <- c("x1", "x2")
+  #' qgcomp:::se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
+  #' qgcomp:::se_comb(expnms, vcov, c(1, 1)) # default linear MSM fit: all exposures
+  #' # have equal weight
+  #' qgcomp:::se_comb(expnms, vcov, c(.3, .1)) # used when one exposure contributes
+  #'   # to the overall fit more than others  = d(msmeffect)/dx
+
   if(!is.matrix(covmat)) {
     nm <- names(covmat)
     covmat = matrix(covmat)
@@ -24,7 +32,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
   if(!is.null(grad)) weightvec[which(colnames(as.matrix(covmat)) %in% expnms)] <- grad
   var <- weightvec %*% covmat %*% weightvec # delta method
   #var <- sum(wcovmat)
-  sqrt(var)
+  sqrt(var)[1,,drop=TRUE] # should be a scalar
 }
 
 grad.poly <- function(intvals, degree){
@@ -301,7 +309,8 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
 }
 
 #TODO: explain (log) better - here and in the noboot
-qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, rr=TRUE, degree=1, seed=NULL, ...){
+qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, 
+                        rr=TRUE, degree=1, seed=NULL, ...){
   #' @title estimation of quantile g-computation fit, using bootstrap confidence intervals
   #'  
   #' @description This function yields population average effect estimates for 
@@ -793,8 +802,8 @@ plot.qgcompfit <- function(x, ...){
                           formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
      scale_y_continuous(name="E(outcome)") + 
-     scale_fill_discrete(name="") + 
-     scale_colour_grey(name="") + 
+     scale_fill_grey(name="", start=.9) + 
+     scale_colour_grey(name="", start=0.0, end=0.6) + 
      theme_classic()
    print(p)
   }
