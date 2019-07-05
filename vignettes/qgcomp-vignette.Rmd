@@ -49,8 +49,17 @@ and selection of exposures that are sufficient to control co-pollutant confoundi
 Here we use a running example from the `metals` dataset from the from the package 
 `qgcomp` to demonstrate some features of the package and method. 
 
-Similar examples can be seen in the `gQWS` package help files, which implements
-WQS regression.
+Namely, the examples below demonstrate use of the package for:
+1. Fast estimation of exposure effects under a linear model for quantized exposures for continuous (normal) outcomes
+2. Estimating conditional and marginal odds/risk ratios of a mixture effect for binary outcomes
+3. Adjusting for non-exposure covariates when estimating effects of the mixture
+4. Allowing non-linear and non-homogenous effects of individual exposures and the mixture as a whole by including product terms
+5. Using qgcomp to fit a time-to-event model to estimate conditional and marginal hazard ratios for the exposure mixture (coming soon)
+
+For analogous approaches to estimating exposure mixture effects, illustrative examples can be seen in the `gQWS` package help files, which implements
+WQS regression, and at https://jenfb.github.io/bkmr/overview.html, which describes Bayesian kernel machine regression.
+
+The `qgcomp` package comes with some example data, which comprise a set of simulated well water exposures and two health outcomes (one continuous, one binary). The exposures are transformed to have mean = 0.0, standard deviation = 1.0. The data are used throughout to demonstrate usage and features of the `qgcomp` package.
 
 ```{r, echo=TRUE, results='markup', message=FALSE}
 library(qgcomp)
@@ -120,7 +129,7 @@ weighted quantile sum regression in large samples.
 The overall mixture effect from quatile g-computation (psi1) is interpreted as 
 the effect on the outcome of increasing every exposure by one quantile, possibly
 conditional on covariates. Given the overall exposure effect, the weights are
-considered fixed and so
+considered fixed and so do not have confidence intervals or p-values.
 
 
 ### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
@@ -235,6 +244,10 @@ plot(qcboot.fit5)
 
 Ideally, the smooth fit will look very similar to the model prediction regression 
 line.
+
+### Example 5: time-to-event analysis
+
+Example coming soon. See help file for `qgcomp.cox.noboot` for usage.
 
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
