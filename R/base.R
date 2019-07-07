@@ -42,7 +42,7 @@ grad.poly <- function(intvals, degree){
   }else{
     mat <- matrix(1, nrow=length(intvals), ncol=degree)
     for(d in 2:degree){
-      mat[,d] <- d*poly(intvals, degree = d-1, simple = TRUE, raw = TRUE)
+      mat[,d] <- d*poly(intvals, degree = d-1, simple = TRUE, raw = TRUE)[,d-1]
     }
   }
   mat
