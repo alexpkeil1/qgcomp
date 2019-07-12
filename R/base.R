@@ -630,7 +630,7 @@ print.qgcompfit <- function(x, ...){
 }
 
 
-plot.qgcompfit <- function(x, ...){
+plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
   #' @title plot.qgcompfit: default plotting method for a qgcompfit object
   #'
   #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
@@ -641,6 +641,9 @@ plot.qgcompfit <- function(x, ...){
   #' every exposure')
   #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
+  #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
+  #'   by default (it can be saved as a ggplot2 object and used programatically)
+  #'   (default = FALSE)
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @import ggplot2 grid gridExtra
@@ -672,7 +675,6 @@ plot.qgcompfit <- function(x, ...){
   #' # suggesting the non-linear MSM fits the data better and should be used
   #' # for inference about the effect of the exposure
   ymin <- ymax <- w <- v <- NULL # appease R CMD check
-
   theme_butterfly_l <- list(theme(
     legend.position = c(0,0), 
     legend.justification = c(0,0),
@@ -805,7 +807,7 @@ plot.qgcompfit <- function(x, ...){
      scale_fill_grey(name="", start=.9) + 
      scale_colour_grey(name="", start=0.0, end=0.6) + 
      theme_classic()
-   print(p)
+     if(!suppressprint) print(p)
   }
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))
 }
