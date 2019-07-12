@@ -18,7 +18,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #' calculated (e.g. same as expnms in qgcomp fit)
   #' @param covmat covariance matrix for parameters, e.g. from a model or 
   #' bootstrap procedure
-  #' @param grad the "weight" vector for calculing the contribution of each variable
+  #' @param grad the "weight" vector for calculating the contribution of each variable
   #' in expnms to the final standard error. For a linear combination, this is equal 
   #' to a vector of ones (and is set automatically). Or can be calculated via the 
   #' grad.poly procedure, in the case of coming up with proper weights when the combination
@@ -656,7 +656,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
   #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
-  #'   by default (it can be saved as a ggplot2 object and used programatically)
+  #'   by default (it can be saved as a ggplot2 object and used programmatically)
   #'   (default = FALSE)
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

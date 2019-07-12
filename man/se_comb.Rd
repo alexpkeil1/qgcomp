@@ -14,7 +14,7 @@ calculated (e.g. same as expnms in qgcomp fit)}
 \item{covmat}{covariance matrix for parameters, e.g. from a model or 
 bootstrap procedure}
 
-\item{grad}{the "weight" vector for calculing the contribution of each variable
+\item{grad}{the "weight" vector for calculating the contribution of each variable
 in expnms to the final standard error. For a linear combination, this is equal 
 to a vector of ones (and is set automatically). Or can be calculated via the 
 grad.poly procedure, in the case of coming up with proper weights when the combination
