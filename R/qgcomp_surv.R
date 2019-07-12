@@ -7,7 +7,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #'  
   #'
   #' @description This function performs quantile g-computation in a survival
-  #' setting. The approach stimates the covaraite conditional hazard ratio for 
+  #' setting. The approach estimates the covariate-conditional hazard ratio for 
   #' a joint change of 1 quantile in each exposure variable specified in expnms
   #' parameter
   #' 
