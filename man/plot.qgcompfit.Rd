@@ -4,10 +4,14 @@
 \alias{plot.qgcompfit}
 \title{plot.qgcompfit: default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompfit}(x, ...)
+\method{plot}{qgcompfit}(x, suppressprint = FALSE, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
+
+\item{suppressprint}{If TRUE, suppresses the plot, rather than printing it 
+by default (it can be saved as a ggplot2 object and used programatically)
+(default = FALSE)}
 
 \item{...}{unused}
 }

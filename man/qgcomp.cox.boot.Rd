@@ -54,8 +54,7 @@ runif(1)
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}} 
  for time-fixed outcomes (cross-sectional or cohort design with outcomes measured
- at the end of follow-up) and \code{\link[qgcomp]{qgcomp.gee.noboot}} for 
- longitudinal outcomes
+ at the end of follow-up)
 }
 \keyword{mixtures}
 \keyword{variance,}
