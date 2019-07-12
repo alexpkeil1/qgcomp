@@ -264,8 +264,7 @@ qgcomp.cox.boot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}} 
   #'  for time-fixed outcomes (cross-sectional or cohort design with outcomes measured
-  #'  at the end of follow-up) and \code{\link[qgcomp]{qgcomp.gee.noboot}} for 
-  #'  longitudinal outcomes
+  #'  at the end of follow-up) 
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 

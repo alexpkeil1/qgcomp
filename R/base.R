@@ -1,16 +1,30 @@
 
 se_comb <- function(expnms, covmat, grad=NULL){
-  #calculate standard error of weighted linear combination of random variables
+  #' @title Calculate standard error of weighted linear combination of random variables
   # given a vector of weights and a covariance matrix (not exported)
-  # usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
-  #calculate standard error of weighted linear combination of random variables
-  #This is simple version of the delta method for a linear combination:
-  #  f(x) = x1 + x2 + x3
-  # given gradient vector G = 
-  #   [d(f(x))/dx1 = 1,
-  #   d(f(x))/dx2 = 1,
-  #   d(f(x))/dx3 = 1]
-  # t(G) %*% cov(x) %*% G = delta variance
+  #' @description This function uses the Delta method to calculate standard errors that 
+  #' @details This function is a vectorized version of `quantile_f` from the `gWQS` 
+  #' package that also allows the use of externally defined breaks
+  #' usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
+  #' E.g. here is simple version of the delta method for a linear combination:
+  #'  f(x) = x1 + x2 + x3
+  #' given gradient vector G = 
+  #'   [d(f(x))/dx1 = 1,
+  #'   d(f(x))/dx2 = 1,
+  #'   d(f(x))/dx3 = 1]
+  #' t(G) %*% cov(x) %*% G = delta variance
+  #' @param expnms a character vector with the names of the columns to be
+  #' of interest in the covariance matrix for a which a standard error will be
+  #' calculated (e.g. same as expnms in qgcomp fit)
+  #' @param covmat covariance matrix for parameters, e.g. from a model or 
+  #' bootstrap procedure
+  #' @param grad the "weight" vector for calculing the contribution of each variable
+  #' in expnms to the final standard error. For a linear combination, this is equal 
+  #' to a vector of ones (and is set automatically). Or can be calculated via the 
+  #' grad.poly procedure, in the case of coming up with proper weights when the combination
+  #' of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).
+  #
+  #' @examples
   #' vcov = rbind(c(1.2, .9),c(.9, 2.0))
   #' colnames(vcov) <- rownames(vcov) <- expnms <- c("x1", "x2")
   #' qgcomp:::se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
@@ -685,8 +699,6 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     panel.grid.minor.x = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.line = element_line(colour = "black"), 
-    #axis.text = element_text(colour="black", face="bold", size=14, family="Helvetica"), 
-    #axis.title = element_text(size=16, face="bold", family="Helvetica"), 
     axis.text = element_text(colour="black", face="bold", size=14), 
     axis.title = element_text(size=16, face="bold"), 
     legend.key = element_blank(),
@@ -700,8 +712,6 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     panel.grid.minor.x = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.line = element_line(colour = "black"), 
-    #axis.text.x = element_text(colour="black", face="bold", size=14, family="Helvetica"), 
-    #axis.title.x = element_text(size=16, face="bold", family="Helvetica"), 
     axis.text.x = element_text(colour="black", face="bold", size=14), 
     axis.title.x = element_text(size=16, face="bold"), 
     axis.ticks.y = element_blank(), 
@@ -716,11 +726,13 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!x$bootstrap){
+    poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
     if(length(x$pweights)==0) x$pweights = x$nweights*0
     if(length(x$nweights)==0) x$nweights = x$pweights*0
     pright <- ggplot() + 
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
-                  data=data.frame(w=x$pweights, v=names(x$pweights))) + 
+                  data=data.frame(w=x$pweights, v=names(x$pweights)),
+                  fill=gray(poscolwt)) + 
     scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
     scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
     geom_hline(aes(yintercept=0)) + 
@@ -728,7 +740,8 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     theme_butterfly_r
     pleft <- ggplot() + 
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
-                  data=data.frame(w=x$nweights, v=names(x$nweights))) + 
+                  data=data.frame(w=x$nweights, v=names(x$nweights)),
+                  fill=gray(1-poscolwt)) + 
     scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
     scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
     geom_hline(aes(yintercept=0)) + 
@@ -738,8 +751,11 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
       maxstr = max(mapply(nchar, c(names(x$nweights), names(x$pweights))))
       lw = 1+maxstr/20
       p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
-      grid::grid.newpage()
-      grid::grid.draw(p1)
+      if(!suppressprint) {
+        grid::grid.newpage()
+        grid::grid.draw(p1)
+      }
+      if(suppressprint) return(p1)
     }
   }
   if(x$bootstrap){
@@ -783,9 +799,10 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
        }
 
        if(x$msmfit$family$link=='log'){
-         pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
-         pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))       
-
+         pyup = pmin(exp(log(py) + qnorm(.975)*sqrt(varpy)), 1)
+         pydo = pmax(exp(log(py) + qnorm(.025)*sqrt(varpy)), 0)       
+         #pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
+         #pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))
        }
        if(x$msmfit$family$link=='logit'){
          pyup = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(varpy))))
@@ -809,6 +826,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
      theme_classic()
      if(!suppressprint) print(p)
   }
+  if(suppressprint) return(p)
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))
 }
 
@@ -832,6 +850,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #' returns a matrix giving the fitted values of each term in the model formula 
   #' on the linear predictor scale.
   #' @param ... arguments to predict.glm
+  #' @import grDevices
   #' @export
   #' @examples
   #' set.seed(50)

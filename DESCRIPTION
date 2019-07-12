@@ -1,6 +1,6 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 1.0.11
+Version: 1.1.0
 Date: 2019-07-12
 Authors@R: 
     person(given = "Alexander",
@@ -21,6 +21,7 @@ Description: G-computation for a set of time-fixed exposures
 License: GPL (>= 2)
 Depends: 
     ggplot2 (>= 2.5),
+    grDevices,
     grid,
     gridExtra,
     R (>= 3.0),

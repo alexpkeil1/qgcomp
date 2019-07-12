@@ -2,17 +2,40 @@
 % Please edit documentation in R/base.R
 \name{se_comb}
 \alias{se_comb}
-\title{vcov = rbind(c(1.2, .9),c(.9, 2.0))
-colnames(vcov) <- rownames(vcov) <- expnms <- c("x1", "x2")
-qgcomp:::se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
-qgcomp:::se_comb(expnms, vcov, c(1, 1)) # default linear MSM fit: all exposures
-# have equal weight
-qgcomp:::se_comb(expnms, vcov, c(.3, .1)) # used when one exposure contributes
-  # to the overall fit more than others  = d(msmeffect)/dx}
+\title{Calculate standard error of weighted linear combination of random variables}
 \usage{
 se_comb(expnms, covmat, grad = NULL)
 }
+\arguments{
+\item{expnms}{a character vector with the names of the columns to be
+of interest in the covariance matrix for a which a standard error will be
+calculated (e.g. same as expnms in qgcomp fit)}
+
+\item{covmat}{covariance matrix for parameters, e.g. from a model or 
+bootstrap procedure}
+
+\item{grad}{the "weight" vector for calculing the contribution of each variable
+in expnms to the final standard error. For a linear combination, this is equal 
+to a vector of ones (and is set automatically). Or can be calculated via the 
+grad.poly procedure, in the case of coming up with proper weights when the combination
+of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).}
+}
 \description{
+This function uses the Delta method to calculate standard errors that
+}
+\details{
+This function is a vectorized version of `quantile_f` from the `gWQS` 
+package that also allows the use of externally defined breaks
+usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
+E.g. here is simple version of the delta method for a linear combination:
+ f(x) = x1 + x2 + x3
+given gradient vector G = 
+  [d(f(x))/dx1 = 1,
+  d(f(x))/dx2 = 1,
+  d(f(x))/dx3 = 1]
+t(G) %*% cov(x) %*% G = delta variance
+}
+\examples{
 vcov = rbind(c(1.2, .9),c(.9, 2.0))
 colnames(vcov) <- rownames(vcov) <- expnms <- c("x1", "x2")
 qgcomp:::se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
