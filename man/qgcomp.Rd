@@ -54,5 +54,4 @@ qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

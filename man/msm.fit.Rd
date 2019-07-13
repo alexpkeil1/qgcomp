@@ -38,7 +38,7 @@ id/cluster)}
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
-this is an internal function called by \code{\link[qgcomp]{qgcomp}},
+This is an internal function called by \code{\link[qgcomp]{qgcomp}},
  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
  but is documented here for clarity. Generally, users will not need to call
  this function directly.
@@ -69,5 +69,4 @@ summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstr
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

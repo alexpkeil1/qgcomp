@@ -33,5 +33,4 @@ print(obj2)
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

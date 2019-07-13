@@ -41,7 +41,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #'  as information on the model fit (fit) and information on the 
   #'  weights/standardized coefficients in the positive (pweights) and 
   #'  negative (nweight) directions.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import survival
   #' @export
   #' @examples
@@ -139,7 +139,7 @@ coxmsm.fit <- function(
   #' id/cluster)
   #' @param ... arguments to coxph (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import survival
   #' @examples
   #' runif(1)
@@ -270,7 +270,7 @@ qgcomp.cox.boot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #'  as information on the model fit (fit) and information on the 
   #'  weights/standardized coefficients in the positive (pweights) and 
   #'  negative (nweight) directions.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import survival
 #  #' @export
   #' @examples
