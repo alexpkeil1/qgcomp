@@ -56,5 +56,4 @@ runif(1)
  for time-fixed outcomes (cross-sectional or cohort design with outcomes measured
  at the end of follow-up)
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

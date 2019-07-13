@@ -62,5 +62,4 @@ runif(1)
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

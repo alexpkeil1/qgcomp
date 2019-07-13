@@ -81,7 +81,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' characterize the minimum value of each category for which to 
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import stats
   #' @export
   #' @examples
@@ -126,7 +126,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=NULL, ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
   #' quantized exposures
-  #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp}},
+  #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
   #'  this function directly.
@@ -161,7 +161,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=
   #' id/cluster)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import stats
   #' @examples
   #' set.seed(50)
@@ -249,7 +249,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #'  as information on the model fit (fit) and information on the 
   #'  weights/standardized coefficients in the positive (pweights) and 
   #'  negative (nweight) directions.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import stats
   #' @export
   #' @examples
@@ -369,7 +369,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #'  as information on the model fit (fit) and information on the 
   #'  marginal structural model (msmfit) used to estimate the final effect
   #'  estimates.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import stats
   #' @export
   #' @examples
@@ -547,7 +547,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #'  as information on the model fit (fit) and possibly information on the 
   #'  marginal structural model (msmfit) used to estimate the final effect
   #'  estimates (qgcomp.boot only). If appropriate, weights are also reported.
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @import stats
   #' @export
   #' @examples
@@ -590,7 +590,7 @@ print.qgcompfit <- function(x, ...){
   #' function
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
-  #' @keywords variance, mixtures
+  #' @concept variance mixtures
   #' @export
   #' @examples
   #' set.seed(50)

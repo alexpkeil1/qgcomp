@@ -125,5 +125,4 @@ res2
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}

@@ -48,5 +48,4 @@ qdata2 = quantize(data=dat, expnms=c("x1", "x2"),
 table(qdata2$data$x1)
 table(qdata2$data$x2)
 }
-\keyword{mixtures}
-\keyword{variance,}
+\concept{variance mixtures}
