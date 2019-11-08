@@ -6,7 +6,7 @@
 quantized exposures}
 \usage{
 msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
-  degree = 1, id = NULL, ...)
+  degree = 1, id = NULL, bayes, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -34,6 +34,11 @@ is quadratic. Default=1)}
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
+
+\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
+in penalized parameter estimation that can help with very highly correlated 
+exposures. Note: this does not lead to fully Bayesian inference in general, 
+so results should be interpereted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }

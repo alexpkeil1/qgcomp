@@ -504,7 +504,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
       as.numeric(
-        msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes
+        msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
                 ...)$msmfit$coefficients[-1]
       )
     }

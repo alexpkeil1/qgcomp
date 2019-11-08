@@ -6,7 +6,7 @@
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
   id = NULL, alpha = 0.05, B = 200, rr = TRUE, degree = 1,
-  seed = NULL, ...)
+  seed = NULL, bayes = FALSE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -42,6 +42,11 @@ allows that the relationship between the whole exposure mixture and the outcome
 is quadratic.}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
+
+\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
+in penalized parameter estimation that can help with very highly correlated 
+exposures. Note: this does not lead to fully Bayesian inference in general, 
+so results should be interpereted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }
