@@ -122,6 +122,21 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
     return(list(data=data, breaks=e$retbr))
 }
 
+checknames <- function(terms){
+  #' @title check for valid model terms if 'expnms' parameter not given
+  #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
+  #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+  #'  but is documented here for clarity. Generally, users will not need to call
+  #'  this function directly.    
+  #' @param terms model terms from attr(terms(modelfunction, data), "term.labels")
+  nonlin <- ifelse(sum(grep("\\(|\\:|\\^", terms))>0, TRUE, FALSE)
+  if(nonlin){
+    return(FALSE)
+  }else{
+    return(TRUE)
+  }
+}
+
 
 msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=NULL, bayes, ...){
   #' @title fitting marginal structural model (MSM) based on g-computation with
@@ -271,11 +286,13 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-    if (is.null(expnms)) {
-      cat("Including all model terms as exposures of interest")
-      expnms <- attr(terms(f, data = data), "term.labels")
-    }
-    if (!is.null(q) | !is.null(breaks)){
+  if (is.null(expnms)) {
+    expnms <- attr(terms(f, data = data), "term.labels")
+    cat("Including all model terms as exposures of interest\n")      
+  }
+  lin = checknames(expnms)
+  if(!lin) stop("Model appears to be non-linear: use qgcomp.boot instead")
+  if (!is.null(q) | !is.null(breaks)){
       ql <- quantize(data, expnms, q, breaks)
       qdata <- ql$data
       br <- ql$breaks
@@ -317,10 +334,10 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     # similar to constrained gWQS
     pos.psi <- sum(wcoef[poscoef])
     neg.psi <- sum(wcoef[negcoef])
-    nmpos <- names(pweights)
-    nmneg <- names(nweights)
-    se.pos.psi <- se_comb(nmpos, covmat = mod$cov.scaled)
-    se.neg.psi <- se_comb(nmneg, covmat = mod$cov.scaled)
+    #nmpos <- names(pweights)
+    #nmneg <- names(nweights)
+    #se.pos.psi <- se_comb(nmpos, covmat = mod$cov.scaled)
+    #se.neg.psi <- se_comb(nmneg, covmat = mod$cov.scaled)
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
     res <- list(
@@ -449,8 +466,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' # Log risk ratio per one IQR change in all exposures (not on quantile basis)
   #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
   #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
-  #' # note that I(x>...) nowoperates on the untransformed value of x,
-  #' # rather than the raw value
+  #' # note that I(x>...) now operates on the untransformed value of x,
+  #' # rather than the quantized value
   #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
   #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
   #'   degree=2)
@@ -458,9 +475,12 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       # character names of exposure mixture components
     if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
     if (is.null(expnms)) {
-      cat("Including all model terms as exposures of interest")
       expnms <- attr(terms(f, data = data), "term.labels")
+      cat("Including all model terms as exposures of interest\n")      
     }
+    lin = checknames(expnms)
+    if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
+                  please use `expnms` parameter to define the variables making up the exposure")
     if (!is.null(q) & !is.null(breaks)){
       # if user specifies breaks, prioritize those
       q <- NULL
@@ -593,8 +613,22 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
+  # f = y ~ factor(x1) + x2
+  # next 7 lines are taken directly from glm function in base R
+  if (is.character(family)) 
+    family <- get(family, mode = "function", envir = parent.frame())
+  if (is.function(family)) 
+    family <- family()
+  if (is.null(family$family)) {
+    print(family)
+    stop("'family' not recognized")
+  }
+  if(!(family$family %in% c("binomial")) & rr) {
+    #warning("'rr=TRUE' is for bimomial family only, setting rr=FALSE")
+    rr = FALSE
+  }
   terms <- attr(terms(f,data=data), 'term.labels')
-  doboot <- ifelse(isTRUE(grep("I\\(", terms)>0), TRUE, FALSE)
+  doboot = !checknames(terms)
   if(rr | doboot){
     res <- qgcomp.boot(f=f,data=data,family=family,rr=rr,...)
   }else{
