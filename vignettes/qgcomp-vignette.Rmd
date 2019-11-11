@@ -63,8 +63,9 @@ WQS regression, and at https://jenfb.github.io/bkmr/overview.html, which describ
 The `qgcomp` package comes with some example data, which comprise a set of simulated well water exposures and two health outcomes (one continuous, one binary). The exposures are transformed to have mean = 0.0, standard deviation = 1.0. The data are used throughout to demonstrate usage and features of the `qgcomp` package.
 
 ```{r, echo=TRUE, results='markup', message=FALSE}
-library(qgcomp)
-library(knitr)
+library("qgcomp")
+library("knitr")
+library("ggplot2")
 data("metals", package="qgcomp")
 head(metals)
 ```
@@ -238,7 +239,7 @@ with interaction terms. We use `y~. + .^2` as the model formula, which fits a mo
 that allows for quadratic term for every predictor in the model.
 
 Similar approaches could be used to include interaction terms between exposures, 
-as well as between exposures and covariates. 
+as well as between exposures and covariates.
 
 
 ```{r, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
@@ -260,7 +261,7 @@ as follows:
 
 qcboot.fit5 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
-                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, B=10, seed=125)
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, B=10, rr=FALSE, seed=125)
 plot(qcboot.fit5)
 ```
 
@@ -272,7 +273,7 @@ Exploring a non-linear fit in settings with multiple exposures is challenging. O
 
 NOTE: qgcomp necessarily fits a regression model with exposures that have a small number of possible values, based on the quantile chosen. By package default, this is `q=4`, but it is difficult to fully examine non-linear fits using only four points, so we recommend exploring larger values of `q`, which will change effect estimates (i.e. the model coefficient implies a smaller change in exposures, so the expected change in the outcome will also decrease).
 
-Here, we examine a couple one strategy for default and exploratory approaches to mixtures that can be implemented in qgcomp using a smaller subset of exposures (iron, lead, cadmium), which we choose via the correlation matrix. High correlations between exposures may result from a common source, so small subsets of the mixture may be useful for examining hypotheses that relate to interventions on a common environmental source or set of behaviors. Note that we can still adjust for the measured exposures, even though only 3 our exposures of interest are considered as the mixture of interest. Note that we will require a new R package to help in exploring non-linearity: `splines`. Note that `qgcomp.boot` must be used in order to produce the graphics below, as `qgcomp.boot` does not calculate the necessary quantities.
+Here, we examine a couple one strategy for default and exploratory approaches to mixtures that can be implemented in qgcomp using a smaller subset of exposures (iron, lead, cadmium), which we choose via the correlation matrix. High correlations between exposures may result from a common source, so small subsets of the mixture may be useful for examining hypotheses that relate to interventions on a common environmental source or set of behaviors. Note that we can still adjust for the measured exposures, even though only 3 our exposures of interest are considered as the mixture of interest. Note that we will require a new R package to help in exploring non-linearity: `splines`. Note that `qgcomp.boot` must be used in order to produce the graphics below, as `qgcomp.noboot` does not calculate the necessary quantities.
 
 #### Graphical approach to explore non-linearity in a correlated subset of exposures using splines
 ```{r, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
@@ -310,6 +311,43 @@ pl.fit6nonlin + coord_cartesian(ylim=c(-0.75, .75)) + ggtitle("Linear fit: mixtu
 pl.fit6nonhom + coord_cartesian(ylim=c(-0.75, .75)) + ggtitle("Non-linear, non-homogeneous fit: mixture of iron, lead, and cadmium")
 ```
 
+
+### Example 6: Miscellaneous other ways to allow non-linearity. Note that these are included as examples of *how* to include non-linearities, and are not intended as a demonstration of appropriate model selection.
+```{r, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
+
+# using indicator terms for each quantile
+qc.fit7a <- qgcomp.boot(y ~ factor(iron) + lead + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=2)
+# underlying fit
+summary(qc.fit7a$fit)$coefficients
+plot(qc.fit7a)
+
+# interactions between indicator terms
+qc.fit7b <- qgcomp.boot(y ~ factor(iron)*factor(lead) + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=3)
+# underlying fit
+#summary(qc.fit7b$fit)$coefficients
+plot(qc.fit7b)
+
+# breaks at specific quantiles (these breaks act on the quantized basis)
+qc.fit7c <- qgcomp.boot(y ~ I(iron>3)*I(lead>3) + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=2)
+# underlying fit
+summary(qc.fit7b$fit)$coefficients
+plot(qc.fit7c)
+
+
+```
+
 Note one restriction on exploring non-linearity: while we can use flexible function such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals, which is far too low.
 
 #### Statistical approach explore non-linearity in a correlated subset of exposures using splines
@@ -324,7 +362,7 @@ BIC(qc.fit6nonlin$fit)
 BIC(qc.fit6nonhom$fit)
 ```
 
-### Example 6: time-to-event analysis
+### Example 7: time-to-event analysis
 
 Example coming soon. See help file for `qgcomp.cox.noboot` for usage.
 

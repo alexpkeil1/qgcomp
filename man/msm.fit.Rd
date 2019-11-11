@@ -6,7 +6,7 @@
 quantized exposures}
 \usage{
 msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
-  degree = 1, id = NULL, ...)
+  degree = 1, id = NULL, bayes, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -35,6 +35,11 @@ is quadratic. Default=1)}
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
+\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
+in penalized parameter estimation that can help with very highly correlated 
+exposures. Note: this does not lead to fully Bayesian inference in general, 
+so results should be interpereted as frequentist.}
+
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
@@ -62,7 +67,7 @@ dat <- data.frame(y=runif(200), x1=runif(200), x2=runif(200), z=runif(200))
 X <- c('x1', 'x2')
 qdat <- quantize(dat, X, q=4)$data
 mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2), 
-        expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4)
+        expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4, bayes=FALSE)
 summary(mod$fit) # outcome regression model
 summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
 }

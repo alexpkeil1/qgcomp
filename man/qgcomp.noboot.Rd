@@ -2,11 +2,11 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{estimation of quantile g-computation fit (continuous outcome)
- or conditional quantile odds ratio (binary outcome)}
+\title{estimating the parameters of a marginal structural model (MSM) based on 
+g-computation with quantized exposures}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  id = NULL, alpha = 0.05, ...)
+  id = NULL, alpha = 0.05, bayes = FALSE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -30,6 +30,11 @@ observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
 \item{alpha}{alpha level for confidence limit calculation}
+
+\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
+in penalized parameter estimation that can help with very highly correlated 
+exposures. Note: this does not lead to fully Bayesian inference in general, 
+so results should be interpereted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }

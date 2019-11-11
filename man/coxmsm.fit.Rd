@@ -2,11 +2,11 @@
 % Please edit documentation in R/qgcomp_surv.R
 \name{coxmsm.fit}
 \alias{coxmsm.fit}
-\title{fitting marginal structural model (MSM) based on g-computation with
-quantized exposures}
+\title{estimating the parameters of a marginal structural model (MSM) based on 
+g-computation with quantized exposures}
 \usage{
-coxmsm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
-  degree = 1, id = NULL, ...)
+coxmsm.fit(f, qdata, intvals, expnms, main = TRUE, degree = 1,
+  id = NULL, MCsize = 10000, ...)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
@@ -22,8 +22,6 @@ is 'set' to for estimating the msm. For quantile g-computation, this is just
 \item{expnms}{a character vector with the names of the columns in qdata that represent
 the exposures of interest (main terms only!)}
 
-\item{rr}{logical, estimate log(risk ratio) (family='binomial' only)}
-
 \item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
@@ -35,7 +33,10 @@ is quadratic. Default=1)}
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
-\item{...}{arguments to coxph (e.g. family)}
+\item{MCsize}{integer: sample size for simulation to approximate marginal 
+hazards ratios}
+
+\item{...}{arguments to coxph (e.g. ties)}
 }
 \description{
 this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
@@ -57,7 +58,20 @@ the MSM yields a causal exposure-response representing the incremental
 change in the expected outcome given a joint intervention on all exposures.
 }
 \examples{
-runif(1)
+set.seed(50)
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(50, 10, 0.1))), d=1.0*(tmg<0.1), 
+                  x1=runif(50), x2=runif(50), z=runif(50))
+expnms=paste0("x", 1:2)
+qdata  = qgcomp:::quantize(dat, expnms)$data
+f = survival::Surv(time, d)~x1 + x2
+fit <- survival::coxph(f, data = qdata, y=TRUE, x=TRUE)
+r1 = qdata[1,,drop=FALSE]
+times = survival::survfit(fit, newdata=r1, se.fit=FALSE)$time
+(obj <- qgcomp:::coxmsm.fit(f, qdata, intvals=c(0,1,2,3), expnms, main=TRUE, degree=1, 
+   id=NULL, MCsize=100))
+#dat2 <- data.frame(psi=seq(1,4, by=0.1))
+#summary(predict(obj))
+#summary(predict(obj, newdata=dat2))
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}

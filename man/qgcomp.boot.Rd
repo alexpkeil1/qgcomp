@@ -2,11 +2,12 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{estimation of quantile g-computation fit, using bootstrap confidence intervals}
+\title{estimating the parameters of a marginal structural model (MSM) based on 
+g-computation with quantized exposures}
 \usage{
 qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
   id = NULL, alpha = 0.05, B = 200, rr = TRUE, degree = 1,
-  seed = NULL, ...)
+  seed = NULL, bayes = FALSE, parallel = FALSE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -42,6 +43,13 @@ allows that the relationship between the whole exposure mixture and the outcome
 is quadratic.}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
+
+\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
+in penalized parameter estimation that can help with very highly correlated 
+exposures. Note: this does not lead to fully Bayesian inference in general, 
+so results should be interpereted as frequentist.}
+
+\item{parallel}{use (safe) parallel processing from the future and future.apply packages}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -115,12 +123,17 @@ plot(res2)
 # Log risk ratio per one IQR change in all exposures (not on quantile basis)
 dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
 dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
-# note that I(x>...) nowoperates on the untransformed value of x,
-# rather than the raw value
+# note that I(x>...) now operates on the untransformed value of x,
+# rather than the quantized value
 res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
   degree=2)
 res2
+# using parallel processing
+res2p = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
+  family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
+  degree=2, parallel=TRUE)
+res2p
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}

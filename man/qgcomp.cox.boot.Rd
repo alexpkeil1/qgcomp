@@ -5,7 +5,8 @@
 \title{estimation of quantile g-computation fit for a survival outcome}
 \usage{
 qgcomp.cox.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  B = 10, id = NULL, alpha = 0.05, ...)
+  id = NULL, alpha = 0.05, B = 200, MCsize = 10000, degree = 1,
+  seed = NULL, parallel = FALSE, ...)
 }
 \arguments{
 \item{f}{R style formula}
@@ -24,13 +25,25 @@ characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{B}{Number of bootstrap iterations (default is 10)}
-
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
 \item{alpha}{alpha level for confidence limit calculation}
+
+\item{B}{integer: number of bootstrap iterations (this should typically be
+>=200, though it is set lower in examples to improve run-time).}
+
+\item{MCsize}{integer: sample size for simulation to approximate marginal 
+hazards ratios (if < sample size, then set to sample size)}
+
+\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+allows that the relationship between the whole exposure mixture and the outcome
+is quadratic.}
+
+\item{seed}{integer or NULL: random number seed for replicable bootstrap results}
+
+\item{parallel}{logical (default FALSE): use parallel package to speed up bootstrapping}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -38,22 +51,42 @@ id/cluster)}
 a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pweights) and 
- negative (nweight) directions.
+ marginal structural model (msmfit) used to estimate the final effect
+ estimates.
 }
 \description{
-This function performs quantile g-computation in a survival
-setting.
+This function yields population average effect estimates for 
+  both continuous and binary outcomes
 }
 \details{
-For survival outcomes ...
+Estimates correspond to the average expected change in the
+ (log) outcome per quantile increase in the joint exposure to all exposures 
+ in `expnms'. Test statistics and confidence intervals are based on 
+ a non-parametric bootstrap, using the standard deviation of the bootstrap
+ estimates to estimate the standard error. The bootstrap standard error is 
+ then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+ is done on estimated quantiles of exposure, so these are treated as fixed
+ quantities
 }
 \examples{
-runif(1)
+set.seed(50)
+N=200
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+expnms=paste0("x", 1:2)
+f = survival::Surv(time, d)~x1 + x2
+(fit1 <- survival::coxph(f, data = dat))
+(obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+#(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
+# using parallel package, marginalizing over confounder z
+#(obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
+#                         B=10, MCsize=2000, parallel=TRUE))
+## non-constant hazard ratio, non-linear terms
+#(obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
+#                         expnms = expnms, data = dat, 
+#                         B=20, MCsize=20000, parallel=FALSE, degree=1))
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}} 
- for time-fixed outcomes (cross-sectional or cohort design with outcomes measured
- at the end of follow-up)
+\code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
 }
 \concept{variance mixtures}
