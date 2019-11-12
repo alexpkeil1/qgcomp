@@ -8,7 +8,8 @@ measures, and 2 health outcomes (y = continuous; disease_state = binary)}
 \format{A data frame with 253 rows and 24 variables:
 \describe{
   \item{y}{continuous birth outcome}
-  \item{disease_state}{binary birth outcome}
+  \item{disease_state}{binary outcome}
+  \item{disease_time}{time-to-disease_state: survival outcome censored at approximately the median}
   \item{arsenic}{metal}
   \item{barium}{metal}
   \item{cadmium}{metal}

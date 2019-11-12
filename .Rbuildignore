@@ -1,0 +1,6 @@
+^CRAN-RELEASE$
+cran-comments.md
+.DS_Store
+.git
+.git*
+^cran-comments\.md$

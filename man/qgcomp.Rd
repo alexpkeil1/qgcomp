@@ -7,11 +7,11 @@
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
 \arguments{
-\item{f}{R style formula}
+\item{f}{R style formula (may include survival outcome via \code{\link[survival]{Surv}})}
 
 \item{data}{data frame}
 
-\item{family}{`gaussian()` or `binomial()`}
+\item{family}{`gaussian()`, `binomial()`, `cox()`}
 
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio. Note, to get population average 
@@ -27,10 +27,14 @@ a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and possibly information on the 
  marginal structural model (msmfit) used to estimate the final effect
- estimates (qgcomp.boot only). If appropriate, weights are also reported.
+ estimates (qgcomp.boot, qgcomp.cox.boot only). 
+ If appropriate, weights are also reported, which represent the proportion
+ of a directional (positive/negative) effect that is accounted for by
+ each exposure.
 }
 \description{
-This function automatically selects between qgcomp.noboot and qgcomp.boot
+This function automatically selects between qgcomp.noboot, qgcomp.boot,
+ qgcomp.cox.noboot, and qgcomp.cox.boot
  to select the most efficient approach to estimate the average expected 
  change in the (log) outcome per quantile increase in the joint 
  exposure to all exposures in `expnms'
@@ -50,6 +54,18 @@ qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=1
 # automatically selects appropriate method
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
+
+#survival objects
+set.seed(50)
+N=200
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+expnms=paste0("x", 1:2)
+f = survival::Surv(time, d)~x1 + x2
+qgcomp(f, expnms = expnms, data = dat)
+
+f = survival::Surv(time, d)~x1 + x2 + x1:x2
+qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}

@@ -261,7 +261,8 @@ as follows:
 
 qcboot.fit5 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
-                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, B=10, rr=FALSE, seed=125)
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, 
+                      B=10, rr=FALSE, seed=125)
 plot(qcboot.fit5)
 ```
 
@@ -301,14 +302,18 @@ qc.fit6nonhom <- qgcomp.boot(y ~ bs(iron)*bs(lead) + bs(iron)*bs(cadmium) + bs(l
                          selenium + silver + sodium + zinc,
                          expnms=newXnm,
                          metals, family=gaussian(), q=8, B=10, degree=3)
-# it helps to place the plots on a common y-axis, which is easy due to dependence of the qgcomp plotting functions on ggplot
+# it helps to place the plots on a common y-axis, which is easy due 
+#  to dependence of the qgcomp plotting functions on ggplot
 pl.fit6lin <- plot(qc.fit6lin, suppressprint = TRUE)
 pl.fit6nonlin <- plot(qc.fit6nonlin, suppressprint = TRUE)
 pl.fit6nonhom <- plot(qc.fit6nonhom, suppressprint = TRUE)
 
-pl.fit6lin + coord_cartesian(ylim=c(-0.75, .75)) + ggtitle("Linear fit: mixture of iron, lead, and cadmium")
-pl.fit6nonlin + coord_cartesian(ylim=c(-0.75, .75)) + ggtitle("Linear fit: mixture of iron, lead, and cadmium")
-pl.fit6nonhom + coord_cartesian(ylim=c(-0.75, .75)) + ggtitle("Non-linear, non-homogeneous fit: mixture of iron, lead, and cadmium")
+pl.fit6lin + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Linear fit: mixture of iron, lead, and cadmium")
+pl.fit6nonlin + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Linear fit: mixture of iron, lead, and cadmium")
+pl.fit6nonhom + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Non-linear, non-homogeneous fit: mixture of iron, lead, and cadmium")
 ```
 
 
@@ -362,14 +367,57 @@ BIC(qc.fit6nonlin$fit)
 BIC(qc.fit6nonhom$fit)
 ```
 
-### Example 7: time-to-event analysis
+### Example 7: time-to-event analysis and parallel processing
 
-Example coming soon. See help file for `qgcomp.cox.noboot` for usage.
+Example description coming soon. See help file for `qgcomp.cox.noboot` for usage.
 
+```{r, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+# non-bootstrapped version estimates a marginal structural model for the 
+# confounder-conditional effect
+survival::coxph(survival::Surv(disease_time, disease_state) ~ iron + lead + cadmium + 
+                         arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc +
+                         mage35,
+                         data=metals)
+qc.survfit1 <- qgcomp.cox.noboot(survival::Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4)
+qc.survfit1
+plot(qc.survfit1)
+
+# bootstrapped version estimates a marginal structural model for the population average effect
+#library(survival)
+qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=10, MCsize=1000, parallel=TRUE)
+qc.survfit2
+p2 = plot(qc.survfit2, suppressprint = TRUE)  
+p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
+
+qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=10, MCsize=1000, parallel=TRUE)
+qc.survfit3
+p3 = plot(qc.survfit3, suppressprint = TRUE) 
+p3 + labs(title="Non-linear log(hazard ratio), exposure specific")
+
+qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=10, MCsize=1000, parallel=TRUE, degree=2)
+qc.survfit4
+# examining the overall hazard ratio as a function of overall exposure
+hrs_q = exp(matrix(c(0,0,1,1,2,4,3,9), ncol=2, byrow=TRUE)%*%qc.survfit4$msmfit$coefficients)
+colnames(hrs_q) = "Hazard ratio"
+print("Hazard ratios by quartiles (min-25%,25-50%, 50-75%, 75%-max)")
+hrs_q
+
+p4 = plot(qc.survfit4, suppressprint = TRUE) 
+p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific") 
+
+```
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
 Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://arxiv.org/abs/1902.04200> 
 
 ## Acknowledgements
 
-The development of this package was supported by NIH Grant RO1ES02953101
+The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing was performed by Nicole Niehoff, Michiel Van Den Dries, Emily Werder, Jessie Buckley, and Katie O'Brien.

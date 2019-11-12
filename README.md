@@ -1,4 +1,6 @@
-#### QGcomp (quantile g-computation): an alternative to weighted quantile sums for estimating the effects of an exposure mixture that does not assume effects of all exposures go in the same direction. Works for continuous and binary outcomes.
+#### QGcomp (quantile g-computation): estimating the effects of exposure mixtures. Works for continuous, binary, and right-censored survival outcomes.
+
+#### Flexible, unconstrained, fast and guided by modern causal inference principles
 
 
 
@@ -128,6 +130,38 @@ in a set of metals found in wellwater on a continuous health outcome.
     # proper test of non-linear mixture effect
     plot(results5)
 ![Results 5](inst/fig/res5.png)
+
+### Survival outcomes with and without bootstrapping (fitting a marginal structural cox model to estimate the hazard ratio)
+
+    results6 = qgcomp.cox.noboot(Surv(disease_time, disease_state)~.,
+                         expnms=Xnm,
+                         metals[,c(Xnm, 'disease_time', 'disease_state')])
+
+    print(results6)
+    
+    > Scaled effect size (positive direction, sum of positive coefficients = 0.32)
+    >    barium      zinc magnesium  chromium    silver    sodium      iron 
+    >    0.3432    0.1946    0.1917    0.1119    0.0924    0.0511    0.0151 
+    > 
+    > Scaled effect size (negative direction, sum of negative coefficients = -0.554)
+    >  selenium    copper   calcium   arsenic manganese   cadmium      lead 
+    >    0.2705    0.1826    0.1666    0.1085    0.0974    0.0794    0.0483 
+    >   mercury 
+    >    0.0466 
+    > 
+    > Mixture log(hazard ratio) (Delta method CI):
+    > 
+    >      Estimate Std. Error Lower CI Upper CI Pr(>|t|)
+    > psi1 -0.23356    0.24535 -0.71444  0.24732   0.3411
+    
+    results7 = qgcomp.cox.boot(Surv(disease_time, disease_state)~.,
+                         expnms=Xnm,
+                         metals[,c(Xnm, 'disease_time', 'disease_state')], 
+                         B=10, MCsize=5000)
+
+    plot(results7)
+
+![Results 7](inst/fig/res7.png)
 
 
 ### More help

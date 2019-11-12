@@ -442,7 +442,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #'   
   #' # Population average mixture slope which accounts for non-linearity and interactions
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
-  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=10)
+  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=6)
   #'  
   #' # binary outcome
   #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
@@ -454,23 +454,23 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' #Marginal mixture OR (population average OR - in general, this will not equal the 
   #' # conditional mixture OR due to non-collapsibility of the OR)
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-  #'   data=dat, q=2, B=10)
+  #'   data=dat, q=2, B=6)
   #'   
   #' # Population average mixture RR
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-  #'   data=dat, q=2, rr=TRUE, B=10)
+  #'   data=dat, q=2, rr=TRUE, B=6)
   #'   
   #' # Population average mixture RR, indicator variable representation of x2
   #' # note that I(x==...) operates on the quantile-based category of x,
   #' # rather than the raw value
   #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10)
+  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6)
   #' res$fit  
   #' plot(res)
   #' 
   #' # now add in a non-linear MSM
   #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=10, 
+  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6, 
   #'   degree=2)
   #' res2$fit  
   #' res2$msmfit  
@@ -481,12 +481,12 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' # note that I(x>...) now operates on the untransformed value of x,
   #' # rather than the quantized value
   #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
+  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
   #'   degree=2)
   #' res2
   #' # using parallel processing
   #' res2p = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=10, 
+  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
   #'   degree=2, parallel=TRUE)
   #' res2p
   # character names of exposure mixture components
@@ -540,7 +540,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...){
       if(i==2){
         timeiter = as.numeric(Sys.time() - starttime)
-        cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
+        if((timeiter*B/60)>0.5) cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
       }
       bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
       names(bootids) <- id
@@ -557,7 +557,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
       
-      future:::ClusterRegistry("stop")
+      future::plan(future::sequential)
     }else{
       bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
@@ -606,14 +606,15 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' @title estimation of quantile g-computation fit
   #' 
-  #' @description This function automatically selects between qgcomp.noboot and qgcomp.boot
+  #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
+  #'  qgcomp.cox.noboot, and qgcomp.cox.boot
   #'  to select the most efficient approach to estimate the average expected 
   #'  change in the (log) outcome per quantile increase in the joint 
   #'  exposure to all exposures in `expnms'
   #'
-  #' @param f R style formula
+  #' @param f R style formula (may include survival outcome via \code{\link[survival]{Surv}})
   #' @param data data frame
-  #' @param family `gaussian()` or `binomial()`
+  #' @param family `gaussian()`, `binomial()`, `cox()`
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
   #' estimate risk ratio rather than odds ratio. Note, to get population average 
   #' effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
@@ -626,7 +627,10 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and possibly information on the 
   #'  marginal structural model (msmfit) used to estimate the final effect
-  #'  estimates (qgcomp.boot only). If appropriate, weights are also reported.
+  #'  estimates (qgcomp.boot, qgcomp.cox.boot only). 
+  #'  If appropriate, weights are also reported, which represent the proportion
+  #'  of a directional (positive/negative) effect that is accounted for by
+  #'  each exposure.
   #' @concept variance mixtures
   #' @import stats
   #' @export
@@ -646,22 +650,43 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
   # f = y ~ factor(x1) + x2
-  # next 7 lines are taken directly from glm function in base R
+  #' 
+  #' #survival objects
+  #' set.seed(50)
+  #' N=200
+  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+  #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+  #' expnms=paste0("x", 1:2)
+  #' f = survival::Surv(time, d)~x1 + x2
+  #' qgcomp(f, expnms = expnms, data = dat)
+  #' 
+  #' f = survival::Surv(time, d)~x1 + x2 + x1:x2
+  #' qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
+  requireNamespace("survival")
+  issurv = survival::is.Surv(eval(attr(terms(f, data = data), "variables")[[2]], envir = data))
   if (is.character(family)) 
     family <- get(family, mode = "function", envir = parent.frame())
   if (is.function(family)) 
     family <- family()
   if (is.null(family$family)) {
-    print(family)
-    stop("'family' not recognized")
+    if(issurv){
+      cat("Survival model\n")
+    }else{
+      print(family)
+      stop("'family' not recognized")
+    }
   }
   if(!(family$family %in% c("binomial")) & rr) {
     #warning("'rr=TRUE' is for bimomial family only, setting rr=FALSE")
     rr = FALSE
   }
   terms <- attr(terms(f,data=data), 'term.labels')
-  doboot = !checknames(terms)
-  if(rr | doboot){
+  doboot <- !checknames(terms)
+  if(issurv & doboot ){
+    res <- qgcomp.cox.boot(f=f,data=data,...)
+  } else if(issurv & !doboot ){
+    res <- qgcomp.cox.noboot(f=f,data=data,...)
+  } else if(rr | doboot){
     res <- qgcomp.boot(f=f,data=data,family=family,rr=rr,...)
   }else{
     res <- qgcomp.noboot(f=f,data=data,family=family,...)
@@ -723,8 +748,20 @@ print.qgcompfit <- function(x, ...){
       printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
   }
-  if (fam == "gaussian" | fam == "cox"){
+  if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    if(is.null(dim(x$ci))){
+      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
+      rownames(pdat) <- paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    } else{
+      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
+      rownames(pdat) <- paste0('psi',1:length(x$psi))
+      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    }
+  }
+  if (fam == "cox"){
+    cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     if(is.null(dim(x$ci))){
       pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
       rownames(pdat) <- paste0('psi',1:length(x$psi))
@@ -858,13 +895,54 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
   if(x$bootstrap){
        # variance based on delta method and knowledge that non-linear
        #functions will always be polynomials in qgcomp
-
-
        # default plot for bootstrap results (no weights obtained)
-    if(x$msmfit$family$family=='cox'){
-      stop("Default plotting is not yet implemented for this method")
-    }
+    surv <- NULL # appease R CMD check
     p <- ggplot() 
+    if(x$msmfit$family$family=='cox'){
+      requireNamespace("survival")
+      #construction("warning", "Plot type may change in future releases.")
+      rootdat <- x$qx
+      psidat <- data.frame(psi=0)
+      rootfun <- function(idx, df){
+        df[,x$expnms] <- idx
+        df
+      }
+      rootfun2 <- function(idx, df){
+        df[,"psi"] <- idx
+        df[,"psi1"] <- idx
+        df[,"psi2"] <- idx^2
+        df[,"psi3"] <- idx^3
+        df[,"psi4"] <- idx^4
+        df
+      }
+      newmarg = lapply(0:(x$q-1), rootfun2, df=psidat)
+      margdf = data.frame(do.call("rbind", newmarg))
+      newcond = lapply(0:(x$q-1), rootfun, df=rootdat)
+      conddf = data.frame(do.call("rbind", newcond))
+      msmobj = survfit(x$msmfit, newdata=margdf)
+      gcompobj = survfit(x$fit, newdata=conddf)
+      mdf = with(msmobj, data.frame(time=time, surv=apply(surv, 1, mean)))
+      gdf = with(gcompobj, data.frame(time=time, surv=apply(surv, 1, mean)))
+      mdf0 = with(survfit(x$msmfit, newdata=newmarg[[1]]), 
+                  data.frame(time=time, surv=surv))
+      gdf0 = with(survfit(x$fit, newdata=newcond[[1]]), 
+                  data.frame(time=time, surv=apply(surv, 1, mean)))
+      mdfx = with(survfit(x$msmfit, newdata=newmarg[[x$q]]), 
+                  data.frame(time=time, surv=surv))
+      gdfx = with(survfit(x$fit, newdata=newcond[[x$q]]), 
+                  data.frame(time=time, surv=apply(surv, 1, mean)))
+      p <- p +
+        geom_step(aes(x=time, y=surv, color="MSM", linetype="Average (all quantiles)"), data=mdf)+
+        geom_step(aes(x=time, y=surv, color="Conditional", linetype="Average (all quantiles)"), data=gdf) + 
+        geom_step(aes(x=time, y=surv, color="MSM", linetype="Lowest quantile"), data=mdf0)+
+        geom_step(aes(x=time, y=surv, color="Conditional", linetype="Lowest quantile"), data=gdf0) + 
+        geom_step(aes(x=time, y=surv, color="MSM", linetype="Highest quantile"), data=mdfx)+
+        geom_step(aes(x=time, y=surv, color="Conditional", linetype="Highest quantile"), data=gdfx) + 
+        scale_y_continuous(name="Survival", limits=c(0,1)) + 
+        scale_x_continuous(name="Time") +
+        scale_linetype_discrete(name="")+
+        theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
+    }
      if(x$msmfit$family$family=='gaussian'){
        #confidence band
        y = x$y.expectedmsm
@@ -915,16 +993,18 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
                     geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index/max(x$index)))
      }
-     p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
+    if(x$msmfit$family$family!='cox'){
+      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
                           data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
                           method = 'gam', 
                           formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
      scale_x_continuous(name=("Joint exposure quantile")) + 
-     scale_y_continuous(name="E(outcome)") + 
-     scale_fill_grey(name="", start=.9) + 
-     scale_colour_grey(name="", start=0.0, end=0.6) + 
-     theme_classic()
-     if(!suppressprint) print(p)
+     scale_y_continuous(name="E(outcome)") 
+    }
+    p <- p + scale_fill_grey(name="", start=.9) + 
+      scale_colour_grey(name="", start=0.0, end=0.6) + 
+      theme_classic()
+    if(!suppressprint) print(p)
   }
   if(suppressprint) return(p)
   #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))

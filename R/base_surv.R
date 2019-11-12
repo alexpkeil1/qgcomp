@@ -230,18 +230,31 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' @title estimation of quantile g-computation fit for a survival outcome
   #'  
   #' @description This function yields population average effect estimates for 
-  #'   both continuous and binary outcomes
+  #'   (possibly right censored) time-to event outcomes
   #'  
-  #' @details Estimates correspond to the average expected change in the
-  #'  (log) outcome per quantile increase in the joint exposure to all exposures 
-  #'  in `expnms'. Test statistics and confidence intervals are based on 
+  #' @details `qgcomp.cox.boot' estimates the
+  #'  log(hazard ratio) per quantile increase in the joint exposure to all exposures 
+  #'  in `expnms'. This function uses g-computation to estimate the parameters of a
+  #'  marginal structural model for the population average effect of increasing all
+  #'  expsoures in `expnms' by a single quantile. This approach involves specifying 
+  #'  an underlying conditional outcome model, given all exposures of interest (possibly
+  #'  with non-linear basis function representations such as splines or product terms)
+  #'  and confounders or covariates of interest. This model is fit first, which is used
+  #'  to generate expected outcomes at each quantile of all exposures, which is then
+  #'  used in a second model to estimate a population average dose-response curve that
+  #'  is linear or follows a simple polynomial function. See section on MCSize below
+  #'  
+  #'  Test statistics and confidence intervals are based on 
   #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
   #'  estimates to estimate the standard error. The bootstrap standard error is 
   #'  then used to estimate Wald-type confidence intervals. Note that no bootstrapping
   #'  is done on estimated quantiles of exposure, so these are treated as fixed
   #'  quantities
+  #'  
+  #'  ###MCSize
   #'
-  #' @param f R style formula
+  #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
+  #'   in the outcome defintion. E.g. \code{Surv(time,event) ~ exposure}
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param q NULL or number of quantiles used to create quantile indicator variables
@@ -252,9 +265,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' characterize the minimum value of each category for which to 
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
-  #' @param id (optional) NULL, or variable name indexing individual units of 
-  #' observation (only needed if analyzing data with multiple observations per 
-  #' id/cluster)
+  #' @param id (optional) NULL. Reserved for future use. This does nothing yet.
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -266,7 +277,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param parallel logical (default FALSE): use parallel package to speed up bootstrapping
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -348,7 +359,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
                        nids=nids, id=id, ...){
     if(i==2){
       timeiter = as.numeric(Sys.time() - starttime)
-      cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
+      if((timeiter*B/60)>0.5) cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
     }
     bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
     names(bootids) <- id
@@ -370,7 +381,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,
                                     f=f, qdata=qdata, intvals=intvals, 
                                     expnms=expnms, degree=degree, nids=nids, id=id, ...)
-    future:::ClusterRegistry("stop")
+    future::plan(future::sequential)
   }else {
     bootsamps <- sapply(X=1:B, FUN=psi.only,
                         f=f, qdata=qdata, intvals=intvals, 
