@@ -21,19 +21,29 @@ grad.poly procedure, in the case of coming up with proper weights when the combi
 of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).}
 }
 \description{
-This function uses the Delta method to calculate standard errors that
+This function uses the Delta method to calculate standard errors of linear
+functions of variables (similar to `lincom` in Stata). Generally, users will not need to 
+call this function directly.
 }
 \details{
-This function is a vectorized version of `quantile_f` from the `gWQS` 
-package that also allows the use of externally defined breaks
-usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
-E.g. here is simple version of the delta method for a linear combination:
- f(x) = x1 + x2 + x3
+This function takes inputs of a set of exposure names (character vector)
+and a covariance matrix (with colnames/rownames that contain the full set
+of exposure names), as well as a possible `grad` parameter to calculate
+the variance of a weighted combination of the exposures in `expnms`, where the
+weights are based off of `grad` (which defaults to 1, so that this function
+yields the variance of a sum of all variables in `expnms`)
+
+Here is simple version of the delta method for a linear combination of 
+three model coefficients:
+
+ \deqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
 given gradient vector G = 
-  [d(f(x))/dx1 = 1,
-  d(f(x))/dx2 = 1,
-  d(f(x))/dx3 = 1]
-t(G) %*% cov(x) %*% G = delta variance
+\deqn{  [d(f(\beta))/d\beta_1 = 1,
+
+  d(f(\beta))/d\beta_2 = 1,
+  
+  d(f(\beta))/d\beta_3 = 1]}
+\deqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
 }
 \examples{
 vcov = rbind(c(1.2, .9),c(.9, 2.0))

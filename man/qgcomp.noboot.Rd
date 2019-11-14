@@ -2,8 +2,8 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{estimation of quantile g-computation fit (continuous outcome)
- or conditional quantile odds ratio (binary outcome)}
+\title{estimating the parameters of a marginal structural model (MSM) based on 
+g-computation with quantized exposures}
 \usage{
 qgcomp.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
   id = NULL, alpha = 0.05, bayes = FALSE, ...)

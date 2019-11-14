@@ -7,11 +7,11 @@
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
 \arguments{
-\item{f}{R style formula}
+\item{f}{R style formula (may include survival outcome via \code{\link[survival]{Surv}})}
 
 \item{data}{data frame}
 
-\item{family}{`gaussian()` or `binomial()`}
+\item{family}{`gaussian()`, `binomial()`, `cox()`}
 
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio. Note, to get population average 
@@ -27,13 +27,25 @@ a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and possibly information on the 
  marginal structural model (msmfit) used to estimate the final effect
- estimates (qgcomp.boot only). If appropriate, weights are also reported.
+ estimates (qgcomp.boot, qgcomp.cox.boot only). 
+ If appropriate, weights are also reported, which represent the proportion
+ of a directional (positive/negative) effect that is accounted for by
+ each exposure.
 }
 \description{
-This function automatically selects between qgcomp.noboot and qgcomp.boot
- to select the most efficient approach to estimate the average expected 
+This function automatically selects between qgcomp.noboot, qgcomp.boot,
+ qgcomp.cox.noboot, and qgcomp.cox.boot
+ for the most efficient approach to estimate the average expected 
  change in the (log) outcome per quantile increase in the joint 
- exposure to all exposures in `expnms'
+ exposure to all exposures in `expnms', given the underlying model. For example,
+ if the underlying model (specified by the formula `f`) is a linear model with all
+ linear terms for exposure, then `qgcomp.noboot`` will be called to fit the model. Non-linear
+ terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
+ function being called. For a given linear model, boot and noboot versions will give identical
+ inference, though when using survival outcomes, the `boot` version uses simulation based 
+ inference, which can vary from the `nonboot` version due to simulation error (which can 
+ be minimized via setting the MCsize parameter very large - see 
+ \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
 }
 \examples{
 set.seed(50)
@@ -50,8 +62,24 @@ qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=1
 # automatically selects appropriate method
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
+
+#survival objects
+set.seed(50)
+N=200
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+expnms=paste0("x", 1:2)
+f = survival::Surv(time, d)~x1 + x2
+qgcomp(f, expnms = expnms, data = dat)
+# note that in the survival models, MCsize should be set to a large number
+#  such that results are repeatable (within an error tolerance such as 2 significant digits)
+# if you run them under different  seed values
+f = survival::Surv(time, d)~x1 + x2 + x1:x2
+qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
+\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
+ \code{\link[qgcomp]{qgcomp.cox.noboot}} and \code{\link[qgcomp]{qgcomp.cox.boot}}
+ (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
 }
 \concept{variance mixtures}

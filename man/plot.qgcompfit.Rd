@@ -30,7 +30,7 @@ dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(1
 ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 ft
 plot(ft)
-# examinging fit
+# examining fit
 plot(ft$fit, which=1) # residual vs. fitted is not straight line!
 
 # using non-linear outcome model
