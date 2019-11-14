@@ -924,7 +924,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     if(x$msmfit$family$family=='cox'){
       requireNamespace("survival")
       #construction("warning", "Plot type may change in future releases.")
-      rootdat <- x$fit$x
+      rootdat <- as.data.frame(x$fit$x)
       psidat <- data.frame(psi=0)
       rootfun <- function(idx, df){
         df[,x$expnms] <- idx

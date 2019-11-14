@@ -382,7 +382,7 @@ survival::coxph(survival::Surv(disease_time, disease_state) ~ iron + lead + cadm
 qc.survfit1 <- qgcomp.cox.noboot(survival::Surv(disease_time, disease_state) ~ .,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4)
 qc.survfit1
-#plot(qc.survfit1)
+plot(qc.survfit1)
 
 # bootstrapped version estimates a marginal structural model for the population average effect
 #library(survival)
@@ -390,15 +390,15 @@ qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
                          B=10, MCsize=1000, parallel=TRUE)
 qc.survfit2
-#p2 = plot(qc.survfit2, suppressprint = TRUE)  
-#p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
+p2 = plot(qc.survfit2, suppressprint = TRUE)  
+p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
 
 qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
                          B=10, MCsize=1000, parallel=TRUE)
 qc.survfit3
-#p3 = plot(qc.survfit3, suppressprint = TRUE) 
-#p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
+p3 = plot(qc.survfit3, suppressprint = TRUE) 
+p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
 
 qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
@@ -410,8 +410,8 @@ colnames(hrs_q) = "Hazard ratio"
 print("Hazard ratios by quartiles (min-25%,25-50%, 50-75%, 75%-max)")
 hrs_q
 
-#p4 = plot(qc.survfit4, suppressprint = TRUE) 
-#p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific") 
+p4 = plot(qc.survfit4, suppressprint = TRUE) 
+p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific") 
 
 ```
 ## References

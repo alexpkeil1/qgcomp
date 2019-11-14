@@ -76,6 +76,7 @@ coxmsm.fit <- function(
     # predictions under hypothetically removing competing risks
     # assuming censoring at random and no late entry
     pfit = survfit(fit, newdata=newdata[,], se.fit=FALSE)
+    if(any(diff(pfit$n.risk)>0)) stop("qgcomp.cox.boot does not yet accomodate late entry")
     ch = pfit$cumhaz
     h1 = ch[1,]
     haz = rbind(h1, apply(ch, 2, diff))
