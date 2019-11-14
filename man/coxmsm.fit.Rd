@@ -13,7 +13,7 @@ coxmsm.fit(f, qdata, intvals, expnms, main = TRUE, degree = 1,
 exposures and covariates. Interaction terms that include exposure variables
 should be represented via the \code{\link[base]{AsIs}} function}
 
-\item{qdata}{a data frame with quantized exposures}
+\item{qdata}{a data frame with quantized exposures (as well as outcome and other covariates)}
 
 \item{intvals}{sequence, the sequence of integer values that the joint exposure 
 is 'set' to for estimating the msm. For quantile g-computation, this is just 

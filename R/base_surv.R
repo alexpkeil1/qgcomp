@@ -24,7 +24,7 @@ coxmsm.fit <- function(
   #' @param f an r formula representing the conditional model for the outcome, given all
   #' exposures and covariates. Interaction terms that include exposure variables
   #' should be represented via the \code{\link[base]{AsIs}} function
-  #' @param qdata a data frame with quantized exposures
+  #' @param qdata a data frame with quantized exposures (as well as outcome and other covariates)
   #' @param intvals sequence, the sequence of integer values that the joint exposure 
   #' is 'set' to for estimating the msm. For quantile g-computation, this is just 
   #' 0:(q-1), where q is the number of quantiles of exposure.

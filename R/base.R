@@ -924,7 +924,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     if(x$msmfit$family$family=='cox'){
       requireNamespace("survival")
       #construction("warning", "Plot type may change in future releases.")
-      rootdat <- x$qx
+      rootdat <- x$fit$qx
       psidat <- data.frame(psi=0)
       rootfun <- function(idx, df){
         df[,x$expnms] <- idx
@@ -966,7 +966,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
         scale_linetype_discrete(name="")+
         theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
     }
-     if(x$msmfit$family$family=='gaussian'){
+    if(x$msmfit$family$family=='gaussian'){
        #confidence band
        y = x$y.expectedmsm
        COV = x$covmat.psi
@@ -986,7 +986,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
                     geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index/max(x$index)))
      }
-     if(x$msmfit$family$family=='binomial'){
+    if(x$msmfit$family$family=='binomial'){
        y = x$y.expectedmsm # probabilities (not on model scale)
        #variance/gradient on model scales
        COV = x$covmat.psi
@@ -1017,12 +1017,12 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
                             data=data.frame(y=y, x=x$index/max(x$index)))
      }
     if(x$msmfit$family$family!='cox'){
-      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
-                          data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
-                          method = 'gam', 
-                          formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
-     scale_x_continuous(name=("Joint exposure quantile")) + 
-     scale_y_continuous(name="E(outcome)") 
+     # p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
+     #                     data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
+     #                     method = 'gam', 
+     #                     formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
+     #scale_x_continuous(name=("Joint exposure quantile")) + 
+     #scale_y_continuous(name="E(outcome)") 
     }
     p <- p + scale_fill_grey(name="", start=.9) + 
       scale_colour_grey(name="", start=0.0, end=0.6) + 
