@@ -69,7 +69,10 @@ coxmsm.fit <- function(
   if(is.null(intvals)){
     intvals = (1:length(table(qdata[expnms[1]]))) - 1
   }
-  times = sort(-sort(-unique(as.numeric(fit$y)))[-1])[-1]
+  ymat = fit$y
+  tval = grep("stop|time",colnames(ymat) , value=TRUE)
+  stop = as.numeric(ymat[,tval])
+  times = sort(-sort(-unique(stop))[-1])[-1]
   predit <- function(idx){
     newdata <- qdata[sample(1:nrow(qdata), size = MCsize, replace = TRUE),,drop=FALSE]
     newdata[,expnms] <- idx
