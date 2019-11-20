@@ -118,19 +118,19 @@ coxmsm.fit <- function(
   res
 }
 
-predict.coxmsmfit <- function(msmfit, newdata=NULL, ...){
-  if(is.null(newdata)){
-    pfit = survfit(msmfit, se.fit=FALSE)
-  } else{
-    pfit = survfit(msmfit, newdata=newdata, se.fit=FALSE)
-  }
-  bh = pfit$cumhaz
-  tms = pfit$time
-  deltat = c(tms[1], diff(tms))
-  haz = rbind(bh[1,], apply(bh, 2, diff))
-  Ya = apply(deltat*haz,2, sum)
-  Ya
-}
+#predict.coxmsmfit <- function(msmfit, newdata=NULL, ...){
+#  if(is.null(newdata)){
+#    pfit = survfit(msmfit, se.fit=FALSE)
+#  } else{
+#    pfit = survfit(msmfit, newdata=newdata, se.fit=FALSE)
+#  }
+#  bh = pfit$cumhaz
+#  tms = pfit$time
+#  deltat = c(tms[1], diff(tms))
+#  haz = rbind(bh[1,], apply(bh, 2, diff))
+#  Ya = apply(deltat*haz,2, sum)
+#  Ya
+#}
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
                                id=NULL, alpha=0.05,...) {
