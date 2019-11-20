@@ -31,6 +31,7 @@ doc
 rsconnect/
 cran-comments.md
 NEWS.md
-
+.gitignore
 .DS_Store
 *.DS_Store
+.Rbuildignore
