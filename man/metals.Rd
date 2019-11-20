@@ -4,7 +4,8 @@
 \name{metals}
 \alias{metals}
 \title{Simulated well water measurements in North Carolina: 16 metals, 6 water chemistry 
-measures, and 2 health outcomes (y = continuous; disease_state = binary)}
+measures, and 2 health outcomes (y = continuous; disease_state = binary/time-to-event
+in combination with disease_time)}
 \format{A data frame with 253 rows and 24 variables:
 \describe{
   \item{y}{continuous birth outcome}

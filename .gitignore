@@ -31,3 +31,6 @@ doc
 rsconnect/
 cran-comments.md
 NEWS.md
+
+.DS_Store
+*.DS_Store

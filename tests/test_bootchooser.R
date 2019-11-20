@@ -43,6 +43,10 @@ fs = Surv(time,d)~.
 res = try(fit1 <- qgcomp(fs, expnms=Xnm, data = dat, B=5, MCsize=100), silent=TRUE)
 stopifnot(class(res)=="try-error")
 
+fs = Surv(time,d)~.
+res = try(fit1 <- qgcomp(fs, expnms=Xnm, family=cox(), data = dat), silent=TRUE)
+stopifnot(class(res)=="try-error")
+
 
 f = y~. + .^2
 res = try(fit1 <- qgcomp(f, expnms=Xnm, data = dat), silent=TRUE)

@@ -398,7 +398,7 @@ qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnm
                          B=10, MCsize=1000, parallel=TRUE)
 qc.survfit3
 p3 = plot(qc.survfit3, suppressprint = TRUE) 
-p3 + labs(title="Non-linear log(hazard ratio), exposure specific")
+p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
 
 qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 

@@ -34,7 +34,13 @@ to define cutpoints.}
 >=200, though it is set lower in examples to improve run-time).}
 
 \item{MCsize}{integer: sample size for simulation to approximate marginal 
-hazards ratios (if < sample size, then set to sample size)}
+hazards ratios (if < sample size, then set to sample size). Note that large
+values will slow down the fitting, but will result in higher accuracy - if you 
+run the function multiple times you will see that results vary due to simuation
+error. Ideally, MCsize would be set such that simulation error is negligible
+in the precision reported (e.g. if you report results to 2 decimal places, then
+MCsize should be set high enough that you consistenty get answers that are the same
+to 2 decimal places).}
 
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
@@ -42,7 +48,7 @@ is quadratic.}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 
-\item{parallel}{logical (default FALSE): use parallel package to speed up bootstrapping}
+\item{parallel}{logical (default FALSE): use future package to speed up bootstrapping}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -77,7 +83,14 @@ This function yields population average effect estimates for
  is done on estimated quantiles of exposure, so these are treated as fixed
  quantities
  
- ###MCSize
+ MCSize is crucial to get accurate point estimates. In order to get marginal
+ estimates of the population hazard under different values of the joint exposure
+ at a given quantile for all exposures in `expnmns`, `qgcomp.cox.boot` uses
+ Monte Carlo simulation to generate outcomes implied by the underlying conditional model
+ and then fit a separate (marginal structural) model to those outcomes. In order to get
+ accurate results that don't vary much from run-to-run of this approach, MCsize
+ must be set large enough so that results are stable across runs according to a pre-determined
+ precision (e.g. 2 significant digits).
 }
 \examples{
 set.seed(50)
@@ -88,14 +101,15 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+# not run (slow when using boot version to proper precision)
 #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
-# using parallel package, marginalizing over confounder z
+# using future package, marginalizing over confounder z
 #(obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
-#                         B=10, MCsize=2000, parallel=TRUE))
+#                         B=1000, MCsize=20000, parallel=TRUE))
 ## non-constant hazard ratio, non-linear terms
 #(obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
 #                         expnms = expnms, data = dat, 
-#                         B=20, MCsize=20000, parallel=FALSE, degree=1))
+#                         B=1000, MCsize=20000, parallel=FALSE, degree=1))
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}

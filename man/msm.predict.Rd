@@ -3,7 +3,7 @@
 \name{msm.predict}
 \alias{msm.predict}
 \title{msm.predict: secondary prediction method for the MSM within a qgcompfit 
-object.}
+object (non-survival outcomes only).}
 \usage{
 msm.predict(object, newdata = NULL)
 }

@@ -35,9 +35,17 @@ a qgcompfit object, which contains information about the effect
 \description{
 This function automatically selects between qgcomp.noboot, qgcomp.boot,
  qgcomp.cox.noboot, and qgcomp.cox.boot
- to select the most efficient approach to estimate the average expected 
+ for the most efficient approach to estimate the average expected 
  change in the (log) outcome per quantile increase in the joint 
- exposure to all exposures in `expnms'
+ exposure to all exposures in `expnms', given the underlying model. For example,
+ if the underlying model (specified by the formula `f`) is a linear model with all
+ linear terms for exposure, then `qgcomp.noboot`` will be called to fit the model. Non-linear
+ terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
+ function being called. For a given linear model, boot and noboot versions will give identical
+ inference, though when using survival outcomes, the `boot` version uses simulation based 
+ inference, which can vary from the `nonboot` version due to simulation error (which can 
+ be minimized via setting the MCsize parameter very large - see 
+ \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
 }
 \examples{
 set.seed(50)
@@ -63,11 +71,15 @@ dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 qgcomp(f, expnms = expnms, data = dat)
-
+# note that in the survival models, MCsize should be set to a large number
+#  such that results are repeatable (within an error tolerance such as 2 significant digits)
+# if you run them under different  seed values
 f = survival::Surv(time, d)~x1 + x2 + x1:x2
 qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
+\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
+ \code{\link[qgcomp]{qgcomp.cox.noboot}} and \code{\link[qgcomp]{qgcomp.cox.boot}}
+ (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
 }
 \concept{variance mixtures}

@@ -11,7 +11,7 @@ msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
 exposures and covariates. Interaction terms that include exposure variables
-should be represented via the \code{\link[base]{I}} function}
+should be represented via the \code{\link[base]{AsIs}} function}
 
 \item{qdata}{a data frame with quantized exposures}
 

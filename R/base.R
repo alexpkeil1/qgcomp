@@ -2,17 +2,28 @@
 se_comb <- function(expnms, covmat, grad=NULL){
   #' @title Calculate standard error of weighted linear combination of random variables
   # given a vector of weights and a covariance matrix (not exported)
-  #' @description This function uses the Delta method to calculate standard errors that 
-  #' @details This function is a vectorized version of `quantile_f` from the `gWQS` 
-  #' package that also allows the use of externally defined breaks
-  #' usage: qgcomp:::se_comb(expnms='x', covmat=summary(lmfit)$cov.scaled)
-  #' E.g. here is simple version of the delta method for a linear combination:
-  #'  f(x) = x1 + x2 + x3
+  #' @description This function uses the Delta method to calculate standard errors of linear
+  #' functions of variables (similar to `lincom` in Stata). Generally, users will not need to 
+  #' call this function directly.
+  #' @details This function takes inputs of a set of exposure names (character vector)
+  #' and a covariance matrix (with colnames/rownames that contain the full set
+  #' of exposure names), as well as a possible `grad` parameter to calculate
+  #' the variance of a weighted combination of the exposures in `expnms`, where the
+  #' weights are based off of `grad` (which defaults to 1, so that this function
+  #' yields the variance of a sum of all variables in `expnms`)
+  #' 
+  #' Here is simple version of the delta method for a linear combination of 
+  #' three model coefficients:
+  #' 
+  #'  \deqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
   #' given gradient vector G = 
-  #'   [d(f(x))/dx1 = 1,
-  #'   d(f(x))/dx2 = 1,
-  #'   d(f(x))/dx3 = 1]
-  #' t(G) %*% cov(x) %*% G = delta variance
+  #' \deqn{  [d(f(\beta))/d\beta_1 = 1,
+  #' 
+  #'   d(f(\beta))/d\beta_2 = 1,
+  #'   
+  #'   d(f(\beta))/d\beta_3 = 1]}
+  #' \deqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
+  #' 
   #' @param expnms a character vector with the names of the columns to be
   #' of interest in the covariance matrix for a which a standard error will be
   #' calculated (e.g. same as expnms in qgcomp fit)
@@ -161,7 +172,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=
   #' change in the expected outcome given a joint intervention on all exposures.
   #' @param f an r formula representing the conditional model for the outcome, given all
   #' exposures and covariates. Interaction terms that include exposure variables
-  #' should be represented via the \code{\link[base]{I}} function
+  #' should be represented via the \code{\link[base]{AsIs}} function
   #' @param qdata a data frame with quantized exposures
   #' @param expnms a character vector with the names of the columns in qdata that represent
   #' the exposures of interest (main terms only!)
@@ -608,9 +619,17 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' 
   #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
   #'  qgcomp.cox.noboot, and qgcomp.cox.boot
-  #'  to select the most efficient approach to estimate the average expected 
+  #'  for the most efficient approach to estimate the average expected 
   #'  change in the (log) outcome per quantile increase in the joint 
-  #'  exposure to all exposures in `expnms'
+  #'  exposure to all exposures in `expnms', given the underlying model. For example,
+  #'  if the underlying model (specified by the formula `f`) is a linear model with all
+  #'  linear terms for exposure, then `qgcomp.noboot`` will be called to fit the model. Non-linear
+  #'  terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
+  #'  function being called. For a given linear model, boot and noboot versions will give identical
+  #'  inference, though when using survival outcomes, the `boot` version uses simulation based 
+  #'  inference, which can vary from the `nonboot` version due to simulation error (which can 
+  #'  be minimized via setting the MCsize parameter very large - see 
+  #'  \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
   #'
   #' @param f R style formula (may include survival outcome via \code{\link[survival]{Surv}})
   #' @param data data frame
@@ -622,7 +641,9 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
   #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q)
-  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}} and \code{\link[qgcomp]{qgcomp.boot}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
+  #'  \code{\link[qgcomp]{qgcomp.cox.noboot}} and \code{\link[qgcomp]{qgcomp.cox.boot}}
+  #'  (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and possibly information on the 
@@ -659,7 +680,9 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' expnms=paste0("x", 1:2)
   #' f = survival::Surv(time, d)~x1 + x2
   #' qgcomp(f, expnms = expnms, data = dat)
-  #' 
+  #' # note that in the survival models, MCsize should be set to a large number
+  #' #  such that results are repeatable (within an error tolerance such as 2 significant digits)
+  #' # if you run them under different  seed values
   #' f = survival::Surv(time, d)~x1 + x2 + x1:x2
   #' qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
   requireNamespace("survival")
@@ -901,7 +924,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
     if(x$msmfit$family$family=='cox'){
       requireNamespace("survival")
       #construction("warning", "Plot type may change in future releases.")
-      rootdat <- x$qx
+      rootdat <- as.data.frame(x$fit$x)
       psidat <- data.frame(psi=0)
       rootfun <- function(idx, df){
         df[,x$expnms] <- idx
@@ -943,7 +966,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
         scale_linetype_discrete(name="")+
         theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
     }
-     if(x$msmfit$family$family=='gaussian'){
+    if(x$msmfit$family$family=='gaussian'){
        #confidence band
        y = x$y.expectedmsm
        COV = x$covmat.psi
@@ -963,7 +986,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
                     geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index/max(x$index)))
      }
-     if(x$msmfit$family$family=='binomial'){
+    if(x$msmfit$family$family=='binomial'){
        y = x$y.expectedmsm # probabilities (not on model scale)
        #variance/gradient on model scales
        COV = x$covmat.psi
@@ -994,12 +1017,12 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
                             data=data.frame(y=y, x=x$index/max(x$index)))
      }
     if(x$msmfit$family$family!='cox'){
-      p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
-                          data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
-                          method = 'gam', 
-                          formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
-     scale_x_continuous(name=("Joint exposure quantile")) + 
-     scale_y_continuous(name="E(outcome)") 
+     # p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
+     #                     data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
+     #                     method = 'gam', 
+     #                     formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
+     #scale_x_continuous(name=("Joint exposure quantile")) + 
+     #scale_y_continuous(name="E(outcome)") 
     }
     p <- p + scale_fill_grey(name="", start=.9) + 
       scale_colour_grey(name="", start=0.0, end=0.6) + 
@@ -1011,7 +1034,8 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
 }
 
 predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
-  #' @title predict.qgcompfit: default prediction method for a qgcompfit object
+  #' @title predict.qgcompfit: default prediction method for a qgcompfit object (non-survival 
+  #' outcomes only)
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
   #' in a new set of data based on the qgcomfit object. Note that when making predictions
@@ -1041,7 +1065,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' summary(predict(obj1, expnms = c('x1', 'x2'), newdata=dat2))
   #' summary(predict(obj2, expnms = c('x1', 'x2'), newdata=dat2))
- if(is.null(newdata)){
+  if(is.null(newdata)){
    pred <- predict(object$fit, type=type, ...) 
   }
  if(!is.null(newdata)){
@@ -1053,7 +1077,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
 
 msm.predict <- function(object, newdata=NULL){
   #' @title msm.predict: secondary prediction method for the MSM within a qgcompfit 
-  #' object. 
+  #' object (non-survival outcomes only). 
   #' 
   #' @description Makes predictions from the MSM (rather than the g-computation 
   #' model) from a "qgcompfit" object. Generally, this should not be used in 

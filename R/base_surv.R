@@ -23,8 +23,8 @@ coxmsm.fit <- function(
   #' change in the expected outcome given a joint intervention on all exposures.
   #' @param f an r formula representing the conditional model for the outcome, given all
   #' exposures and covariates. Interaction terms that include exposure variables
-  #' should be represented via the \code{\link[base]{I}} function
-  #' @param qdata a data frame with quantized exposures
+  #' should be represented via the \code{\link[base]{AsIs}} function
+  #' @param qdata a data frame with quantized exposures (as well as outcome and other covariates)
   #' @param intvals sequence, the sequence of integer values that the joint exposure 
   #' is 'set' to for estimating the msm. For quantile g-computation, this is just 
   #' 0:(q-1), where q is the number of quantiles of exposure.
@@ -69,13 +69,20 @@ coxmsm.fit <- function(
   if(is.null(intvals)){
     intvals = (1:length(table(qdata[expnms[1]]))) - 1
   }
-  times = sort(-sort(-unique(as.numeric(fit$y)))[-1])[-1]
+  ymat = fit$y
+  tval = grep("stop|time",colnames(ymat) , value=TRUE)
+  stop = as.numeric(ymat[,tval])
+  times = sort(-sort(-unique(stop))[-1])
   predit <- function(idx){
     newdata <- qdata[sample(1:nrow(qdata), size = MCsize, replace = TRUE),,drop=FALSE]
     newdata[,expnms] <- idx
     # predictions under hypothetically removing competing risks
     # assuming censoring at random and no late entry
     pfit = survfit(fit, newdata=newdata[,], se.fit=FALSE)
+    if(any(diff(pfit$n.risk)>0)){
+      warning("Late entry/counting process style data is still under 
+              testing in qgcomp.cox.boot: be cautious of output.")
+    }
     ch = pfit$cumhaz
     h1 = ch[1,]
     haz = rbind(h1, apply(ch, 2, diff))
@@ -111,19 +118,19 @@ coxmsm.fit <- function(
   res
 }
 
-predict.coxmsmfit <- function(msmfit, newdata=NULL, ...){
-  if(is.null(newdata)){
-    pfit = survfit(msmfit, se.fit=FALSE)
-  } else{
-    pfit = survfit(msmfit, newdata=newdata, se.fit=FALSE)
-  }
-  bh = pfit$cumhaz
-  tms = pfit$time
-  deltat = c(tms[1], diff(tms))
-  haz = rbind(bh[1,], apply(bh, 2, diff))
-  Ya = apply(deltat*haz,2, sum)
-  Ya
-}
+#predict.coxmsmfit <- function(msmfit, newdata=NULL, ...){
+#  if(is.null(newdata)){
+#    pfit = survfit(msmfit, se.fit=FALSE)
+#  } else{
+#    pfit = survfit(msmfit, newdata=newdata, se.fit=FALSE)
+#  }
+#  bh = pfit$cumhaz
+#  tms = pfit$time
+#  deltat = c(tms[1], diff(tms))
+#  haz = rbind(bh[1,], apply(bh, 2, diff))
+#  Ya = apply(deltat*haz,2, sum)
+#  Ya
+#}
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
                                id=NULL, alpha=0.05,...) {
@@ -159,7 +166,8 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' id/cluster)
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
+  #'   and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -169,7 +177,16 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @import survival
   #' @export
   #' @examples
-  #' runif(1)
+  #' set.seed(50)
+  #' N=200
+  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+  #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+  #' expnms=paste0("x", 1:2)
+  #' f = survival::Surv(time, d)~x1 + x2
+  #' (fit1 <- survival::coxph(f, data = dat))
+  #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' # not run: bootstrapped version is much slower
+  #' #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
   if (is.null(expnms)) {
     cat("Including all model terms as exposures of interest")
     expnms <- attr(terms(f, data = data), "term.labels")
@@ -251,7 +268,14 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #'  is done on estimated quantiles of exposure, so these are treated as fixed
   #'  quantities
   #'  
-  #'  ###MCSize
+  #'  MCSize is crucial to get accurate point estimates. In order to get marginal
+  #'  estimates of the population hazard under different values of the joint exposure
+  #'  at a given quantile for all exposures in `expnmns`, `qgcomp.cox.boot` uses
+  #'  Monte Carlo simulation to generate outcomes implied by the underlying conditional model
+  #'  and then fit a separate (marginal structural) model to those outcomes. In order to get
+  #'  accurate results that don't vary much from run-to-run of this approach, MCsize
+  #'  must be set large enough so that results are stable across runs according to a pre-determined
+  #'  precision (e.g. 2 significant digits). 
   #'
   #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
   #'   in the outcome defintion. E.g. \code{Surv(time,event) ~ exposure}
@@ -273,9 +297,15 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic.
   #' @param MCsize integer: sample size for simulation to approximate marginal 
-  #'  hazards ratios (if < sample size, then set to sample size)
+  #'  hazards ratios (if < sample size, then set to sample size). Note that large
+  #'  values will slow down the fitting, but will result in higher accuracy - if you 
+  #'  run the function multiple times you will see that results vary due to simuation
+  #'  error. Ideally, MCsize would be set such that simulation error is negligible
+  #'  in the precision reported (e.g. if you report results to 2 decimal places, then
+  #'  MCsize should be set high enough that you consistenty get answers that are the same
+  #'  to 2 decimal places).
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
-  #' @param parallel logical (default FALSE): use parallel package to speed up bootstrapping
+  #' @param parallel logical (default FALSE): use future package to speed up bootstrapping
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
@@ -295,14 +325,15 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' f = survival::Surv(time, d)~x1 + x2
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' # not run (slow when using boot version to proper precision)
   #' #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
-  #' # using parallel package, marginalizing over confounder z
+  #' # using future package, marginalizing over confounder z
   #' #(obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
-  #' #                         B=10, MCsize=2000, parallel=TRUE))
+  #' #                         B=1000, MCsize=20000, parallel=TRUE))
   #' ## non-constant hazard ratio, non-linear terms
   #' #(obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
   #' #                         expnms = expnms, data = dat, 
-  #' #                         B=20, MCsize=20000, parallel=FALSE, degree=1))
+  #' #                         B=1000, MCsize=20000, parallel=FALSE, degree=1))
   requireNamespace("survival")
   
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
@@ -369,13 +400,6 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   }
   set.seed(seed)
   if(parallel){
-    #usedcores = parallel::detectCores()
-    #cat(paste("Parallel bootstraps using", usedcores, "cores\n"))
-    #bootsamps <- parallel::mclapply(X=1:B, FUN=psi.only,mc.preschedule = TRUE,
-    #                                mc.cleanup = TRUE,mc.cores=usedcores,
-    #                                f=f, qdata=qdata, intvals=intvals, 
-    #                                expnms=expnms, degree=degree, nids=nids, id=id, ...)
-    #bootsamps = simplify2array(bootsamps)
     Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multiprocess)
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,
