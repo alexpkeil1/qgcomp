@@ -22,8 +22,8 @@ repit <- function(i){
   dat = dgm(50)
   m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=gaussian(), q=4)
   m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=5, parallel=TRUE)
-  res = c(m1$psi, m1$var.psi, 1*(m1$pval>0.05), with(m1, ci[1]<2 & ci[2]>2), m2$psi, m2$var.psi, 1*(m2$pval>0.05), with(m2, ci[1]<2 & ci[2]>2))
-  names(res) <- c("psi", "var", "pow", "cover", "b.psi", "b.var", "b.pow", "b.cover")
+  res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
+  names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
   res
 }
 
@@ -33,6 +33,7 @@ res = lapply(1:2, repit)
 res = simplify2array(res)
 
 # equality within toleraance
+stopifnot(all.equal(res["psiint",],res["b.psiint",]))
 stopifnot(all.equal(res["psi",],res["b.psi",]))
 
 
@@ -41,8 +42,8 @@ repit2 <- function(i){
   dat = dgm(500)
   m1 = qgcomp.noboot(y~., expnms=c("x1", "x2"), data = dat, family=gaussian(), q=4)
   m2 = qgcomp.boot(  y~., expnms=c("x1", "x2"), data = dat, family=gaussian(), q=4, B=5, parallel=TRUE)
-  res = c(m1$psi, m1$var.psi, 1*(m1$pval>0.05), with(m1, ci[1]<2 & ci[2]>2), m2$psi, m2$var.psi, 1*(m2$pval>0.05), with(m2, ci[1]<2 & ci[2]>2))
-  names(res) <- c("psi", "var", "pow", "cover", "b.psi", "b.var", "b.pow", "b.cover")
+  res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
+  names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
   res
 }
 

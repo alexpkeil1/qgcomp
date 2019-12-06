@@ -1,4 +1,5 @@
 cat("# asis test\n")
+library("qgcomp")
 # does the checknames correctly intuit which are linear/non-linear models for common specifications
 set.seed(50)
 N=50

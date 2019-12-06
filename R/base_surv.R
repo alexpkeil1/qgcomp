@@ -230,8 +230,10 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #se.neg.psi <- se_comb(nmneg, covmat = covMat)
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
-  res <- list(qx = qx, fit = fit, psi = estb, var.psi = seb^2, 
-              ci = ci, expnms = expnms, q = q, breaks = br, degree = 1, 
+  res <- list(qx = qx, fit = fit, 
+              psi = estb, var.psi = seb^2, covmat.psi = seb^2, ci = ci, 
+              coef = estb, var.coef = seb^2, covmat.coef = seb^2, ci.coef = ci, 
+              expnms = expnms, q = q, breaks = br, degree = 1, 
               pos.psi = pos.psi, neg.psi = neg.psi, 
               pweights = sort(pweights, decreasing = TRUE), 
               nweights = sort(nweights, decreasing = TRUE), 
@@ -427,8 +429,9 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #   for non-linearity, then weights will vary with level of exposure)
   qx <- qdata[, expnms]
   res <- list(
-    qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, psi = estb, 
-    var.psi = seb ^ 2, covmat.psi=covmat, ci = ci,
+    qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
+    psi = estb, var.psi = seb ^ 2, covmat.psi=covmat, ci = ci,
+    coef = estb, var.coef = seb^2, covmat.coef=covmat, ci.coef = ci, 
     expnms=expnms, q=q, breaks=br, degree=degree,
     pos.psi = NULL, neg.psi = NULL, 
     pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,

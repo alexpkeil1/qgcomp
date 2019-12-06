@@ -53,8 +53,8 @@ dat <- data.frame(stop=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
                   d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
 expnms=paste0("x", 1:2)
 f = survival::Surv(start,stop, d)~x1 + x2
-(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=1, MCsize=5000))
-plot(obj)
+suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=1, MCsize=5000))
+#plot(obj)
 
 
 ymat = obj$fit$y

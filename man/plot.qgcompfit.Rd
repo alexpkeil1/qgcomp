@@ -4,7 +4,9 @@
 \alias{plot.qgcompfit}
 \title{plot.qgcompfit: default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompfit}(x, suppressprint = FALSE, ...)
+\method{plot}{qgcompfit}(x, suppressprint = FALSE,
+  pointwisebars = TRUE, modelfitline = TRUE, modelband = TRUE,
+  flexfit = TRUE, pointwiseref = 1, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
@@ -12,6 +14,20 @@
 \item{suppressprint}{If TRUE, suppresses the plot, rather than printing it 
 by default (it can be saved as a ggplot2 object and used programmatically)
 (default = FALSE)}
+
+\item{pointwisebars}{(boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
+of E(Y|joint exposure) to the smooth regression line plot}
+
+\item{modelfitline}{(boot.gcomp only) If TRUE, adds fitted (MSM) regression line
+of E(Y|joint exposure) to the smooth regression line plot}
+
+\item{modelband}{If TRUE, adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)}
+
+\item{flexfit}{(boot.gcomp only) if TRUE, adds flexible interpolation of predictions from 
+underlying (conditional) model}
+
+\item{pointwiseref}{(boot.gcomp only) integer: which category of exposure (from 1 to q) 
+should serve as the referent category for pointwise comparisons? (default=1)}
 
 \item{...}{unused}
 }

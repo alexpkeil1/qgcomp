@@ -129,7 +129,11 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
         cut(datmat, breaks = br, labels = FALSE,
              include.lowest = TRUE) - 1
     }
-    data[, expnms] <- sapply(1:length(expnms), qt)
+    if(length(expnms)==1){
+      data[, expnms] <- qt(1)
+    }else{
+      data[, expnms] <- sapply(1:length(expnms), qt)
+    }
     return(list(data=data, breaks=e$retbr))
 }
 
@@ -337,13 +341,13 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
              3) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
            ")
     }
-    estb <- sum(mod$coefficients[expnms,1, drop=TRUE])
-    seb <- se_comb(expnms, covmat = mod$cov.scaled)
+    estb <- c(fit$coefficients[1], sum(mod$coefficients[expnms,1, drop=TRUE]))
+    seb <- c(sqrt(mod$cov.scaled[1,1]), se_comb(expnms, covmat = mod$cov.scaled))
     tstat <- estb / seb
     df <- mod$df.null - length(expnms)
     pval <- 2 - 2 * pt(abs(tstat), df = df)
     pvalz <- 2 - 2 * pnorm(abs(tstat))
-    ci <- c(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
+    ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
     # 'weights'
     wcoef <- fit$coefficients[expnms]
     names(wcoef) <- gsub("_q", "", names(wcoef))
@@ -362,14 +366,17 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
     res <- list(
-      qx = qx, fit = fit, psi = estb, var.psi = seb ^ 2, covmat.psi = c('psi1' = seb^2), 
-      ci = ci, expnms=expnms, q=q, breaks=br, degree=1,
+      qx = qx, fit = fit, 
+      psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=c('psi1' = seb[-1]^2), ci = ci[-1,],
+      coef = estb, var.coef = seb ^ 2, covmat.coef=c('(Intercept)' = seb[2]^2, 'psi1' = seb[2]^2), ci.coef = ci,
+      expnms=expnms, q=q, breaks=br, degree=1,
       pos.psi = pos.psi, neg.psi = neg.psi,
       pweights = sort(pweights, decreasing = TRUE),
       nweights = sort(nweights, decreasing = TRUE), 
       psize = sum(abs(wcoef[poscoef])),
       nsize = sum(abs(wcoef[negcoef])),
-      bootstrap=FALSE
+      bootstrap=FALSE,
+      cov.yhat=NULL
     )
       if(fit$family$family=='gaussian'){
         res$tstat <- tstat
@@ -532,7 +539,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       # pooled together
       # TODO: allow user specification of this
       cat("\nNote: using quantiles of all exposures combined in order to set 
-          proposed intervention values for overall effect (25th, 50th, 75th %ile)")
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)\n")
       intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
       br <- NULL
     }
@@ -543,7 +550,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     ###
     msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, bayes, ...)
     # main estimate  
-    estb <- as.numeric(msmfit$msmfit$coefficients[-1])
+    #estb <- as.numeric(msmfit$msmfit$coefficients[-1])
+    estb <- as.numeric(msmfit$msmfit$coefficients)
     #bootstrap to get std. error
     nobs <- dim(qdata)[1]
     nids <- length(unique(qdata[,id, drop=TRUE]))
@@ -556,9 +564,13 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
       bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
+      ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
+              ...)
+      yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])
       as.numeric(
-        msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
-                ...)$msmfit$coefficients[-1]
+        c(ft$msmfit$coefficients, with(yhatty, tapply(yhat, psi, mean)))
+        #msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
+        #        ...)$msmfit$coefficients[-1]
       )
     }
     set.seed(seed)
@@ -574,15 +586,18 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
       
     }
-    if(is.null(dim(bootsamps))) {
-      seb <- sd(bootsamps)
-      covmat <- var(bootsamps)
-      names(covmat) <- 'psi1'
-    }else{
-      seb <- apply(bootsamps, 1, sd)
+    #if(is.null(dim(bootsamps))) {
+    #  seb <- sd(bootsamps)
+    #  covmat <- var(bootsamps)
+    #  names(covmat) <- 'psi1'
+    #}else{
+    hats = t(bootsamps[-c(1:(degree+1)),])
+    cov.yhat = cov(hats)
+    bootsamps = bootsamps[1:(degree+1),]
+    seb <- apply(bootsamps, 1, sd)
       covmat <- cov(t(bootsamps))
-      colnames(covmat) <- rownames(covmat) <- paste0("psi", 1:nrow(bootsamps))
-    }
+      colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
+    #}
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
     pval <- 2 - 2 * pt(abs(tstat), df = df)
@@ -592,13 +607,15 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     #   then weights will vary with level of exposure)
     qx <- qdata[, expnms]
     res <- list(
-      qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, psi = estb, 
-      var.psi = seb ^ 2, covmat.psi=covmat, ci = ci,
+      qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
+      psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=covmat[-1,-1, drop=FALSE], ci = ci[-1,],
+      coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
       expnms=expnms, q=q, breaks=br, degree=degree,
       pos.psi = NULL, neg.psi = NULL, 
       pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
       y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
-      bootsamps = bootsamps
+      bootsamps = bootsamps,
+      cov.yhat=cov.yhat
     )
       if(msmfit$fit$family$family=='gaussian'){
         res$tstat <- tstat
@@ -717,6 +734,12 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   res
 }
 
+coef.qgcompfit <- function(object, ...){
+  #' @importFrom stats coef
+  #' @export
+  object$coef
+}
+
 print.qgcompfit <- function(x, ...){
   #' @title default printing method for a qgcompfit object
   #' 
@@ -761,44 +784,51 @@ print.qgcompfit <- function(x, ...){
     estimand <- 'OR'
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
-    if(is.null(dim(x$ci))){
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    } else{
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "Z value"=x$zstat, "Pr(>|z|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    }
+    testtype = "Z"
+    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
-    if(is.null(dim(x$ci))){
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    } else{
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    }
+    testtype = "t"
+    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "cox"){
     cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
-    if(is.null(dim(x$ci))){
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[1], "Upper CI"=x$ci[2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    } else{
-      pdat <- cbind(Estimate=x$psi, "Std. Error"=sqrt(x$var.psi), "Lower CI"=x$ci[,1], "Upper CI"=x$ci[,2], "t value"=x$tstat, "Pr(>|t|)"=x$pval)
-      rownames(pdat) <- paste0('psi',1:length(x$psi))
-      printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    }
+    testtype = "Z"
+    rnm = c(paste0('psi',1:max(1, length(coef(x)))))
+  }
+  if(is.null(dim(x$ci))){
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
+    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    rownames(pdat) <- rnm
+    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+  } else{
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[,1], "Upper CI"=x$ci.coef[,2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
+    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    rownames(pdat) <- rnm
+    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
   }
 }
 
+summary.qgcompfit <- function(object, ...){
+  #' @export
+  print(object)
+}
 
-plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
+family.qgcompfit <- function(object, ...){
+  #' @export
+  object$fit$family
+}
+
+
+plot.qgcompfit <- function(x, 
+                           suppressprint=FALSE, 
+                           pointwisebars=TRUE, 
+                           modelfitline=TRUE, 
+                           modelband=TRUE, 
+                           flexfit=TRUE, 
+                           pointwiseref = 1,
+                           ...){
   #' @title plot.qgcompfit: default plotting method for a qgcompfit object
   #'
   #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
@@ -812,6 +842,15 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
   #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
   #'   by default (it can be saved as a ggplot2 object and used programmatically)
   #'   (default = FALSE)
+  #' @param pointwisebars (boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
+  #' of E(Y|joint exposure) to the smooth regression line plot
+  #' @param modelfitline (boot.gcomp only) If TRUE, adds fitted (MSM) regression line
+  #' of E(Y|joint exposure) to the smooth regression line plot
+  #' @param modelband If TRUE, adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)
+  #' @param flexfit (boot.gcomp only) if TRUE, adds flexible interpolation of predictions from 
+  #' underlying (conditional) model
+  #' @param pointwiseref (boot.gcomp only) integer: which category of exposure (from 1 to q) 
+  #' should serve as the referent category for pointwise comparisons? (default=1)
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @import ggplot2 grid gridExtra
@@ -967,6 +1006,7 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
         theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
     }
     if(x$msmfit$family$family=='gaussian'){
+      p <- p + labs(x = "Joint exposure quantile", y = "Y")
        #confidence band
        y = x$y.expectedmsm
        COV = x$covmat.psi
@@ -980,11 +1020,35 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
        }
        pyup = py + qnorm(.975)*sqrt(varpy)
        pydo = py + qnorm(.025)*sqrt(varpy)
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
-                                fill="Model confidence band"),
-                            data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals))) +
-                    geom_line(aes(x=x,y=y, color="Model fit"),
+       if(modelband){
+         p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                                  fill="Model confidence band"),
+                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+       }
+       if(flexfit){
+         p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
+                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+       }
+       if(modelfitline){
+         p <- p + geom_line(aes(x=x,y=y, color="MSM fit"),
                             data=data.frame(y=y, x=x$index/max(x$index)))
+       }
+      if(pointwisebars){
+        # pairwise comparisons with referent
+        ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+        pw.diff = c(0,diff(py))
+        pw.vars = numeric(length(pw.diff))
+        pw.vars[pointwiseref] = 0
+        pw.idx = (1:length(py))[-pointwiseref]
+        for(j in pw.idx){
+          pw.vars[j] = sum(ycovmat[c(pointwiseref,j),c(pointwiseref,j)])  
+        }
+        pw.up = py + qnorm(.975)*sqrt(pw.vars)
+        pw.lo = py + qnorm(.025)*sqrt(pw.vars)
+        p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
+                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+      }
      }
     if(x$msmfit$family$family=='binomial'){
        y = x$y.expectedmsm # probabilities (not on model scale)
@@ -1000,21 +1064,54 @@ plot.qgcompfit <- function(x, suppressprint=FALSE, ...){
        }
 
        if(x$msmfit$family$link=='log'){
+         p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)")
          pyup = pmin(exp(log(py) + qnorm(.975)*sqrt(varpy)), 1)
          pydo = pmax(exp(log(py) + qnorm(.025)*sqrt(varpy)), 0)       
          #pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
          #pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))
        }
        if(x$msmfit$family$link=='logit'){
+         p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)")
          pyup = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(varpy))))
          pydo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(varpy))))      
        }
 
-       p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
-                                fill="Model confidence band"),
-                            data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals))) +
-                    geom_line(aes(x=x,y=y, color="Model fit"),
+       if(modelband){
+         p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                                  fill="Model confidence band"),
+                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+       }
+       if(flexfit){
+         p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
+                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+       }
+       if(modelfitline){
+         p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
                             data=data.frame(y=y, x=x$index/max(x$index)))
+       }
+       if(pointwisebars){
+         # pairwise comparisons with referent
+         ycovmat = x$cov.yhat # bootstrap covariance matrix of E(mu|x) from MSM
+         pw.diff = c(0,diff(py))
+         pw.vars = numeric(length(pw.diff))
+         pw.vars[pointwiseref] = 0
+         pw.idx = (1:length(py))[-pointwiseref]
+         for(j in pw.idx){
+           pw.vars[j] = sum(ycovmat[c(pointwiseref,j),c(pointwiseref,j)])  
+         }
+         if(x$msmfit$family$link=='log'){
+           pw.up = pmin(exp(log(py) + qnorm(.975)*sqrt(pw.vars)), 1)
+           pw.lo = pmax(exp(log(py) + qnorm(.025)*sqrt(pw.vars)), 0)       
+         }
+         if(x$msmfit$family$link=='logit'){
+           pw.up = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(pw.vars))))
+           pw.lo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(pw.vars))))      
+         }
+         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
+                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+       }
+       
      }
     if(x$msmfit$family$family!='cox'){
      # p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
