@@ -15,14 +15,12 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #' Here is simple version of the delta method for a linear combination of 
   #' three model coefficients:
   #' 
-  #'  \deqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
-  #' given gradient vector G = 
-  #' \deqn{  [d(f(\beta))/d\beta_1 = 1,
-  #' 
+  #'  \eqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
+  #' given gradient vector 
+  #' \deqn{G = [d(f(\beta))/d\beta_1 = 1,
   #'   d(f(\beta))/d\beta_2 = 1,
-  #'   
   #'   d(f(\beta))/d\beta_3 = 1]}
-  #' \deqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
+  #' \eqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
   #' 
   #' @param expnms a character vector with the names of the columns to be
   #' of interest in the covariance matrix for a which a standard error will be

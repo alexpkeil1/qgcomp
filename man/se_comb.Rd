@@ -36,14 +36,12 @@ yields the variance of a sum of all variables in `expnms`)
 Here is simple version of the delta method for a linear combination of 
 three model coefficients:
 
- \deqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
-given gradient vector G = 
-\deqn{  [d(f(\beta))/d\beta_1 = 1,
-
+ \eqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
+given gradient vector 
+\deqn{G = [d(f(\beta))/d\beta_1 = 1,
   d(f(\beta))/d\beta_2 = 1,
-  
   d(f(\beta))/d\beta_3 = 1]}
-\deqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
+\eqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
 }
 \examples{
 vcov = rbind(c(1.2, .9),c(.9, 2.0))
