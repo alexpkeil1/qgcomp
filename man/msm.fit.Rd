@@ -5,8 +5,18 @@
 \title{fitting marginal structural model (MSM) based on g-computation with
 quantized exposures}
 \usage{
-msm.fit(f, qdata, intvals, expnms, rr = TRUE, main = TRUE,
-  degree = 1, id = NULL, bayes, ...)
+msm.fit(
+  f,
+  qdata,
+  intvals,
+  expnms,
+  rr = TRUE,
+  main = TRUE,
+  degree = 1,
+  id = NULL,
+  bayes,
+  ...
+)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all

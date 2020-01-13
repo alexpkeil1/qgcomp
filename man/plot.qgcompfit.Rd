@@ -4,9 +4,16 @@
 \alias{plot.qgcompfit}
 \title{plot.qgcompfit: default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompfit}(x, suppressprint = FALSE,
-  pointwisebars = TRUE, modelfitline = TRUE, modelband = TRUE,
-  flexfit = TRUE, pointwiseref = 1, ...)
+\method{plot}{qgcompfit}(
+  x,
+  suppressprint = FALSE,
+  pointwisebars = TRUE,
+  modelfitline = TRUE,
+  modelband = TRUE,
+  flexfit = TRUE,
+  pointwiseref = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}

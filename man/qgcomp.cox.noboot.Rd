@@ -4,8 +4,16 @@
 \alias{qgcomp.cox.noboot}
 \title{estimation of quantile g-computation fit for a survival outcome}
 \usage{
-qgcomp.cox.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  id = NULL, alpha = 0.05, ...)
+qgcomp.cox.noboot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  alpha = 0.05,
+  ...
+)
 }
 \arguments{
 \item{f}{R style formula}
@@ -36,7 +44,7 @@ id/cluster)}
 a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pweights) and 
+ weights/standardized coefficients in the positive (pos.weights) and 
  negative (nweight) directions.
 }
 \description{

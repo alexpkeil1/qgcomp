@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 1.3.0
-Date: 2019-12-11
+Version: 2.0.0
+Date: 2020-01-13
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -30,7 +30,7 @@ Imports:
     grDevices,
     grid,
     gridExtra,
-    parallel,
+    pscl,
     stats,
     survival
 Suggests: 
@@ -40,4 +40,4 @@ VignetteBuilder:
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2

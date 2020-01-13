@@ -4,9 +4,21 @@
 \alias{qgcomp.cox.boot}
 \title{estimation of quantile g-computation fit for a survival outcome}
 \usage{
-qgcomp.cox.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  id = NULL, alpha = 0.05, B = 200, MCsize = 10000, degree = 1,
-  seed = NULL, parallel = FALSE, ...)
+qgcomp.cox.boot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  alpha = 0.05,
+  B = 200,
+  MCsize = 10000,
+  degree = 1,
+  seed = NULL,
+  parallel = FALSE,
+  ...
+)
 }
 \arguments{
 \item{f}{R style survival formula, which includes \code{\link[survival]{Surv}}

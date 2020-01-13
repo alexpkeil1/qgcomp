@@ -5,8 +5,7 @@
 \title{predict.qgcompfit: default prediction method for a qgcompfit object (non-survival 
 outcomes only)}
 \usage{
-\method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL,
-  type = "response", ...)
+\method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)
 }
 \arguments{
 \item{object}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}

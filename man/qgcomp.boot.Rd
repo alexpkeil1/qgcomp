@@ -5,9 +5,22 @@
 \title{estimating the parameters of a marginal structural model (MSM) based on 
 g-computation with quantized exposures}
 \usage{
-qgcomp.boot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  id = NULL, alpha = 0.05, B = 200, rr = TRUE, degree = 1,
-  seed = NULL, bayes = FALSE, parallel = FALSE, ...)
+qgcomp.boot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  alpha = 0.05,
+  B = 200,
+  rr = TRUE,
+  degree = 1,
+  seed = NULL,
+  bayes = FALSE,
+  parallel = FALSE,
+  ...
+)
 }
 \arguments{
 \item{f}{R style formula}

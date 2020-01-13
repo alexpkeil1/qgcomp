@@ -5,8 +5,17 @@
 \title{estimating the parameters of a marginal structural model (MSM) based on 
 g-computation with quantized exposures}
 \usage{
-coxmsm.fit(f, qdata, intvals, expnms, main = TRUE, degree = 1,
-  id = NULL, MCsize = 10000, ...)
+coxmsm.fit(
+  f,
+  qdata,
+  intvals,
+  expnms,
+  main = TRUE,
+  degree = 1,
+  id = NULL,
+  MCsize = 10000,
+  ...
+)
 }
 \arguments{
 \item{f}{an r formula representing the conditional model for the outcome, given all
