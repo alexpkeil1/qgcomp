@@ -841,9 +841,11 @@ plot.qgcompfit <- function(x,
   #' of the joint exposures (e.g. '1' represents 'at the first quantile for
   #' every exposure')
   #' 
-  #' @param x "qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions
+  #' @param x "qgcompfit" object from `qgcomp.noboot`,  `qgcomp.boot`, 
+  #'   `qgcomp.cox.noboot`,  `qgcomp.cox.boot`, `qgcomp.zi.noboot` or `qgcomp.zi.boot` functions
   #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
-  #'   by default (it can be saved as a ggplot2 object and used programmatically)
+  #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
+  #'   inflated model) and used programmatically)
   #'   (default = FALSE)
   #' @param pointwisebars (boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
   #' of E(Y|joint exposure) to the smooth regression line plot
@@ -920,39 +922,83 @@ plot.qgcompfit <- function(x,
     plot.margin = unit(c(t=1, r=0.5, b=.75, l=0.0), "cm"),
     panel.border = element_blank()))
 
-  nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
+  if(!is.null(x$fit$family)) nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
   
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!x$bootstrap){
-    poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
-    if(length(x$pos.weights)==0) x$pos.weights = x$neg.weights*0
-    if(length(x$neg.weights)==0) x$neg.weights = x$pos.weights*0
-    pright <- ggplot() + 
-    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
-                  data=data.frame(w=x$pos.weights, v=names(x$pos.weights)),
-                  fill=gray(poscolwt)) + 
-    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
-    geom_hline(aes(yintercept=0)) + 
-    coord_flip(ylim=c(0,1)) + 
-    theme_butterfly_r
-    pleft <- ggplot() + 
-    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
-                  data=data.frame(w=x$neg.weights, v=names(x$neg.weights)),
-                  fill=gray(1-poscolwt)) + 
-    scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-    scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
-    geom_hline(aes(yintercept=0)) + 
-    coord_flip(ylim=c(0,1)) + 
-    theme_butterfly_l
-    if((length(x$neg.weights)>0 & length(x$pos.weights)>0)){
-      maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
-      lw = 1+maxstr/20
-      p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+    if(!is.null(x$fit$family)){
+      # glm
+      poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
+      if(length(x$pos.weights)==0) x$pos.weights = x$neg.weights*0
+      if(length(x$neg.weights)==0) x$neg.weights = x$pos.weights*0
+      pright <- ggplot() + 
+        stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                      data=data.frame(w=x$pos.weights, v=names(x$pos.weights)),
+                      fill=gray(poscolwt)) + 
+        scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+        scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
+        geom_hline(aes(yintercept=0)) + 
+        coord_flip(ylim=c(0,1)) + 
+        theme_butterfly_r
+      pleft <- ggplot() + 
+        stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                      data=data.frame(w=x$neg.weights, v=names(x$neg.weights)),
+                      fill=gray(1-poscolwt)) + 
+        scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+        scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
+        geom_hline(aes(yintercept=0)) + 
+        coord_flip(ylim=c(0,1)) + 
+        theme_butterfly_l
+      if((length(x$neg.weights)>0 & length(x$pos.weights)>0)){
+        maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
+        lw = 1+maxstr/20
+        p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+        if(!suppressprint) {
+          grid::grid.newpage()
+          grid::grid.draw(p1)
+        }
+        if(suppressprint) return(p1)
+      }
+    }
+    if(is.null(x$fit$family)){
+      # zero inflated
+      p1 = list()
+      for(modtype in names(x$psi)){
+        nms = unique(names(sort(c(x$pos.weights[[modtype]], x$neg.weights[[modtype]]), decreasing = FALSE)))
+        poscolwt = 1-x$pos.psi[[modtype]]/(x$pos.psi[[modtype]] - x$neg.psi[[modtype]])
+        if(length(x$pos.weights[[modtype]])==0) x$pos.weights[[modtype]] = x$neg.weights[[modtype]]*0
+        if(length(x$neg.weights[[modtype]])==0) x$neg.weights[[modtype]] = x$pos.weights[[modtype]]*0
+        pright <- ggplot() + 
+          stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                        data=data.frame(w=x$pos.weights[[modtype]], v=names(x$pos.weights[[modtype]])),
+                        fill=gray(poscolwt)) + 
+          scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+          scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
+          geom_hline(aes(yintercept=0)) + 
+          coord_flip(ylim=c(0,1)) + 
+          theme_butterfly_r
+        pleft <- ggplot() + 
+          stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                        data=data.frame(w=x$neg.weights[[modtype]], v=names(x$neg.weights[[modtype]])),
+                        fill=gray(1-poscolwt)) + 
+          scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+          scale_x_discrete(name=paste0("Variable (", modtype, " model)"), limits=nms, breaks=nms, labels=nms, drop=FALSE) +
+          geom_hline(aes(yintercept=0)) + 
+          coord_flip(ylim=c(0,1)) + 
+          theme_butterfly_l
+        if((length(x$neg.weights[[modtype]])>0 & length(x$pos.weights[[modtype]])>0)){
+          maxstr = max(mapply(nchar, c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
+          lw = 1+maxstr/20
+          p1[[modtype]] <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+        }
+      }
       if(!suppressprint) {
-        grid::grid.newpage()
-        grid::grid.draw(p1)
+        plfun <- function(plt){ 
+          grid::grid.newpage()
+          grid::grid.draw(plt)
+        }
+        lapply(p1, plfun)
       }
       if(suppressprint) return(p1)
     }

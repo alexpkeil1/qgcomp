@@ -171,7 +171,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
-  #'  weights/standardized coefficients in the positive (pos.weights) and 
+  #'  weights/standardized coefficients in the positive (pweights) and 
   #'  negative (nweight) directions.
   #' @concept variance mixtures
   #' @import survival
@@ -218,14 +218,14 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
                                                             alpha/2))
   wcoef <- fit$coefficients[expnms]
   names(wcoef) <- gsub("_q", "", names(wcoef))
-  pos.coef <- which(wcoef > 0)
-  neg.coef <- which(wcoef <= 0)
-  pos.weights <- abs(wcoef[pos.coef])/sum(abs(wcoef[pos.coef]))
-  neg.weights <- abs(wcoef[neg.coef])/sum(abs(wcoef[neg.coef]))
-  pos.psi <- sum(wcoef[pos.coef])
-  neg.psi <- sum(wcoef[neg.coef])
-  #nmpos = names(pos.weights)
-  #nmneg = names(neg.weights)
+  poscoef <- which(wcoef > 0)
+  negcoef <- which(wcoef <= 0)
+  pweights <- abs(wcoef[poscoef])/sum(abs(wcoef[poscoef]))
+  nweights <- abs(wcoef[negcoef])/sum(abs(wcoef[negcoef]))
+  pos.psi <- sum(wcoef[poscoef])
+  neg.psi <- sum(wcoef[negcoef])
+  #nmpos = names(pweights)
+  #nmneg = names(nweights)
   #se.pos.psi <- se_comb(nmpos, covmat = covMat)
   #se.neg.psi <- se_comb(nmneg, covmat = covMat)
   qx <- qdata[, expnms]
@@ -235,9 +235,9 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
               coef = estb, var.coef = seb^2, covmat.coef = seb^2, ci.coef = ci, 
               expnms = expnms, q = q, breaks = br, degree = 1, 
               pos.psi = pos.psi, neg.psi = neg.psi, 
-              pos.weights = sort(pos.weights, decreasing = TRUE), 
-              neg.weights = sort(neg.weights, decreasing = TRUE), 
-              pos.size = sum(abs(wcoef[pos.coef])), neg.size = sum(abs(wcoef[neg.coef])), 
+              pweights = sort(pweights, decreasing = TRUE), 
+              nweights = sort(nweights, decreasing = TRUE), 
+              psize = sum(abs(wcoef[poscoef])), nsize = sum(abs(wcoef[negcoef])), 
               bootstrap = FALSE, zstat = tstat, pval = pvalz)
   attr(res, "class") <- "qgcompfit"
   res
@@ -434,7 +434,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci, 
     expnms=expnms, q=q, breaks=br, degree=degree,
     pos.psi = NULL, neg.psi = NULL, 
-    pos.weights = NULL,neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
+    pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
     bootsamps = bootsamps
   )
