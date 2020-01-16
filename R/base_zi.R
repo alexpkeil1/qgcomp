@@ -528,7 +528,7 @@ printZI <- function(x){
                                  "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
       colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
       rownames(pdat[[modtype]]) <- rnm
-      cat(paste("Prob(Y ~ ", modtype,"):\n"))
+      cat(paste0("Prob(Y ~ ", modtype,"):\n"))
       printCoefmat(pdat[[modtype]],has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
     }
   }
