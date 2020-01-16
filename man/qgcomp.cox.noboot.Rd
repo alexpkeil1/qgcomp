@@ -4,8 +4,16 @@
 \alias{qgcomp.cox.noboot}
 \title{estimation of quantile g-computation fit for a survival outcome}
 \usage{
-qgcomp.cox.noboot(f, data, expnms = NULL, q = 4, breaks = NULL,
-  id = NULL, alpha = 0.05, ...)
+qgcomp.cox.noboot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  alpha = 0.05,
+  ...
+)
 }
 \arguments{
 \item{f}{R style formula}

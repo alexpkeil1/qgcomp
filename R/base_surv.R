@@ -188,7 +188,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' # not run: bootstrapped version is much slower
   #' #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
   if (is.null(expnms)) {
-    cat("Including all model terms as exposures of interest")
+    message("Including all model terms as exposures of interest")
     expnms <- attr(terms(f, data = data), "term.labels")
   }
   if (!is.null(q) | !is.null(breaks)) {
@@ -341,7 +341,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   if (is.null(expnms)) {
     expnms <- attr(terms(f, data = data), "term.labels")
-    cat("Including all model terms as exposures of interest\n")      
+    message("Including all model terms as exposures of interest\n")      
   }
   lin = checknames(expnms)
   if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
@@ -368,7 +368,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     # then draw distribution values from quantiles of all the exposures
     # pooled together
     # TODO: allow user specification of this
-    cat("\nNote: using quantiles of all exposures combined in order to set 
+    message("\nNote: using quantiles of all exposures combined in order to set 
         proposed intervention values for overall effect (25th, 50th, 75th %ile)")
     intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
     br <- NULL
@@ -431,7 +431,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   res <- list(
     qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
     psi = estb, var.psi = seb ^ 2, covmat.psi=covmat, ci = ci,
-    coef = estb, var.coef = seb^2, covmat.coef=covmat, ci.coef = ci, 
+    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci, 
     expnms=expnms, q=q, breaks=br, degree=degree,
     pos.psi = NULL, neg.psi = NULL, 
     pweights = NULL,nweights = NULL, psize = NULL,nsize = NULL, bootstrap=TRUE,

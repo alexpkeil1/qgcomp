@@ -4,15 +4,24 @@
 \alias{plot.qgcompfit}
 \title{plot.qgcompfit: default plotting method for a qgcompfit object}
 \usage{
-\method{plot}{qgcompfit}(x, suppressprint = FALSE,
-  pointwisebars = TRUE, modelfitline = TRUE, modelband = TRUE,
-  flexfit = TRUE, pointwiseref = 1, ...)
+\method{plot}{qgcompfit}(
+  x,
+  suppressprint = FALSE,
+  pointwisebars = TRUE,
+  modelfitline = TRUE,
+  modelband = TRUE,
+  flexfit = TRUE,
+  pointwiseref = 1,
+  ...
+)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
+\item{x}{"qgcompfit" object from `qgcomp.noboot`,  `qgcomp.boot`, 
+`qgcomp.cox.noboot`,  `qgcomp.cox.boot`, `qgcomp.zi.noboot` or `qgcomp.zi.boot` functions}
 
 \item{suppressprint}{If TRUE, suppresses the plot, rather than printing it 
-by default (it can be saved as a ggplot2 object and used programmatically)
+by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
+inflated model) and used programmatically)
 (default = FALSE)}
 
 \item{pointwisebars}{(boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
