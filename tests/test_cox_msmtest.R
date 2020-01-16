@@ -65,3 +65,4 @@ datatimes = with(dat, sort(unique(stop*d))[-1])
 
 stopifnot(all.equal(times, datatimes))
 
+cat("done")

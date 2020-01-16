@@ -185,8 +185,10 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' f = survival::Surv(time, d)~x1 + x2
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' \donttest{
   #' # not run: bootstrapped version is much slower
-  #' #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+  #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+  #' }
   if (is.null(expnms)) {
     message("Including all model terms as exposures of interest")
     expnms <- attr(terms(f, data = data), "term.labels")
@@ -327,15 +329,17 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' f = survival::Surv(time, d)~x1 + x2
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' \donttest{
   #' # not run (slow when using boot version to proper precision)
-  #' #(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
+  #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
   #' # using future package, marginalizing over confounder z
-  #' #(obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
-  #' #                         B=1000, MCsize=20000, parallel=TRUE))
-  #' ## non-constant hazard ratio, non-linear terms
-  #' #(obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
-  #' #                         expnms = expnms, data = dat, 
-  #' #                         B=1000, MCsize=20000, parallel=FALSE, degree=1))
+  #' (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
+  #'                          B=1000, MCsize=20000, parallel=TRUE))
+  #' # non-constant hazard ratio, non-linear terms
+  #' (obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
+  #'                          expnms = expnms, data = dat, 
+  #'                          B=1000, MCsize=20000, parallel=FALSE, degree=1))
+  #' }
   requireNamespace("survival")
   
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))

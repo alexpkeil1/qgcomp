@@ -54,3 +54,4 @@ res = simplify2array(res)
 stopifnot(all.equal(res["var",],res["b.var",], tolerance=sqrt(0.01)))
 
 
+cat("done")

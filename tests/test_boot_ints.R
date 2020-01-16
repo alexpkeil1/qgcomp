@@ -39,3 +39,5 @@ stopifnot(identical(res2$breaks, qdat$breaks))
 
 # should be true
 stopifnot(identical(res1$msmfit$df.null, res2$msmfit$df.null))
+
+cat("done")

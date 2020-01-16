@@ -149,3 +149,5 @@ stopifnot(all.equal(
 stopifnot(substr(all.equal(
   obj0$msmfit$coefficients,
   obj3$msmfit$coefficients, check.names=FALSE), 1, 10)=="Mean relat")
+
+cat("done")

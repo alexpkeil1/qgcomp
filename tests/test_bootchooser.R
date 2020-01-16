@@ -93,3 +93,4 @@ stopifnot(class(res)=="qgcompfit")
 
 
 
+cat("done")

@@ -127,10 +127,14 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   #' set.seed(50)
   #' n=100
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
-  #' # poinsson count model, mixture in both portions
-  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="poisson")
-  #' # negative binomial count model, mixture in both portions
-  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
+  #' # poisson count model, mixture in both portions
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+  #'     data=dat, q=2, dist="poisson")
+  #' # negative binomial count model, mixture and covariate in both portions
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
+  #'    data=dat, q=2, dist="negbin")  
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+  #'    data=dat, q=2, dist="negbin") # equivalent
   #' # negative binomial count model, mixture only in the 'count' portion of the model
   #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
   
@@ -159,7 +163,12 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     id = "id__"
     qdata$id__ = 1:dim(qdata)[1]
   }
-  for(modtype in c("count", "zero")) containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
+  for(modtype in c("count", "zero")){
+    containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
+    if (!containmix[[modtype]] & any(expnms %in% allterms[[modtype]])) stop("Ensure that all of the 
+    variables in 'expnms' are in either the count model, the zero model, or both,
+    and that neither model contains only a subset of exposures.")
+  }
   
 
   if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
@@ -169,14 +178,13 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     #fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
   }
   mod <- summary(fit)
-  if((length(setdiff(expnms, rownames(mod$coefficients$count)))>0 & containmix$count) ||
+  if((length(setdiff(expnms, rownames(mod$coefficients$count)))>0 & containmix$count) |
      (length(setdiff(expnms, rownames(mod$coefficients$zero)))>0 & containmix$zero)
      ){
-    stop("Model aliasing occurred, likely due to perfectly correlated quantized exposures. 
-           Try one of the following:
-             1) set 'bayes' to TRUE in the qgcomp function (recommended)
-             2) set 'q' to a higher value in the qgcomp function (recommended)
-             3) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
+    stop("Model aliasing occurred, 
+          Try one of the following:
+             1) set 'q' to a higher value in the qgcomp function (recommended)
+             2) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
            ")
   }
   for(modtype in names(containmix)){
@@ -298,61 +306,6 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
 #  #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 #  #' # Conditional linear slope
 #  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
-#  #' # Marginal linear slope (population average slope, for a purely linear, 
-#  #' #  additive model this will equal the conditional)
-#  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
-#  #'   family=gaussian(), B=10) #increase B to at least 200 in actual examples
-#  #'   
-#  #' # Population average mixture slope which accounts for non-linearity and interactions
-#  #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
-#  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=6)
-#  #'  
-#  #' # binary outcome
-#  #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
-#  #' 
-#  #' # Conditional mixture OR
-#  #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2)
-#  #'   
-#  #' #Marginal mixture OR (population average OR - in general, this will not equal the 
-#  #' # conditional mixture OR due to non-collapsibility of the OR)
-#  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2, B=6)
-#  #'   
-#  #' # Population average mixture RR
-#  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2, rr=TRUE, B=6)
-#  #'   
-#  #' # Population average mixture RR, indicator variable representation of x2
-#  #' # note that I(x==...) operates on the quantile-based category of x,
-#  #' # rather than the raw value
-#  #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-#  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6)
-#  #' res$fit  
-#  #' plot(res)
-#  #' 
-#  #' # now add in a non-linear MSM
-#  #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-#  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6, 
-#  #'   degree=2)
-#  #' res2$fit  
-#  #' res2$msmfit  
-#  #' plot(res2)
-#  #' # Log risk ratio per one IQR change in all exposures (not on quantile basis)
-#  #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
-#  #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
-#  #' # note that I(x>...) now operates on the untransformed value of x,
-#  #' # rather than the quantized value
-#  #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-#  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
-#  #'   degree=2)
-#  #' res2
-#  #' # using parallel processing
-#  #' res2p = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-#  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
-#  #'   degree=2, parallel=TRUE)
-#  #' res2p
-#  # character names of exposure mixture components
 #  if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
 #  if (is.null(expnms)) {
 #    expnms <- attr(terms(f, data = data), "term.labels")
