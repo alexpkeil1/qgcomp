@@ -1,81 +1,80 @@
-library(pscl)
 
-ziptest <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
-  data("bioChemists", package = "pscl")
-  # art   fem     mar kid5  phd ment
-  #   0   Men Married    0 2.52    7
-  #   0 Women  Single    0 2.05    6
-  #   0 Women  Single    0 3.75    6
-  #   0   Men Married    1 1.18    3
-  #   0 Women  Single    0 3.75   26
-  #   0 Women Married    2 3.59    2
-  f = art ~ fem + kid5 + ment + phd | kid5
-  expnms = c("phd", "ment")
-  qdata = qgcomp:::quantize(bioChemists, expnms=expnms)
-  
-  
-  res = zeroinfl(f, data = qdata$data)
-  # non bootstrapped
-  coef1 = res$coefficients$count[expnms]
-  vc1 = vcov(res, "count")
-  coef2 = res$coefficients$zero[expnms]
-  vc2 = vcov(res, "zero")
-  psi
-  "Count model coefficients (poisson with log link):"
-  sum(coef1)
-  qgcomp:::se_comb(expnms, vc1)
-  "Zero-inflation model coefficients (binomial with logit link):"
-  sum(coef2)
-  qgcomp:::se_comb(expnms, vc2)
-  
-  # bootstrapped
-    ndat3 <- ndat2 <- ndat1 <- ndat0 <- qdata$data
-    ndat0$phd=0
-    ndat0$ment=0
-    ndat0$psi=0
-    ndat1$phd=1
-    ndat1$ment=1
-    ndat1$psi=1
-    ndat2$phd=2
-    ndat2$ment=2
-    ndat2$psi=2
-    ndat3$phd=3
-    ndat3$ment=3
-    ndat3$psi=3
-    ndat = data.frame(rbind(ndat0, ndat1, ndat2, ndat3))
-    totn = nrow(ndat)
-    # new predicted class using class probabilities (more general?)
-      classprob = predict(res, newdata = ndat, type="prob")
-      ncats = ncol(classprob)
-      sum(rmultinom(1,ncats,classprob[,]))
-      resres = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
-      resres
-    # new predicted class using count/zero preds (faster?)
-      pmfg0 = predict(res, newdata = ndat, type="count")
-      pmf0  = predict(res, newdata = ndat, type="zero")
-      resres2 = rbinom(totn, 1, 1-pmf0)*rpois(totn, pmfg0)
-      mean(resres)
-      mean(resres2)
-      mean(qdata$data$art)
-      prop.table(table(resres, ndat$psi), margin = 2)
-      prop.table(table(resres2, ndat$psi), margin = 2)
-      table(qdata$data$art)
-    ndat$art = resres
-    # new regression
-    margf = art ~ fem + kid5 + psi | kid5 + psi
-    margres = zeroinfl(margf, data = ndat)
-  
-  # comparison
-  margres
-  "Count model coefficients (poisson with log link):"
-  sum(coef1)
-  qgcomp:::se_comb(expnms, vc1)
-  "Zero-inflation model coefficients (binomial with logit link):"
-  sum(coef2)
-  qgcomp:::se_comb(expnms, vc2)
-  
-  ##############################
-}
+#ziptest <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
+#  data("bioChemists", package = "pscl")
+#  # art   fem     mar kid5  phd ment
+#  #   0   Men Married    0 2.52    7
+#  #   0 Women  Single    0 2.05    6
+#  #   0 Women  Single    0 3.75    6
+#  #   0   Men Married    1 1.18    3
+#  #   0 Women  Single    0 3.75   26
+#  #   0 Women Married    2 3.59    2
+#  f = art ~ fem + kid5 + ment + phd | kid5
+#  expnms = c("phd", "ment")
+#  qdata = qgcomp:::quantize(bioChemists, expnms=expnms)
+#  
+#  
+#  res = zeroinfl(f, data = qdata$data)
+#  # non bootstrapped
+#  coef1 = res$coefficients$count[expnms]
+#  vc1 = vcov(res, "count")
+#  coef2 = res$coefficients$zero[expnms]
+#  vc2 = vcov(res, "zero")
+#  psi
+#  "Count model coefficients (poisson with log link):"
+#  sum(coef1)
+#  qgcomp:::se_comb(expnms, vc1)
+#  "Zero-inflation model coefficients (binomial with logit link):"
+#  sum(coef2)
+#  qgcomp:::se_comb(expnms, vc2)
+#  
+#  # bootstrapped
+#    ndat3 <- ndat2 <- ndat1 <- ndat0 <- qdata$data
+#    ndat0$phd=0
+#    ndat0$ment=0
+#    ndat0$psi=0
+#    ndat1$phd=1
+#    ndat1$ment=1
+#    ndat1$psi=1
+#    ndat2$phd=2
+#    ndat2$ment=2
+#    ndat2$psi=2
+#    ndat3$phd=3
+#    ndat3$ment=3
+#    ndat3$psi=3
+#    ndat = data.frame(rbind(ndat0, ndat1, ndat2, ndat3))
+#    totn = nrow(ndat)
+#    # new predicted class using class probabilities (more general?)
+#      classprob = predict(res, newdata = ndat, type="prob")
+#      ncats = ncol(classprob)
+#      sum(rmultinom(1,ncats,classprob[,]))
+#      resres = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
+#      resres
+#    # new predicted class using count/zero preds (faster?)
+#      pmfg0 = predict(res, newdata = ndat, type="count")
+#      pmf0  = predict(res, newdata = ndat, type="zero")
+#      resres2 = rbinom(totn, 1, 1-pmf0)*rpois(totn, pmfg0)
+#      mean(resres)
+#      mean(resres2)
+#      mean(qdata$data$art)
+#      prop.table(table(resres, ndat$psi), margin = 2)
+#      prop.table(table(resres2, ndat$psi), margin = 2)
+#      table(qdata$data$art)
+#    ndat$art = resres
+#    # new regression
+#    margf = art ~ fem + kid5 + psi | kid5 + psi
+#    margres = zeroinfl(margf, data = ndat)
+#  
+#  # comparison
+#  margres
+#  "Count model coefficients (poisson with log link):"
+#  sum(coef1)
+#  qgcomp:::se_comb(expnms, vc1)
+#  "Zero-inflation model coefficients (binomial with logit link):"
+#  sum(coef2)
+#  qgcomp:::se_comb(expnms, vc2)
+#  
+#  ##############################
+#}
 
 
 
@@ -475,62 +474,4 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
 #  attr(res, "class") <- "qgcompfit"
 #  res
 #}
-
-
-printZI <- function(x){
-  if(class(x$fit) == "zeroinfl"){
-    if(!is.null(x$pos.size$count)) {
-      cat("Prob(Y ~ count):\n")
-      cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$pos.size$count, 3) , ")\n"))
-      if (length(x$pos.weights$count) > 0) {
-        print(x$pos.weights$count, digits = 3)
-      } else cat("None\n")
-      cat("\n")
-    }
-    if(!is.null(x$neg.size$count)) {
-      cat(paste0("Scaled effect size (negative direction, sum of negative coefficients = ", signif(-x$neg.size$count, 3) , ")\n"))
-      if (length(x$neg.weights$count) > 0) {
-        print(x$neg.weights$count, digits = 3)
-      } else cat("None\n")
-      cat("\n")
-    }
-    if(!is.null(x$pos.size$zero)) {
-      cat("Prob(Y ~ zero/count):\n")
-      cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$pos.size$zero, 3) , ")\n"))
-      if (length(x$pos.weights$zero) > 0) {
-        print(x$pos.weights$zero, digits = 3)
-      } else cat("None\n")
-      cat("\n")
-    }
-    if(!is.null(x$neg.size$zero)) {
-      cat(paste0("Scaled effect size (negative direction, sum of negative coefficients = ", signif(-x$neg.size$zero, 3) , ")\n"))
-      if (length(x$neg.weights$zero) > 0) {
-        print(x$neg.weights$zero, digits = 3)
-      } else cat("None\n")
-      cat("\n")
-    }
-    
-    if(x$fit$dist %in% c("poisson", "negbin")){
-      estimand <- 'OR/RR'
-      cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
-    }
-    #if(x$fit$dist=="gaussian"){
-    #  estimand <- 'log(OR)/mean diff'
-    #  cat(paste0("Mixture ",estimand,"", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
-    #}
-    testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
-    
-    pdat <- list()
-    for(modtype in names(x$psi)){
-      pdat[[modtype]] <- cbind(Estimate=coef(x)[[modtype]], "Std. Error"=sqrt(x$var.coef[[modtype]]), 
-                                 "Lower CI"=x$ci.coef[[modtype]][,1], "Upper CI"=x$ci.coef[[modtype]][,2], 
-                                 "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
-      colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
-      rownames(pdat[[modtype]]) <- rnm
-      cat(paste("Prob(Y ~ ", modtype,"):\n"))
-      printCoefmat(pdat[[modtype]],has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-    }
-  }
-}
 

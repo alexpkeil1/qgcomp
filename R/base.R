@@ -800,7 +800,7 @@ print.qgcompfit <- function(x, ...){
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(x)))))
   }
-  if(is.null(dim(x$ci))){
+  if(is.null(dim(x$ci.coef))){
     pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
     colnames(pdat)[5] = eval(paste(testtype, "value"))
     rownames(pdat) <- rnm

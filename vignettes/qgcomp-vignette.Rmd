@@ -1,0 +1,459 @@
+---
+title: "The qgcomp package: g-computation on exposure quantiles"
+author: "Alexander Keil"
+date: "`r Sys.Date()`"
+#output: rmarkdown::pdf_document 
+output: rmarkdown::html_vignette  
+vignette: >
+  %\VignetteIndexEntry{The qgcomp package: g-computation on exposure quantiles}
+  %\VignetteEngine{knitr::knitr}
+  \usepackage[utf8]{inputenc}
+---
+
+## Introduction
+`qgcomp` is a package to implement g-computation for analyzing the effects of exposure
+mixtures. Quantile g-computation yields estimates of the effect of increasing
+all exposures by one quantile, simultaneously. This, it estimates a "mixture
+effect" useful in the study of exposure mixtures such as air pollution, diet,
+and water contamination.
+
+Using terminology from methods developed for causal effect estimation, quantile 
+g-computation estimates the parameters of a marginal structural model that 
+characterizes the change in the expected potential outcome given a joint intervention
+on all exposures, possibly conditional on confounders. Under the assumptions of
+exchangeability, causal consistency, positivity, no interference, and correct
+model specification, this model yields a causal effect for an intervention
+on the mixture as a whole. While these assumptions may not be met exactly, they
+provide a useful roadmap for how to interpret the results of a qgcomp fit, and
+where efforts should be spent in terms of ensuring accurate model specification
+and selection of exposures that are sufficient to control co-pollutant confounding.
+
+## How to use the `qgcomp` package
+Here we use a running example from the `metals` dataset from the from the package 
+`qgcomp` to demonstrate some features of the package and method. 
+
+Namely, the examples below demonstrate use of the package for:
+1. Fast estimation of exposure effects under a linear model for quantized exposures for continuous (normal) outcomes
+2. Estimating conditional and marginal odds/risk ratios of a mixture effect for binary outcomes
+3. Adjusting for non-exposure covariates when estimating effects of the mixture
+4. Allowing non-linear and non-homogenous effects of individual exposures and the mixture as a whole by including product terms
+5. Using qgcomp to fit a time-to-event model to estimate conditional and marginal hazard ratios for the exposure mixture
+
+For analogous approaches to estimating exposure mixture effects, illustrative examples can be seen in the `gQWS` package help files, which implements
+weighte quantile sum (WQS) regression, and at https://jenfb.github.io/bkmr/overview.html, which describes Bayesian kernel machine regression.
+
+The `metals` dataset from the from the package `qgcomp`, comprises a set of simulated well water exposures and two health outcomes (one continuous, one binary/time-to-event). The exposures are transformed to have mean = 0.0, standard deviation = 1.0. The data are used throughout to demonstrate usage and features of the `qgcomp` package.
+
+```{r metals data, echo=TRUE, results='markup', message=FALSE}
+library("qgcomp")
+library("knitr")
+library("ggplot2")
+data("metals", package="qgcomp")
+head(metals)
+```
+
+
+### Example 1: linear model
+```{r linear model and runtime, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+# we save the names of the mixture variables in the variable "Xnm"
+Xnm <- c(
+    'arsenic','barium','cadmium','calcium','chromium','copper',
+    'iron','lead','magnesium','manganese','mercury','selenium','silver',
+    'sodium','zinc'
+)
+covars = c('nitrate','nitrite','sulfate','ph', 'total_alkalinity','total_hardness')
+
+
+
+# Example 1: linear model
+# Run the model and save the results "qc.fit"
+system.time(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian()))
+#   user  system elapsed 
+#  0.011   0.002   0.018 
+
+# contrasting other methods with computational speed
+# WQS regression
+#system.time(wqs.fit <- gwqs(y~NULL,mix_name=Xnm, data=metals[,c(Xnm, 'y')], family="gaussian"))
+#   user  system elapsed 
+# 35.775   0.124  36.114 
+
+# Bayesian kernel machine regression (note that the number of iterations here would 
+#  need to be >5,000, at minimum, so this underestimates the run time by a factor
+#  of 50+
+#system.time(bkmr.fit <- kmbayes(y=metals$y, Z=metals[,Xnm], family="gaussian", iter=100))
+#   user  system elapsed 
+# 81.644   4.194  86.520 
+
+
+#first note that qgcomp is very fast
+
+# View results: scaled coefficients/weights and statistical inference about
+# mixture effect
+qc.fit
+
+
+
+```
+One advantage of quantile g-computation over other methods that estimate 
+"mixture effects" (the effect of changing all exposures at once), is that it 
+is very computationally efficient. Contrasting methods such as WQS (`gWQS` 
+package) and Bayesian Kernel Machine regression (`bkmr` package), 
+quantile g-computation can provide results many orders of magnitude faster.
+For example, the example above ran 3000X faster for quantile g-computation
+versus WQS regression, and we estimate the speedup would be several
+hundred thousand times versus Bayesian kernel machine regression. 
+
+Quantile g-computation yields fixed weights in the estimation procedure, similar
+to WQS regression. However, note that the weights from `qgcomp.noboot` 
+can be negative or positive. When all effects are linear and in the same 
+direction ("directional homogeneity"), quantile g-computation is equivalent to 
+weighted quantile sum regression in large samples.
+
+The overall mixture effect from quantile g-computation (psi1) is interpreted as 
+the effect on the outcome of increasing every exposure by one quantile, possibly
+conditional on covariates. Given the overall exposure effect, the weights are
+considered fixed and so do not have confidence intervals or p-values.
+
+
+### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
+
+This example introduces the use of a binary outcome in `qgcomp` via the 
+`qgcomp.noboot` function, which yields a conditional odds ratio or the
+`qgcomp.boot`, which yields a marginal odds ratio or risk/prevalence ratio. These
+will not equal each other when there are non-exposure covariates (e.g. 
+confounders) included in the model because the odds ratio is not collapsible (both
+are still valid). Marginal parameters will yield estimates of the population
+average exposure effect, which is often of more interest due to better 
+interpretability over conditional odds ratios. Further, odds ratios are not
+generally of interest when risk ratios can be validly estimated, so `qgcomp.boot`
+will estimate the risk ratio by default for binary data (set rr=FALSE to 
+allow estimation of ORs when using `qgcomp.boot`).
+
+```{r logistic qgcomp, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+
+qc.fit2 <- qgcomp.noboot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4)
+qcboot.fit2 <- qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10,# B should be 200-500+ in practice
+          seed=125, rr=FALSE)
+qcboot.fit2b <- qgcomp.boot(disease_state~., expnms=Xnm, 
+          data = metals[,c(Xnm, 'disease_state')], family=binomial(), 
+          q=4, B=10,# B should be 200-500+ in practice
+          seed=125, rr=TRUE)
+
+
+# Compare a qgcomp.noboot fit:
+qc.fit2
+# and a qgcomp.boot fit:
+qcboot.fit2
+# and a qgcomp.boot fit, where the risk/prevalence ratio is estimated, 
+#  rather than the odds ratio:
+qcboot.fit2b
+
+```
+
+### Example 3: adjusting for covariates, plotting estimates
+
+In the following code we run a maternal age-adjusted linear model with 
+`qgcomp` (`family = "gaussian"`). Further, we plot both the weights, as well as the mixture slope
+which yields overall model confidence bounds, representing the bounds that contain the true
+regression line across 95% of studies, in expectation (provided correct model fit). The pointwise
+bounds represent comparisons of the expected difference in outcomes at each quantile, with reference 
+to a specific quantile (which can be specified by the user, as below). The pointwise bounds will
+generally give better agreement with statistical tests of model coefficients, as the model bounds
+are not generally useful for determining whether mean outcomes at two specific levels of exposure
+are statistically distinguishable at a given alpha level.
+
+```{r adjusting for covariates, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+
+qc.fit3 <- qgcomp.noboot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
+                           chromium + copper + iron + lead + magnesium + manganese + 
+                           mercury + selenium + silver + sodium + zinc,
+                         expnms=Xnm,
+                         metals, family=gaussian(), q=4)
+qc.fit3
+plot(qc.fit3)
+qcboot.fit3 <- qgcomp.boot(y ~ mage35 + arsenic + barium + cadmium + calcium + chloride + 
+                           chromium + copper + iron + lead + magnesium + manganese + 
+                           mercury + selenium + silver + sodium + zinc,
+                         expnms=Xnm,
+                         metals, family=gaussian(), q=4, B=10,# B should be 200-500+ in practice
+                         seed=125)
+qc.fit3
+plot(qcboot.fit3)
+plot(qcboot.fit3, pointwiseref = 3)
+
+```
+
+From the first plot we see weights from `qgcomp.noboot` function, which include both
+positive and negative effect directions. When the weights are all on a single side of the null,
+these plots are easy to in interpret since the weight corresponds to the proportion of the
+overall effect from each exposure. WQS uses a constraint in the model to force
+all of the weights to be in the same direction - unfortunately such constraints
+lead to biased effect estimates. The `qgcomp` package takes a different approach
+and allows that "weights" might go in either direction, indicating that some exposures
+may beneficial, and some harmful, or there may be sampling variation due to using
+small or moderate sample sizes (or, more often, systematic bias such as unmeasured
+confounding). The "weights" in `qgcomp` correspond to the proportion of the overall effect
+when all of the exposures have effects in the same direction, but otherwise they
+correspond to the proportion of the effect *in a particular direction*, which
+may be small (or large) compared to the overall "mixture" effect. NOTE: the left 
+and right sides of the  plot should not be compared with each other because the 
+length of the bars corresponds to the effect size only relative to other effects 
+in the same direction. The darkness of the bars corresponds to the overall effect 
+size - in this case the bars on the right (positive) side of the plot are darker 
+because the overall "mixture" effect is positive. Thus, the shading allows one
+to make informal comparisons across the left and right sides: a large, darkly
+shaded bar indicates a larger independent effect than a large, lightly shaded bar.
+
+Using `qgcomp.boot` also allows us to assess
+linearity of the total exposure effect (the second plot). Similar output is available
+for WQS (`gWQS` package), though WQS results will generally be less interpretable
+when exposure effects are non-linear (see below how to do this with `qgcomp.boot`). 
+
+The plot for the `qcboot.fit3` object (using g-computation with bootstrap variance) 
+gives predictions at the joint intervention levels of exposure. It also displays
+a smoothed (graphical) fit. Generally, we cannot overlay the data over this plot
+since the regression line corresponds to a change in potentially many exposures
+at once. Hence, it is useful to explore non-linearity by fitting models that
+allow for non-linear effects.
+
+
+### Example 4: non-linearity (and non-homogeneity)
+
+Let's close with one more feature of `qgcomp` (and `qgcomp.boot`): handling non-linearity. 
+Here is an example where we use a feature of the R language for fitting models
+with interaction terms. We use `y~. + .^2` as the model formula, which fits a model
+that allows for quadratic term for every predictor in the model.
+
+Similar approaches could be used to include interaction terms between exposures, 
+as well as between exposures and covariates.
+
+
+```{r non-linear non-hom intro, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+
+qcboot.fit4 <- qgcomp(y~. + .^2,
+                         expnms=Xnm,
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, B=10, seed=125)
+plot(qcboot.fit4)
+```
+
+Note that allowing for a non-linear effect of all exposures induces an apparent 
+non-linear trend in the overall exposure effect. The smoothed regression line is 
+still well within the confidence bands of the marginal linear model 
+(by default, the overall effect of joint exposure is assumed linear, 
+though this assumption can be relaxed via the 'degree' parameter in qgcomp.boot, 
+as follows:
+
+```{r overall non-linearity, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+
+qcboot.fit5 <- qgcomp(y~. + .^2,
+                         expnms=Xnm,
+                         metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, 
+                      B=10, rr=FALSE, seed=125)
+plot(qcboot.fit5)
+```
+
+Ideally, the smooth fit will look very similar to the model prediction regression 
+line.
+
+### Example 5: Comparing model fits and further exploring non-linearity
+Exploring a non-linear fit in settings with multiple exposures is challenging. One way to explore non-linearity, as demonstrated above, is to to include all 2-way interaction terms (including quadratic terms, or "self-interactions"). Sometimes this approach is not desired, either because the number of terms in the model can become very large, or because some sort of model selection procedure is required, which risks inducing over-fit (biased estimates and standard errors that are too small). Short of having a set of a priori non-linear terms to include, we find it best to take a default approach (e.g. taking all second order terms) that doesn't rely on statistical significance, or to simply be honest that the search for a non-linear model is exploratory and shouldn't be relied upon for robust inference. Methods such as kernel machine regression may be good alternatives, or supplementary approaches to exploring non-linearity.
+
+NOTE: qgcomp necessarily fits a regression model with exposures that have a small number of possible values, based on the quantile chosen. By package default, this is `q=4`, but it is difficult to fully examine non-linear fits using only four points, so we recommend exploring larger values of `q`, which will change effect estimates (i.e. the model coefficient implies a smaller change in exposures, so the expected change in the outcome will also decrease).
+
+Here, we examine a couple one strategy for default and exploratory approaches to mixtures that can be implemented in qgcomp using a smaller subset of exposures (iron, lead, cadmium), which we choose via the correlation matrix. High correlations between exposures may result from a common source, so small subsets of the mixture may be useful for examining hypotheses that relate to interventions on a common environmental source or set of behaviors. Note that we can still adjust for the measured exposures, even though only 3 our exposures of interest are considered as the mixture of interest. Note that we will require a new R package to help in exploring non-linearity: `splines`. Note that `qgcomp.boot` must be used in order to produce the graphics below, as `qgcomp.noboot` does not calculate the necessary quantities.
+
+#### Graphical approach to explore non-linearity in a correlated subset of exposures using splines
+```{r graphical non-linearity, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
+library(splines)
+# find all correlations > 0.6 (this is an arbitrary choice)
+cormat = cor(metals[,Xnm])
+idx = which(cormat>0.6 & cormat <1.0, arr.ind = TRUE)
+newXnm = unique(rownames(idx)) # iron, lead, and cadmium
+
+
+qc.fit6lin <- qgcomp.boot(y ~ iron + lead + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10)
+
+qc.fit6nonlin <- qgcomp.boot(y ~ bs(iron) + bs(cadmium) + bs(lead) +
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, degree=2)
+
+qc.fit6nonhom <- qgcomp.boot(y ~ bs(iron)*bs(lead) + bs(iron)*bs(cadmium) + bs(lead)*bs(cadmium) +
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, degree=3)
+# it helps to place the plots on a common y-axis, which is easy due 
+#  to dependence of the qgcomp plotting functions on ggplot
+pl.fit6lin <- plot(qc.fit6lin, suppressprint = TRUE, pointwiseref = 4)
+pl.fit6nonlin <- plot(qc.fit6nonlin, suppressprint = TRUE, pointwiseref = 4)
+pl.fit6nonhom <- plot(qc.fit6nonhom, suppressprint = TRUE, pointwiseref = 4)
+
+pl.fit6lin + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Linear fit: mixture of iron, lead, and cadmium")
+pl.fit6nonlin + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Non-linear fit: mixture of iron, lead, and cadmium")
+pl.fit6nonhom + coord_cartesian(ylim=c(-0.75, .75)) + 
+  ggtitle("Non-linear, non-homogeneous fit: mixture of iron, lead, and cadmium")
+```
+
+#### Caution about graphical approaches
+The underlying condtional model fit can be made extremely flexible, and the graphical representation of this (via the 
+smooth conditional fit) can look extremely flexible. Simply matching the overall (MSM) fit to this line is not
+a viable strategy for identifying parsimonious models because that would ignore potential for overfit. Thus,
+caution should be used when judging the accuracy of a fit when comparing the "smooth conditional fit" to the 
+"MSM fit." Here, there is little statistical evidence for even a linear trend, which makes the 
+smoothed conditional fit appear to be overift. The smooth conditional fit can be turned off, as below.
+```{r graphical caution, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
+qc.overfit <- qgcomp.boot(y ~ bs(iron) + bs(cadmium) + bs(lead) +
+                         mage35 + bs(arsenic) + bs(magnesium) + bs(manganese) + bs(mercury) + 
+                         bs(selenium) + bs(silver) + bs(sodium) + bs(zinc),
+                         expnms=Xnm,
+                         metals, family=gaussian(), q=8, B=10, degree=1)
+qc.overfit
+plot(qc.overfit, pointwiseref = 5)
+plot(qc.overfit, flexfit = FALSE, pointwiseref = 5)
+```
+
+
+### Example 6: Miscellaneous other ways to allow non-linearity. Note that these are included as examples of *how* to include non-linearities, and are not intended as a demonstration of appropriate model selection.
+```{r non-linear examples, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
+
+# using indicator terms for each quantile
+qc.fit7a <- qgcomp.boot(y ~ factor(iron) + lead + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=2)
+# underlying fit
+summary(qc.fit7a$fit)$coefficients
+plot(qc.fit7a)
+
+# interactions between indicator terms
+qc.fit7b <- qgcomp.boot(y ~ factor(iron)*factor(lead) + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=3)
+# underlying fit
+#summary(qc.fit7b$fit)$coefficients
+plot(qc.fit7b)
+
+# breaks at specific quantiles (these breaks act on the quantized basis)
+qc.fit7c <- qgcomp.boot(y ~ I(iron>3)*I(lead>3) + cadmium + 
+                         mage35 + arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc,
+                         expnms=newXnm,
+                         metals, family=gaussian(), q=8, B=10, deg=2)
+# underlying fit
+summary(qc.fit7b$fit)$coefficients
+plot(qc.fit7c)
+
+
+```
+
+Note one restriction on exploring non-linearity: while we can use flexible function such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals (to increase computational speed for the xample), which is far too low.
+
+#### Statistical approach explore non-linearity in a correlated subset of exposures using splines
+
+The graphical approaches don't give a clear picture of which model might be preferred, but we can compare the model fits using AIC, AICC, or BIC (all various forms of information criterion that weigh model fit with over-parameterization). Both of these criterion suggest the linear model fits best (lowest AIC and BIC), which suggests that the apparently non-linear fits observed in the graphical approaches don't improve prediction of the health outcome, relative to the linear fit, due to the increase in variance associated with including more parameters.
+```{r splines, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+AIC(qc.fit6lin$fit)
+AIC(qc.fit6nonlin$fit)
+AIC(qc.fit6nonhom$fit)
+
+BIC(qc.fit6lin$fit)
+BIC(qc.fit6nonlin$fit)
+BIC(qc.fit6nonhom$fit)
+```
+
+### Example 7: time-to-event analysis and parallel processing
+
+- The `qgcomp` package utilizes Cox proportional hazards models as the underlying model for 
+  time-to-event analysis. The interpretation of a `qgcomp.noboot` fit parameter is a conditional (on confounders)
+  hazard ratio for increasing all exposures at once. The `qc.survfit1` object demonstrates a time-to-
+  event analysis with `qgcompcox.noboot`. The default plot is similar to that of `qgcompcox.noboot`, 
+  in that it yields weights and an overall mixture effect
+- Marginal hazards ratios (and bootstrapped quantile g-computation in general) uses a slightly different 
+  approach to effect estimation that makes it more computationally demanding than other `qcomp` functions.
+  To estimate a marginal hazards ratio, the underlying model is fit, and then new outcomes are simulated
+  under the underlying model with a baseline hazard estimator (Efron's) - this simulation requires a 
+  large sample (controlled by MCsize) for accuracy. This approach is similar to other g-computation
+  approaches to survival analysis, but this approach uses the exact survival times, rather than
+  discretized survival times as are common in most g-computation analysis. Plotting a `qgcompcox.boot` 
+  object yields a set of survival curves (e.g.`qc.survfit2`) which comprise estimated survival curves
+  (assuming censoring and late entry at random, conditional on covariates in the model) that characterize
+  conditional survival functions (i.e. censoring competing risks) at various levels of joint-exposure 
+  (including the overall average - which may be slightly different from the observed survival curve, 
+  but should more or less agree).
+- All bootstrapped functions in `qgcomp` allow parellelization via the parallel=TRUE parameter
+  (demonstrated with the non-liner fit in`qc.survfit3`). Only 5 bootstrap iterations are used here,
+  which is not nearly enough for inference, and will actually be slower for parallel processing due
+  to some overhead when setting up the parallel processes.
+- While`qgcompcox.boot` fits a smooth hazard ratio function, the hazard ratios contrasting specific
+ quantiles with a referent quantile can be obtained, as demonstrated with `qc.survfit4`. 
+ As in `qgcomp.boot` plots, the conditional model fit and the MSM fit are overlaid as a way to judge
+ how well the MSM fits the conditional fit (and whether, for example non-linear terms should be added
+ or removed from the overall fit via the degree parameter - we note here that we know of no statistical
+ test for quantifying the difference between these lines, so this is up to user discretion and the
+ plots are provided as visuals to aid in exploratory data analysis).
+
+```{r time-to-event, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+# non-bootstrapped version estimates a marginal structural model for the 
+# confounder-conditional effect
+survival::coxph(survival::Surv(disease_time, disease_state) ~ iron + lead + cadmium + 
+                         arsenic + magnesium + manganese + mercury + 
+                         selenium + silver + sodium + zinc +
+                         mage35,
+                         data=metals)
+qc.survfit1 <- qgcomp.cox.noboot(survival::Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4)
+qc.survfit1
+plot(qc.survfit1)
+
+# bootstrapped version estimates a marginal structural model for the population average effect
+#library(survival)
+qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=5, MCsize=1000, parallel=TRUE)
+qc.survfit2
+p2 = plot(qc.survfit2, suppressprint = TRUE)  
+p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
+
+qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=5, MCsize=1000, parallel=TRUE)
+qc.survfit3
+p3 = plot(qc.survfit3, suppressprint = TRUE) 
+p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
+
+qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=5, MCsize=1000, parallel=TRUE, degree=2)
+qc.survfit4
+# examining the overall hazard ratio as a function of overall exposure
+hrs_q = exp(matrix(c(0,0,1,1,2,4,3,9), ncol=2, byrow=TRUE)%*%qc.survfit4$msmfit$coefficients)
+colnames(hrs_q) = "Hazard ratio"
+print("Hazard ratios by quartiles (min-25%,25-50%, 50-75%, 75%-max)")
+hrs_q
+
+p4 = plot(qc.survfit4, suppressprint = TRUE) 
+p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific") 
+
+```
+## References
+Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
+Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://arxiv.org/abs/1902.04200> 
+
+## Acknowledgements
+
+The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing was performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, and Katie O'Brien.
