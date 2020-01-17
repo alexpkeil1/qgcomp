@@ -12,6 +12,14 @@ cox <- function(){
   obj
 }
 
+# fake zi family function
+zi <- function(){
+  obj = binomial(link="log")
+  obj$family="zi"
+  obj
+}
+
+
 #printing of zero-inflated results
 
 printZI <- function(x){
@@ -56,7 +64,6 @@ printZI <- function(x){
     #  cat(paste0("Mixture ",estimand,"", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     #}
     testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
     
     pdat <- list()
     for(modtype in names(x$psi)){
@@ -64,6 +71,9 @@ printZI <- function(x){
                                "Lower CI"=x$ci.coef[[modtype]][,1], "Upper CI"=x$ci.coef[[modtype]][,2], 
                                "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
       colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
+      numpsi = length(x$psi[[modtype]])
+      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',1:max(1, numpsi))))
+      if(numpsi==0) rnm = c("(Intercept)")
       rownames(pdat[[modtype]]) <- rnm
       cat(paste0("Prob(Y ~ ", modtype,"):\n"))
       printCoefmat(pdat[[modtype]],has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)

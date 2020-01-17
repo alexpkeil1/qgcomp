@@ -71,8 +71,10 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+\donttest{
 # not run: bootstrapped version is much slower
-#(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+}
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 

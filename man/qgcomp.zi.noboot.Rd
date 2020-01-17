@@ -68,10 +68,14 @@ for the "count" portion of the distribution.
 set.seed(50)
 n=100
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
-# poinsson count model, mixture in both portions
-qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="poisson")
-# negative binomial count model, mixture in both portions
-qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
+# poisson count model, mixture in both portions
+qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+    data=dat, q=2, dist="poisson")
+# negative binomial count model, mixture and covariate in both portions
+qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
+   data=dat, q=2, dist="negbin")  
+qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+   data=dat, q=2, dist="negbin") # equivalent
 # negative binomial count model, mixture only in the 'count' portion of the model
 qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
 }

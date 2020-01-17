@@ -48,3 +48,6 @@ stopifnot(class(res)=="qgcompfit")
 #print(results5bayes)
 #plot(results5bayes)
 #results5bayes$bootsamps # samples are reasonable
+
+
+cat("done")

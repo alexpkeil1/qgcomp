@@ -1,83 +1,146 @@
-
-#ziptest <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
-#  data("bioChemists", package = "pscl")
-#  # art   fem     mar kid5  phd ment
-#  #   0   Men Married    0 2.52    7
-#  #   0 Women  Single    0 2.05    6
-#  #   0 Women  Single    0 3.75    6
-#  #   0   Men Married    1 1.18    3
-#  #   0 Women  Single    0 3.75   26
-#  #   0 Women Married    2 3.59    2
-#  f = art ~ fem + kid5 + ment + phd | kid5
-#  expnms = c("phd", "ment")
-#  qdata = qgcomp:::quantize(bioChemists, expnms=expnms)
-#  
-#  
-#  res = zeroinfl(f, data = qdata$data)
-#  # non bootstrapped
-#  coef1 = res$coefficients$count[expnms]
-#  vc1 = vcov(res, "count")
-#  coef2 = res$coefficients$zero[expnms]
-#  vc2 = vcov(res, "zero")
-#  psi
-#  "Count model coefficients (poisson with log link):"
-#  sum(coef1)
-#  qgcomp:::se_comb(expnms, vc1)
-#  "Zero-inflation model coefficients (binomial with logit link):"
-#  sum(coef2)
-#  qgcomp:::se_comb(expnms, vc2)
-#  
-#  # bootstrapped
-#    ndat3 <- ndat2 <- ndat1 <- ndat0 <- qdata$data
-#    ndat0$phd=0
-#    ndat0$ment=0
-#    ndat0$psi=0
-#    ndat1$phd=1
-#    ndat1$ment=1
-#    ndat1$psi=1
-#    ndat2$phd=2
-#    ndat2$ment=2
-#    ndat2$psi=2
-#    ndat3$phd=3
-#    ndat3$ment=3
-#    ndat3$psi=3
-#    ndat = data.frame(rbind(ndat0, ndat1, ndat2, ndat3))
-#    totn = nrow(ndat)
-#    # new predicted class using class probabilities (more general?)
-#      classprob = predict(res, newdata = ndat, type="prob")
-#      ncats = ncol(classprob)
-#      sum(rmultinom(1,ncats,classprob[,]))
-#      resres = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
-#      resres
-#    # new predicted class using count/zero preds (faster?)
-#      pmfg0 = predict(res, newdata = ndat, type="count")
-#      pmf0  = predict(res, newdata = ndat, type="zero")
-#      resres2 = rbinom(totn, 1, 1-pmf0)*rpois(totn, pmfg0)
-#      mean(resres)
-#      mean(resres2)
-#      mean(qdata$data$art)
-#      prop.table(table(resres, ndat$psi), margin = 2)
-#      prop.table(table(resres2, ndat$psi), margin = 2)
-#      table(qdata$data$art)
-#    ndat$art = resres
-#    # new regression
-#    margf = art ~ fem + kid5 + psi | kid5 + psi
-#    margres = zeroinfl(margf, data = ndat)
-#  
-#  # comparison
-#  margres
-#  "Count model coefficients (poisson with log link):"
-#  sum(coef1)
-#  qgcomp:::se_comb(expnms, vc1)
-#  "Zero-inflation model coefficients (binomial with logit link):"
-#  sum(coef2)
-#  qgcomp:::se_comb(expnms, vc2)
-#  
-#  ##############################
-#}
+# zero inflation
+zimsm.fit.control <- function(
+  predmethod=c("components", "catprobs")
+){
+  #' @title control of fitting parameters for zero inflated MSMs
+  #' @description this is an internal function called by 
+  #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
+  #'  but is documented here for clarity. Generally, users will not need to call
+  #'  this function directly.
+  #' @details Provides fine control over zero inflated MSM fitting
+  #' @param predmethod character in c("components", "catprobs"). "components" simulates from the 
+  #' model parameters directly while "catprobs" simulates outcomes from the category specific 
+  #' probabilities, which is output from predict.zeroinfl. The former is slightly
+  #' more flexible and stable, but the latter is preferred in zero inflated negative bionomial models.
+  #' @export
+  if(!(predmethod[1] %in% c("components","catprobs"))) stop("predmethod must be one of 
+     'components','catprobs', 'expected'")
+  list(
+    predmethod = predmethod[1]
+  )
+}
 
 
 
+zimsm.fit <- function(
+  f, 
+  qdata, 
+  intvals, 
+  expnms, 
+  main=TRUE, 
+  degree=1, 
+  id=NULL, 
+  MCsize=10000, 
+  containmix=list(count=TRUE, zero=TRUE),
+  bayes=FALSE,
+  x=FALSE,
+  msmcontrol=zimsm.fit.control(),
+  ...){
+  #' @title estimating the parameters of a marginal structural model (MSM) based on 
+  #' g-computation with quantized exposures
+  #' @description this is an internal function called by 
+  #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
+  #'  but is documented here for clarity. Generally, users will not need to call
+  #'  this function directly.
+  #' @details This function first computes expected outcomes under hypothetical
+  #' interventions to simultaneously set all exposures to a specific quantile. These
+  #' predictions are based on g-computation, where the exposures are `quantized',
+  #' meaning that they take on ordered integer values according to their ranks,
+  #' and the integer values are determined by the number of quantile cutpoints used.
+  #' The function then takes these expected outcomes and fits an additional model
+  #' (a marginal structural model) with the expected outcomes as the outcome and
+  #' the intervention value of the exposures (the quantile integer) as the exposure.
+  #' Under causal identification assumptions and correct model specification,
+  #' the MSM yields a causal exposure-response representing the incremental
+  #' change in the expected outcome given a joint intervention on all exposures.
+  #' @param f an r formula representing the conditional model for the outcome, given all
+  #' exposures and covariates. Interaction terms that include exposure variables
+  #' should be represented via the \code{\link[base]{AsIs}} function
+  #' @param qdata a data frame with quantized exposures (as well as outcome and other covariates)
+  #' @param intvals sequence, the sequence of integer values that the joint exposure 
+  #' is 'set' to for estimating the msm. For quantile g-computation, this is just 
+  #' 0:(q-1), where q is the number of quantiles of exposure.
+  #' @param expnms a character vector with the names of the columns in qdata that represent
+  #' the exposures of interest (main terms only!)
+  #' @param main logical, internal use: produce estimates of exposure effect (psi)
+  #'  and expected outcomes under g-computation and the MSM
+  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #'  allows that the relationship between the whole exposure mixture and the outcome
+  #'  is quadratic. Default=1)
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
+  #' @param MCsize integer: sample size for simulation to approximate marginal 
+  #'  hazards ratios
+  #' @param containmix named list of logical scalars with names "count" and "zero"
+  #' @param bayes not used
+  #' @param x keep design matrix? (logical)
+  #' @param ... arguments to zeroinfl (e.g. dist)
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
+  #' @concept variance mixtures
+  #' @import pscl
+  #' @examples
+  #' runif(1)
+  if(is.null(id)) {
+    id = "id__"
+    qdata$id__ = 1:dim(qdata)[1]
+  }
+  # conditional outcome regression fit
+  if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
+  if(bayes) stop("Bayes not yet implemented for this function")
+  if(fit$optim$convergence[1]!=0) warning("Conditional outcome regression model did not converge")
+  ## get predictions (set exposure to 0,1,...,q-1)
+  if(is.null(intvals)){
+    intvals = (1:length(table(qdata[expnms[1]]))) - 1
+  }
+  predit <- function(idx, newdata){
+    newdata[,expnms] <- idx
+    if(msmcontrol$predmethod=="components"){
+      pmfg0 = predict(fit, newdata = newdata, type="count")
+      pmf0  = predict(fit, newdata = newdata, type="zero")
+      if(fit$dist=="poisson") newY = rbinom(MCsize, 1, 1-pmf0)*rpois(n=MCsize, lambda=pmfg0)
+      if(fit$dist=="negbin") newY = rbinom(MCsize, 1, 1-pmf0)*rnbinom(n=MCsize, size=fit$theta, mu=pmfg0)
+      if(fit$dist=="geometric"){
+        pg0 = predict(fit, newdata = newdata, type="prob")
+        newY = rbinom(MCsize, 1, 1-pmf0)*rgeom(n=MCsize, mu=pg0) 
+      }
+    }
+    if(msmcontrol$predmethod=="catprobs"){
+      classprob = suppressWarnings(predict(fit, newdata = newdata, type="prob"))
+      ncats = ncol(classprob)
+      newY = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
+    }
+    #if(msmcontrol$predmethod=="expected"){
+    #  pmfg0 = predict(fit, newdata = newdata, type="count")
+    #  pmf0  = predict(fit, newdata = newdata, type="zero")
+    #  newY = rbinom(MCsize, 1, 1-pmf0)*(pmfg0)
+    #}
+    newY
+  }
+  newdata <- qdata[sample(1:nrow(qdata), size = MCsize, replace = TRUE),,drop=FALSE]
+  predmat = lapply(intvals, predit, newdata=newdata)
+  newdata = NULL
+  msmdat <- data.frame(
+    Ya = do.call("c", predmat),
+    psi = rep(intvals, each=MCsize)
+  )
+  fstr = paste("Ya ~ 1", 
+               ifelse(containmix[["count"]], "+ poly(psi, degree=degree, raw=TRUE) | 1", "| 1"),
+               ifelse(containmix[["zero"]], "+ poly(psi, degree=degree, raw=TRUE)", "")
+  )
+  
+  msmfit <- zeroinfl(as.formula(fstr), data=msmdat, x=x, ...)
+  if(msmfit$optim$convergence[1]!=0) warning("MSM did not converge")
+  
+  res = list(fit=fit, msmfit=msmfit)
+  if(main) {
+    res$Ya = msmdat$Ya   # expected outcome under joint exposure, by gcomp
+    #res$Yamsm = exp(-predict(msmfit, newdata = msmdat[,], type="expected")) # not yet implemented
+    res$A =  msmdat$psi # joint exposure (0 = all exposures set category with 
+    # upper cut-point as first quantile)
+  }
+  res
+}
 
 
 
@@ -127,17 +190,21 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   #' set.seed(50)
   #' n=100
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
-  #' # poinsson count model, mixture in both portions
-  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="poisson")
-  #' # negative binomial count model, mixture in both portions
-  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
+  #' # poisson count model, mixture in both portions
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+  #'     data=dat, q=2, dist="poisson")
+  #' # negative binomial count model, mixture and covariate in both portions
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
+  #'    data=dat, q=2, dist="negbin")  
+  #' qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+  #'    data=dat, q=2, dist="negbin") # equivalent
   #' # negative binomial count model, mixture only in the 'count' portion of the model
   #' qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
   
   # list containers
   estb <- vcov_mod <- seb <- tstat <- pvalz <- allterms <- containmix <- pos.weights <- neg.weights <- 
-    pos.coef <- neg.coef <-pos.psi <- neg.psi <- pos.size <- neg.size <- wcoef <- ci <- tstat<- list()
-  suppressWarnings(testfit <- zeroinfl(f, data = data, control=zeroinfl.control(maxit = 1, EM=FALSE)))
+    pos.coef <- neg.coef <- pos.psi <- neg.psi <- pos.size <- neg.size <- wcoef <- ci <- tstat <- list()
+  suppressWarnings(testfit <- zeroinfl(f, data = data, msmcontrol=zeroinfl.control(maxit = 1, EM=FALSE)))
   allterms$count = attr(terms(testfit, "count"), "term.labels")
   allterms$zero = attr(terms(testfit, "zero"), "term.labels")
   if (is.null(expnms)) {
@@ -159,7 +226,12 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     id = "id__"
     qdata$id__ = 1:dim(qdata)[1]
   }
-  for(modtype in c("count", "zero")) containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
+  for(modtype in c("count", "zero")){
+    containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
+    if (!containmix[[modtype]] & any(expnms %in% allterms[[modtype]])) stop("Ensure that all of the 
+    variables in 'expnms' are in either the count model, the zero model, or both,
+    and that neither model contains only a subset of exposures.")
+  }
   
 
   if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
@@ -169,14 +241,13 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     #fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
   }
   mod <- summary(fit)
-  if((length(setdiff(expnms, rownames(mod$coefficients$count)))>0 & containmix$count) ||
+  if((length(setdiff(expnms, rownames(mod$coefficients$count)))>0 & containmix$count) |
      (length(setdiff(expnms, rownames(mod$coefficients$zero)))>0 & containmix$zero)
      ){
-    stop("Model aliasing occurred, likely due to perfectly correlated quantized exposures. 
-           Try one of the following:
-             1) set 'bayes' to TRUE in the qgcomp function (recommended)
-             2) set 'q' to a higher value in the qgcomp function (recommended)
-             3) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
+    stop("Model aliasing occurred, 
+          Try one of the following:
+             1) set 'q' to a higher value in the qgcomp function (recommended)
+             2) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
            ")
   }
   for(modtype in names(containmix)){
@@ -201,7 +272,6 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   }
   pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))
 
-  ### TODONE ^
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   res <- list(
@@ -237,241 +307,271 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   res
 }
 
-#qgcomp.zi.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, 
-#                        rr=TRUE, degree=1, seed=NULL, bayes=FALSE, parallel=FALSE, ...){
-#  #' @title estimating the parameters of a marginal structural model (MSM) based on 
-#  #' g-computation with quantized exposures
-#  #'  
-#  #' @description This function yields population average effect estimates for 
-#  #'   both continuous and binary outcomes
-#  #'  
-#  #' @details Estimates correspond to the average expected change in the
-#  #'  (log) outcome per quantile increase in the joint exposure to all exposures 
-#  #'  in `expnms'. Test statistics and confidence intervals are based on 
-#  #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
-#  #'  estimates to estimate the standard error. The bootstrap standard error is 
-#  #'  then used to estimate Wald-type confidence intervals. Note that no bootstrapping
-#  #'  is done on estimated quantiles of exposure, so these are treated as fixed
-#  #'  quantities
-#  #'
-#  #' @param f R style formula
-#  #' @param data data frame
-#  #' @param expnms character vector of exposures of interest
-#  #' @param q NULL or number of quantiles used to create quantile indicator variables
-#  #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
-#  #' version of exposures in the input datasets (useful if data are already transformed,
-#  #' or for performing standard g-computation)
-#  #' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
-#  #' characterize the minimum value of each category for which to 
-#  #' break up the variables named in expnms. This is an alternative to using 'q'
-#  #' to define cutpoints.
-#  #' @param id (optional) NULL, or variable name indexing individual units of 
-#  #' observation (only needed if analyzing data with multiple observations per 
-#  #' id/cluster)
-#  #' @param alpha alpha level for confidence limit calculation
-#  #' @param B integer: number of bootstrap iterations (this should typically be
-#  #' >=200, though it is set lower in examples to improve run-time).
-#  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
-#  #'   estimate risk ratio rather than odds ratio
-#  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
-#  #'  allows that the relationship between the whole exposure mixture and the outcome
-#  #'  is quadratic.
-#  #' @param seed integer or NULL: random number seed for replicable bootstrap results
-#  #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
-#  #' in penalized parameter estimation that can help with very highly correlated 
-#  #' exposures. Note: this does not lead to fully Bayesian inference in general, 
-#  #' so results should be interpereted as frequentist.
-#  #' @param parallel use (safe) parallel processing from the future and future.apply packages
-#  #' @param ... arguments to glm (e.g. family)
-#  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
-#  #' @return a qgcompfit object, which contains information about the effect
-#  #'  measure of interest (psi) and associated variance (var.psi), as well
-#  #'  as information on the model fit (fit) and information on the 
-#  #'  marginal structural model (msmfit) used to estimate the final effect
-#  #'  estimates.
-#  #' @concept variance mixtures
-#  #' @import stats pscl
-#  #' @export
-#  #' @examples
-#  #' set.seed(30)
-#  #' # continuous outcome
-#  #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
-#  #' # Conditional linear slope
-#  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
-#  #' # Marginal linear slope (population average slope, for a purely linear, 
-#  #' #  additive model this will equal the conditional)
-#  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
-#  #'   family=gaussian(), B=10) #increase B to at least 200 in actual examples
-#  #'   
-#  #' # Population average mixture slope which accounts for non-linearity and interactions
-#  #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
-#  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=6)
-#  #'  
-#  #' # binary outcome
-#  #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
-#  #' 
-#  #' # Conditional mixture OR
-#  #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2)
-#  #'   
-#  #' #Marginal mixture OR (population average OR - in general, this will not equal the 
-#  #' # conditional mixture OR due to non-collapsibility of the OR)
-#  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2, B=6)
-#  #'   
-#  #' # Population average mixture RR
-#  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-#  #'   data=dat, q=2, rr=TRUE, B=6)
-#  #'   
-#  #' # Population average mixture RR, indicator variable representation of x2
-#  #' # note that I(x==...) operates on the quantile-based category of x,
-#  #' # rather than the raw value
-#  #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-#  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6)
-#  #' res$fit  
-#  #' plot(res)
-#  #' 
-#  #' # now add in a non-linear MSM
-#  #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-#  #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=6, 
-#  #'   degree=2)
-#  #' res2$fit  
-#  #' res2$msmfit  
-#  #' plot(res2)
-#  #' # Log risk ratio per one IQR change in all exposures (not on quantile basis)
-#  #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
-#  #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
-#  #' # note that I(x>...) now operates on the untransformed value of x,
-#  #' # rather than the quantized value
-#  #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-#  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
-#  #'   degree=2)
-#  #' res2
-#  #' # using parallel processing
-#  #' res2p = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-#  #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=6, 
-#  #'   degree=2, parallel=TRUE)
-#  #' res2p
-#  # character names of exposure mixture components
-#  if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
-#  if (is.null(expnms)) {
-#    expnms <- attr(terms(f, data = data), "term.labels")
-#    cat("Including all model terms as exposures of interest\n")      
-#  }
-#  lin = checknames(expnms)
-#  if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
-#                  please use `expnms` parameter to define the variables making up the exposure")
-#  if (!is.null(q) & !is.null(breaks)){
-#    # if user specifies breaks, prioritize those
-#    q <- NULL
-#  }
-#  if (!is.null(q) | !is.null(breaks)){
-#    ql <- quantize(data, expnms, q, breaks)
-#    qdata <- ql$data
-#    br <- ql$breaks
-#    if(is.null(q)){
-#      # rare scenario with user specified breaks and q is left at NULL
-#      nvals <- length(br[[1]])-1
-#    } else{
-#      nvals <- q
-#    }
-#    intvals <- (1:nvals)-1
-#  } else {
-#    # if( is.null(breaks) & is.null(q)) # also includes NA
-#    qdata <- data
-#    # if no transformation is made (no quantiles, no breaks given)
-#    # then draw distribution values from quantiles of all the exposures
-#    # pooled together
-#    # TODO: allow user specification of this
-#    cat("\nNote: using quantiles of all exposures combined in order to set 
-#          proposed intervention values for overall effect (25th, 50th, 75th %ile)\n")
-#    intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
-#    br <- NULL
-#  }
-#  if(is.null(id)) {
-#    id <- "id__"
-#    qdata$id__ <- 1:dim(qdata)[1]
-#  }
-#  ###
-#  msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, bayes, ...)
-#  # main estimate  
-#  #estb <- as.numeric(msmfit$msmfit$coefficients[-1])
-#  estb <- as.numeric(msmfit$msmfit$coefficients)
-#  #bootstrap to get std. error
-#  nobs <- dim(qdata)[1]
-#  nids <- length(unique(qdata[,id, drop=TRUE]))
-#  starttime = Sys.time()
-#  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...){
-#    if(i==2){
-#      timeiter = as.numeric(Sys.time() - starttime)
-#      if((timeiter*B/60)>0.5) cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
-#    }
-#    bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
-#    names(bootids) <- id
-#    qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-#    ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
-#                 ...)
-#    yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])
-#    as.numeric(
-#      c(ft$msmfit$coefficients, with(yhatty, tapply(yhat, psi, mean)))
-#      #msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes,
-#      #        ...)$msmfit$coefficients[-1]
-#    )
-#  }
-#  set.seed(seed)
-#  if(parallel){
-#    Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-#    future::plan(strategy = future::multiprocess)
-#    bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-#                                             expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
-#    
-#    future::plan(future::sequential)
-#  }else{
-#    bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-#                        expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...)
-#    
-#  }
-#  #if(is.null(dim(bootsamps))) {
-#  #  seb <- sd(bootsamps)
-#  #  covmat <- var(bootsamps)
-#  #  names(covmat) <- 'psi1'
-#  #}else{
-#  hats = t(bootsamps[-c(1:(degree+1)),])
-#  cov.yhat = cov(hats)
-#  bootsamps = bootsamps[1:(degree+1),]
-#  seb <- apply(bootsamps, 1, sd)
-#  covmat <- cov(t(bootsamps))
-#  colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
-#  #}
-#  tstat <- estb / seb
-#  df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
-#  pval <- 2 - 2 * pt(abs(tstat), df = df)
-#  pvalz <- 2 - 2 * pnorm(abs(tstat))
-#  ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
-#  # 'weights' not applicable in this setting, generally (i.e. if using this function for non-linearity, 
-#  #   then weights will vary with level of exposure)
-#  qx <- qdata[, expnms]
-#  res <- list(
-#    qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
-#    psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=covmat[-1,-1, drop=FALSE], ci = ci[-1,],
-#    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
-#    expnms=expnms, q=q, breaks=br, degree=degree,
-#    pos.psi = NULL, neg.psi = NULL, 
-#    pos.weights = NULL,neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
-#    y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
-#    bootsamps = bootsamps,
-#    cov.yhat=cov.yhat
-#  )
-#  if(msmfit$fit$family$family=='gaussian'){
-#    res$tstat <- tstat
-#    res$df <- df
-#    res$pval <- pval
-#  }
-#  if(msmfit$fit$family$family=='binomial'){
-#    res$zstat <- tstat
-#    res$pval <- pvalz
-#  }
-#  attr(res, "class") <- "qgcompfit"
-#  res
-#}
+qgcomp.zi.boot <- function(f, 
+                           data, 
+                           expnms=NULL, 
+                           q=4, 
+                           breaks=NULL, 
+                           id=NULL, 
+                           alpha=0.05, 
+                           B=200, 
+                           degree=1, 
+                           seed=NULL, 
+                           bayes=FALSE, 
+                           parallel=FALSE, 
+                           MCsize=10000, 
+                           msmcontrol=zimsm.fit.control(),
+                          ...){
+  #' @title estimating the parameters of a marginal structural model (MSM) based on 
+  #' g-computation with quantized exposures
+  #'  
+  #' @description This function yields population average effect estimates for 
+  #'   both continuous and binary outcomes
+  #'  
+  #' @details Estimates correspond to the average expected change in the
+  #'  (log) outcome per quantile increase in the joint exposure to all exposures 
+  #'  in `expnms'. Test statistics and confidence intervals are based on 
+  #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
+  #'  estimates to estimate the standard error. The bootstrap standard error is 
+  #'  then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+  #'  is done on estimated quantiles of exposure, so these are treated as fixed
+  #'  quantities
+  #'
+  #' @param f R style formula
+  #' @param data data frame
+  #' @param expnms character vector of exposures of interest
+  #' @param q NULL or number of quantiles used to create quantile indicator variables
+  #' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
+  #' version of exposures in the input datasets (useful if data are already transformed,
+  #' or for performing standard g-computation)
+  #' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
+  #' characterize the minimum value of each category for which to 
+  #' break up the variables named in expnms. This is an alternative to using 'q'
+  #' to define cutpoints.
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster)
+  #' @param alpha alpha level for confidence limit calculation
+  #' @param B integer: number of bootstrap iterations (this should typically be
+  #' >=200, though it is set lower in examples to improve run-time).
+  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
+  #'   estimate risk ratio rather than odds ratio
+  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #'  allows that the relationship between the whole exposure mixture and the outcome
+  #'  is quadratic.
+  #' @param seed integer or NULL: random number seed for replicable bootstrap results
+  #' @param bayes not currently implemented.
+  #' @param parallel use (safe) parallel processing from the future and future.apply packages
+  #' @param MCsize integer: sample size for simulation to approximate marginal 
+  #'  zero inflated model parameters. This can be left small for testing, but should be as large
+  #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
+  #'  linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation 
+  #'  error at a given value of MCsize)
+  #' @param msmcontrol named list from \code{\link[qgcomp]{zimsm.fit.control}}
+  #' @param ... arguments to glm (e.g. family)
+  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @return a qgcompfit object, which contains information about the effect
+  #'  measure of interest (psi) and associated variance (var.psi), as well
+  #'  as information on the model fit (fit) and information on the 
+  #'  marginal structural model (msmfit) used to estimate the final effect
+  #'  estimates.
+  #' @concept variance mixtures
+  #' @import stats pscl
+  #' @export
+  #' @examples
+  #' set.seed(50)
+  #' n=100
+  #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
+  #' # poisson count model, mixture in both portions
+  #' \donttest{
+  #' res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+  #'     data=dat, q=2, dist="poisson", B=1000, MCsize=5000, parallel=TRUE)
+  #' qgcomp.zi.noboot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+  #'     data=dat, q=2, dist="poisson")
+  #'   # ...(truncated output)
+  #'   # Mixture log(OR/RR) (Delta method CI):
+  #'   # Prob(Y ~ count):
+  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
+  #'   # (Intercept)  0.27720    0.15033 -0.017445  0.57185  1.8439  0.06519
+  #'   # psi1        -0.06132    0.27058 -0.591644  0.46901 -0.2266  0.82072
+  #'   # Prob(Y ~ zero):
+  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
+  #'   # (Intercept) -0.037799   0.262648 -0.55258  0.47698 -0.1439   0.8856
+  #'   # psi1         0.448493   0.443598 -0.42094  1.31793  1.0110   0.3120
+  
+  #' res
+  #' # Mixture log(OR/RR) (bootstrap CI):
+  #' # Prob(Y ~ count):
+  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
+  #' # (Intercept)  0.2757045  0.1456615 -0.0097867  0.56120  1.8928  0.05839
+  #' # psi1        -0.0072852  0.2577658 -0.5124969  0.49793 -0.0283  0.97745
+  #' # Prob(Y ~ zero):
+  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
+  #' # (Intercept) 0.017946   0.298588 -0.56728  0.60317  0.0601   0.9521
+  #' # psi1        0.480062   0.523181 -0.54535  1.50548  0.9176   0.3588
+  #' 
+  #' # accuracy for small MCsize is suspect (compare coefficients between boot/noboot versions), 
+  #' # so re-check with MCsize set to larger value (this takes a long time to run)
+  #' res2 = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+  #'     data=dat, q=2, dist="poisson", B=1000, MCsize=50000, parallel=TRUE)
+  #'  res2
+  #' # Mixture log(OR/RR) (bootstrap CI):
+  #' #   
+  #' #   Prob(Y ~ count):
+  #' #              Estimate Std. Error   Lower CI Upper CI Z value Pr(>|z|)
+  #' # (Intercept)  0.278000   0.138389  0.0067627  0.54924  2.0088  0.04455
+  #' # psi1        -0.072634   0.246445 -0.5556581  0.41039 -0.2947  0.76820
+  #' #    Prob(Y ~ zero):
+  #' #              Estimate Std. Error   Lower CI Upper CI Z value Pr(>|z|)
+  #' # (Intercept) -0.03056    0.29277 -0.60438  0.54326 -0.1044   0.9169
+  #' # psi1         0.43745    0.50557 -0.55344  1.42834  0.8653   0.3869
+  #'  
+  #'  # better, but could possibly go even higher
+  #' plot(density(res2$bootsamps[4,]))
+  #' 
+  #' # negative binomial count model, mixture and covariate in both portions
+  #' qgcomp.zi.boot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
+  #'    data=dat, q=2, dist="negbin", B=10, MCsize=10000) 
+  #' }
+  if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
+  
+  # list containers
+  estb <- vcov_mod <- seb <- tstat <- pvalz <- allterms <- containmix  <- ci <- tstat<- list() 
+  pos.weights <- neg.weights <- pos.psi <- neg.psi <- pos.size <- neg.size <- NULL
+  suppressWarnings(testfit <- zeroinfl(f, data = data, control=zeroinfl.control(maxit = 1, EM=FALSE)))
+  allterms$count = attr(terms(testfit, "count"), "term.labels")
+  allterms$zero = attr(terms(testfit, "zero"), "term.labels")
+  if (is.null(expnms)) {
+    expnms <- attr(terms(testfit), "term.labels")
+    message("Including all model terms as exposures of interest (count and zero parts must be identical)\n")      
+  }
+  for(modtype in c("count", "zero")){
+    containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
+    if (!containmix[[modtype]] & any(expnms %in% allterms[[modtype]])) stop("Ensure that all of the 
+    variables in 'expnms' are in either the count model, the zero model, or both,
+    and that neither model contains only a subset of exposures.")
+  }
+  #lin = checknames(expnms)
+  #if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
+  #                please use `expnms` parameter to define the variables making up the exposure")
+  if (!is.null(q) & !is.null(breaks)){
+    # if user specifies breaks, prioritize those
+    q <- NULL
+  }
+  if (!is.null(q) | !is.null(breaks)){
+    ql <- quantize(data, expnms, q, breaks)
+    qdata <- ql$data
+    br <- ql$breaks
+    if(is.null(q)){
+      # rare scenario with user specified breaks and q is left at NULL
+      nvals <- length(br[[1]])-1
+    } else{
+      nvals <- q
+    }
+    intvals <- (1:nvals)-1
+  } else {
+    # if( is.null(breaks) & is.null(q)) # also includes NA
+    qdata <- data
+    # if no transformation is made (no quantiles, no breaks given)
+    # then draw distribution values from quantiles of all the exposures
+    # pooled together
+    # TODO: allow user specification of this
+    cat("\nNote: using quantiles of all exposures combined in order to set 
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)\n")
+    intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
+    br <- NULL
+  }
+  if(is.null(id)) {
+    id <- "id__"
+    qdata$id__ <- 1:dim(qdata)[1]
+  }
+  ###
+  msmfit <- zimsm.fit(f, qdata, intvals, expnms, main=TRUE,
+                      degree=degree, id=id, MCsize=MCsize, containmix=containmix, 
+                      bayes=FALSE, x=FALSE, msmcontrol=msmcontrol, ...)
+  #bootstrap to get std. error
+  #nobs <- dim(qdata)[1]
+  nids <- length(unique(qdata[,id, drop=TRUE]))
+  starttime = Sys.time()
+  intvals = (1:length(table(qdata[expnms[1]]))) - 1
+  Xpsi = rep(intvals, each=MCsize)
+  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, nids=nids, id=id, ...){
+    if(i==2 & !parallel){
+      timeiter = as.numeric(Sys.time() - starttime)
+      if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
+    }
+    bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
+    names(bootids) <- id
+    qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
+    ft = zimsm.fit(f, qdata_, intvals, expnms, main=FALSE,
+                   degree=degree, id=id, MCsize=MCsize, containmix=containmix, 
+                   bayes=FALSE, x=FALSE, msmcontrol=msmcontrol, ...)
+    classprob = suppressWarnings(predict(ft$msmfit, type="prob"))
+    ncats = ncol(classprob)
+    yhat = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
+
+    yhatty = data.frame(yhat=yhat, psi=Xpsi)
+    as.numeric(
+      c(unlist(ft$msmfit$coefficients), with(yhatty, tapply(yhat, psi, mean)))
+    )
+  }
+  set.seed(seed)
+  if(parallel){
+    Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
+    future::plan(strategy = future::multiprocess)
+    bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+                                             expnms=expnms, degree=degree, nids=nids, id=id, ...)
+    
+    future::plan(future::sequential)
+  }else{
+    bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+                        expnms=expnms, degree=degree, nids=nids, id=id, ...)
+    
+  }
+  maxcidx=1
+  for(modtype in names(containmix)){
+    #if(containmix[[modtype]]){
+      cidx = grep(paste0("^",modtype), names(unlist(msmfit$msmfit$coefficients)))
+      maxcidx = max(cidx, maxcidx)
+      estb[[modtype]] = msmfit$msmfit$coefficients[[modtype]]
+      vcov_mod[[modtype]] = as.matrix(var(t(bootsamps)[,cidx]))
+      seb[[modtype]] = sqrt(diag(vcov_mod[[modtype]]))
+      tstat[[modtype]] = estb[[modtype]]/seb[[modtype]]
+      ci[[modtype]] = cbind(estb[[modtype]] + seb[[modtype]] * qnorm(alpha / 2), estb[[modtype]] + seb[[modtype]] * qnorm(1 - alpha / 2))
+    #}
+  }
+  
+  pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))
+  hats = t(bootsamps[-c(1:(maxcidx)),])
+  cov.yhat = cov(hats)
+  
+  qx <- qdata[, expnms]
+  names(qx) <- paste0(names(qx), "_q")
+  res <- list(
+    qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
+    psi = lapply(estb, function(x) x[-1]), 
+    var.psi = lapply(seb, function(x) x[-1]^2), 
+    covmat.psi = lapply(seb, function(x) c('psi1' = x[-1]^2)),
+    ci = lapply(ci, function(x) x[-1,]), 
+    coef = estb, 
+    var.coef = lapply(seb, function(x) x^2), 
+    covmat.coef=lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    ci.coef = ci,
+    expnms=expnms, q=q, breaks=br, degree=degree,
+    pos.psi = pos.psi, 
+    neg.psi = neg.psi,
+    pos.weights = lapply(pos.weights, function(x) sort(x, decreasing = TRUE)),
+    neg.weights = lapply(neg.weights, function(x) sort(x, decreasing = TRUE)), 
+    pos.size = pos.size,
+    neg.size = neg.size,
+    bootstrap=TRUE,
+    cov.yhat=cov.yhat,
+    y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
+    bootsamps = bootsamps
+  )
+  res$zstat <- tstat
+  res$pval <- pvalz
+  attr(res, "class") <- "qgcompfit"
+  res
+}
 
