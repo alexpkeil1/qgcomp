@@ -394,9 +394,9 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   starttime = Sys.time()
   psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, 
                        nids=nids, id=id, ...){
-    if(i==2){
+    if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
-      if((timeiter*B/60)>0.5) cat(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
+      if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
     }
     bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
     names(bootids) <- id

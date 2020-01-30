@@ -158,13 +158,24 @@ qcboot.fit2b
 
 In the following code we run a maternal age-adjusted linear model with 
 `qgcomp` (`family = "gaussian"`). Further, we plot both the weights, as well as the mixture slope
-which yields overall model confidence bounds, representing the bounds that contain the true
-regression line across 95% of studies, in expectation (provided correct model fit). The pointwise
-bounds represent comparisons of the expected difference in outcomes at each quantile, with reference 
-to a specific quantile (which can be specified by the user, as below). The pointwise bounds will
-generally give better agreement with statistical tests of model coefficients, as the model bounds
-are not generally useful for determining whether mean outcomes at two specific levels of exposure
-are statistically distinguishable at a given alpha level.
+which yields overall model confidence bounds, representing the bounds that, for each value of the
+joint exposure are expected to contain the true regression line over 95% of trials (so-called 95% 
+'pointwise' bounds for the regression line). The pointwise comparison bounds, denoted by error bars 
+on the plot, represent comparisons of the expected difference in outcomes at each quantile, with reference 
+to a specific quantile (which can be specified by the user, as below). (These bounds is similar to the bounds
+created in the bkmr package when plotting the overall effect of all exposures), The pointwise bounds 
+can be obtained via the pointwisebound.boot function. To avoid confusion between "pointwise regression"
+and "pointwise comparison" bounds, the pointwise regression bounds are denoted as the "model confidence
+band" in the plots, since they yield estimate the same type of bounds as the `predict` function in R when
+applied to linear model fits.
+
+Note that the underlying regression model is on the quantile 'score', which takes on values integer values
+0, 1, ..., q. For plotting purposes (when plotting regression line results from qgcomp.boot), 
+the quantile score is translated into a quantile (range = [0-1]). This is not a perfect correspondence, 
+because the quantile g-computation model treats the 
+quantile score as a continuous variable, but the quantile category comprises a range of quantiles.
+For visualization, we fix the ends of the plot at the mid-points of the first and last quantile cutpoint,
+so the range of the plot will change slightly if 'q' is changed.
 
 ```{r adjusting for covariates, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 
@@ -181,9 +192,12 @@ qcboot.fit3 <- qgcomp.boot(y ~ mage35 + arsenic + barium + cadmium + calcium + c
                          expnms=Xnm,
                          metals, family=gaussian(), q=4, B=10,# B should be 200-500+ in practice
                          seed=125)
-qc.fit3
-plot(qcboot.fit3)
+qcboot.fit3
+p = plot(qcboot.fit3)
 plot(qcboot.fit3, pointwiseref = 3)
+
+pointwisebound.boot(qcboot.fit3, pointwiseref=3)
+qgcomp:::modelbound.boot(qcboot.fit3)
 
 ```
 
@@ -253,6 +267,8 @@ qcboot.fit5 <- qgcomp(y~. + .^2,
                          expnms=Xnm,
                          metals[,c(Xnm, 'y')], family=gaussian(), q=4, degree=2, 
                       B=10, rr=FALSE, seed=125)
+qgcomp::pointwisebound.boot(qcboot.fit5)
+qgcomp:::modelbound.boot(qcboot.fit5)
 plot(qcboot.fit5)
 ```
 
@@ -325,7 +341,11 @@ plot(qc.overfit, flexfit = FALSE, pointwiseref = 5)
 ```
 
 
-### Example 6: Miscellaneous other ways to allow non-linearity. Note that these are included as examples of *how* to include non-linearities, and are not intended as a demonstration of appropriate model selection.
+### Example 6: Miscellaneous other ways to allow non-linearity. 
+Note that these are included as examples of *how* to include non-linearities, and are not intended as 
+a demonstration of appropriate model selection. In fact, qc.fit7b is generally a bad idea in small
+to moderate sample sizes due to large numbers of parameters. 
+
 ```{r non-linear examples, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
 
 # using indicator terms for each quantile
@@ -333,7 +353,7 @@ qc.fit7a <- qgcomp.boot(y ~ factor(iron) + lead + cadmium +
                          mage35 + arsenic + magnesium + manganese + mercury + 
                          selenium + silver + sodium + zinc,
                          expnms=newXnm,
-                         metals, family=gaussian(), q=8, B=10, deg=2)
+                         metals, family=gaussian(), q=8, B=20, deg=2)
 # underlying fit
 summary(qc.fit7a$fit)$coefficients
 plot(qc.fit7a)
@@ -349,13 +369,13 @@ qc.fit7b <- qgcomp.boot(y ~ factor(iron)*factor(lead) + cadmium +
 plot(qc.fit7b)
 
 # breaks at specific quantiles (these breaks act on the quantized basis)
-qc.fit7c <- qgcomp.boot(y ~ I(iron>3)*I(lead>3) + cadmium + 
+qc.fit7c <- qgcomp.boot(y ~ I(iron>4)*I(lead>4) + cadmium + 
                          mage35 + arsenic + magnesium + manganese + mercury + 
                          selenium + silver + sodium + zinc,
                          expnms=newXnm,
                          metals, family=gaussian(), q=8, B=10, deg=2)
 # underlying fit
-summary(qc.fit7b$fit)$coefficients
+summary(qc.fit7c$fit)$coefficients
 plot(qc.fit7c)
 
 

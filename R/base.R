@@ -558,7 +558,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     nids <- length(unique(qdata[,id, drop=TRUE]))
     starttime = Sys.time()
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, nids=nids, id=id, ...){
-      if(i==2){
+      if(i==2 & !parallel){
         timeiter = as.numeric(Sys.time() - starttime)
         if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
       }
@@ -596,8 +596,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     cov.yhat = cov(hats)
     bootsamps = bootsamps[1:(degree+1),]
     seb <- apply(bootsamps, 1, sd)
-      covmat <- cov(t(bootsamps))
-      colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
+    covmat <- cov(t(bootsamps))
+    colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
     #}
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
@@ -681,15 +681,19 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will 
-  #' dat <- data.frame(y=rbinom(50, 1, 0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
+  #' \donttest{
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, 
   #'   family=binomial())
+  #'   
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
-  # f = y ~ factor(x1) + x2
-  #' 
+  #' qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4, 
+  #' family=binomial())
+  # 
+  #' }
   #' #survival objects
   #' set.seed(50)
   #' N=200
@@ -733,6 +737,141 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
     res <- qgcomp.noboot(f=f,data=data,family=family,...)
   }
   res
+}
+
+
+pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
+  #' @title pointwise_total: calculating pointwise comparisons for qgcomp.boot objects
+  #'
+  #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
+  #' and the standard error of the mean difference (link scale) for pointwise comparisons
+  #' 
+  #' @details The comparison of interest following a qgcomp fit is often comparisons of model
+  #' predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
+  #' at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure is 
+  #' given as E(Y|S), where S takes on integer values 0 to q-1. Thus, comparisons are of the type
+  #' E(Y|S=s) - E(Y|S=s2) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
+  #' This function yields E(Y|S) as well as E(Y|S=s) - E(Y|S=p) where s is any value of S and p is
+  #' the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/
+  #' prevalence difference at all values of S, with the referent category S=p-1. The standard error
+  #' of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E(Y|S), such that 
+  #' the standard error for E(Y|S=s) - E(Y|S=p) is given by
+  #' 
+  #' Var(E(Y|S=s)) + - Var(E(Y|S=p)) - 2*Cov(E(Y|S=p), - E(Y|S=s))
+  #' 
+  #' This is used to create pointwise confidence intervals
+  #' 
+  #' @param x "qgcompfit" object from `qgcomp.boot`, 
+  #' @param alpha alpha level for confidence intervals
+  #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+  #' the referent category for calculating all mean differences/standard deviations)
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
+  #' @export
+  #' @examples
+  #' set.seed(12)
+  #' \donttest{
+  #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
+  #'                   y=runif(50)+x1+x1^2)
+  #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=9)
+  #' pointwisebound.boot(ft, 5)
+  #' }
+  if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
+  # todo: error catching for other functions
+  pwr = pointwiseref+0 # may break this in the future
+  py = tapply(x$y.expectedmsm, x$index, mean)
+  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+  pw.diff = c(0,diff(py))
+  pw.vars = numeric(length(pw.diff))
+  pw.vars[pwr] = 0
+  pw.idx = (1:length(py))[-pwr]
+  for(j in pw.idx){
+    yc = ycovmat[c(pwr,j),c(pwr,j)]
+    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
+    pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
+  }
+  data.frame(quantile = (1:x$q)-1, 
+             quantile.midpoint=((1:x$q)-1+0.5)/(x$q), 
+             y.expected = py, 
+             mean.diff=py-py[pwr], 
+             se.diff=sqrt(pw.vars),
+             pw.up = py + qnorm(.975)*sqrt(pw.vars),
+             pw.lo = py + qnorm(.025)*sqrt(pw.vars)
+             )
+}
+
+
+modelbound.boot <- function(x, alpha=0.05){
+  #' @title modelbound.boot: calculating qgcomp regression line confidence bounds
+  #'
+  #' @description Calculates: expected outcome (on the link scale), and upper and lower
+  #'  confidence intervals (both pointwise and simultaneous)
+  #'
+  #' @details This method leverages the bootstrap distribution of qgcomp model coefficients
+  #' to estimate pointwise regression line confidence bounds. These are defined as the bounds
+  #' that, for each value of the independent variable X (here, X is the joint exposure quantiles)
+  #' the 95% bounds for the model estimate of the regression line E(Y|X) are expected to include the
+  #' true value of E(Y|X) in 95% of studies. The "simultaneous" bounds are also calculated, and the 95%  
+  #' simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% of studies. The
+  #' latter are more conservative and account for the multiple testing implied by the former. Pointwise
+  #' bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
+  #' bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
+  #' sample bounds that assume normality and thus will be underconservative in small samples.
+  #' 
+  #' 
+  #' Reference:
+  #' 
+  #' Cheng, Russell CH. "Bootstrapping simultaneous confidence bands." 
+  #' Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
+  #' 
+  #' @param x "qgcompfit" object from `qgcomp.boot`, 
+  #' @param alpha alpha level for confidence intervals
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
+  #' @export
+  #' @examples
+  #' set.seed(12)
+  #' \donttest{
+  #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
+  #'                   y=runif(50)+x1+x1^2)
+  #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=9)
+  #' modelbound.boot(ft, 0.05)
+  #' }
+  if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
+  #x = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,family=gaussian(), B=10000, parallel = TRUE)
+  py = tapply(x$y.expectedmsm, x$index, mean)
+  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+  pw.vars = diag(ycovmat)
+  coef.boot = x$bootsamps
+  boot.err = t(coef.boot - x$coef)
+  iV = solve(qr(x$covmat.coef, tol=1e-20))
+  chi.boots = sapply(1:nrow(boot.err), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+  chicrit = qchisq(1-alpha, length(x$coef))
+  C.set = t(coef.boot[,which(chi.boots<chicrit)])
+  fx = function(coef, q=x$q, degree=x$degree){
+    reps = numeric(q)
+    for(q_ in 0:(q-1)){
+      cd = 1
+      iv = integer(0)
+      while(length(iv)<degree){
+        iv = c(iv, q_^cd)
+        cd = cd + 1
+      }
+      reps[q_+1] = c(1, iv) %*% coef
+    }
+    reps
+  }
+  fullset = apply(C.set, 1, fx)
+  ll = apply(fullset, 1, min)
+  ul = apply(fullset, 1, max)
+
+  data.frame(quantile = (1:x$q)-1, 
+             quantile.midpoint=((1:x$q)-1+0.5)/(x$q), 
+             y.expected = py, 
+             se.pw=sqrt(pw.vars), 
+             ll.pw=py + qnorm(alpha/2)*sqrt(pw.vars), 
+             ul.pw=py + qnorm(1-alpha/2)*sqrt(pw.vars), 
+             ll.simul=ll, 
+             ul.simul=ul
+             )
 }
 
 coef.qgcompfit <- function(object, ...){
@@ -813,11 +952,13 @@ print.qgcompfit <- function(x, ...){
     rownames(pdat) <- rnm
     printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
   }
+  invisible(x)
 }
 
 summary.qgcompfit <- function(object, ...){
   #' @export
   print(object)
+  invisible(object)
 }
 
 family.qgcompfit <- function(object, ...){
@@ -832,7 +973,7 @@ plot.qgcompfit <- function(x,
                            modelfitline=TRUE, 
                            modelband=TRUE, 
                            flexfit=TRUE, 
-                           pointwiseref = 1,
+                           pointwiseref = ceiling(x$q/2),
                            ...){
   #' @title plot.qgcompfit: default plotting method for a qgcompfit object
   #'
@@ -1011,7 +1152,33 @@ plot.qgcompfit <- function(x,
        # default plot for bootstrap results (no weights obtained)
     surv <- NULL # appease R CMD check
     p <- ggplot() 
-    if(x$msmfit$family$family=='cox'){
+    if(is.null(x$msmfit$family)){
+      p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
+      if(modelband){
+        message("modelband not implemented for qgcompfit objects of this")
+        #modelbound.boot(x)
+       }
+      if(flexfit){
+        p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                             method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
+                             #data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                             data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
+      }
+      if(modelfitline){
+        p <- p + geom_line(aes(x=x,y=y, color="MSM fit"),
+                           data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
+      }
+      if(pointwisebars){
+        # pairwise comparisons with referent
+        pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
+        py = pwbdat$y.expected
+        pw.up = py + qnorm(.975)*pwbdat$se.diff
+        pw.lo = py + qnorm(.025)*pwbdat$se.diff
+        p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
+                               data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
+      }
+    }    
+    if(!is.null(x$msmfit$family) && x$msmfit$family$family=='cox'){
       requireNamespace("survival")
       #construction("warning", "Plot type may change in future releases.")
       rootdat <- as.data.frame(x$fit$x)
@@ -1056,129 +1223,109 @@ plot.qgcompfit <- function(x,
         scale_linetype_discrete(name="")+
         theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
     }
-    if(x$msmfit$family$family=='gaussian'){
-      p <- p + labs(x = "Joint exposure quantile", y = "Y")
+    if(!is.null(x$msmfit$family) && x$msmfit$family$family=='gaussian'){
+      p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
        #confidence band
        y = x$y.expectedmsm
-       COV = x$covmat.psi
+       #COV = x$covmat.psi
        intvals = as.numeric(names(table(x$index)))
-       grad = grad.poly(intvals, x$degree)
-       py = tapply(x$y.expectedmsm, x$index, mean)
-       varpy = 0*py
-       for(i in 1:length(intvals)){
-         varpy[i] = se_comb(expnms = paste0('psi', 1:x$degree), 
-                        covmat=COV, grad = grad[i,])
-       }
-       pyup = py + qnorm(.975)*sqrt(varpy)
-       pydo = py + qnorm(.025)*sqrt(varpy)
+       #grad = grad.poly(intvals, x$degree)
+       #py = tapply(x$y.expectedmsm, x$index, mean)
+       #varpy = 0*py
+       #for(i in 1:length(intvals)){
+       #   varpy[i] = se_comb(expnms = paste0('psi', 1:x$degree), 
+       #                covmat=COV, grad = grad[i,])
+       #}
+       #pyup = py + qnorm(.975)*sqrt(varpy)
+       #pydo = py + qnorm(.025)*sqrt(varpy)
+       modbounds = modelbound.boot(x)
+       py = modbounds$y.expected
+       
        if(modelband){
          p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                                   fill="Model confidence band"),
-                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              #data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              data=data.frame(ymin=modbounds$ll.simul, ymax=modbounds$ul.simul, x=modbounds$quantile.midpoint))
        }
        if(flexfit){
          p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              #data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
        }
        if(modelfitline){
          p <- p + geom_line(aes(x=x,y=y, color="MSM fit"),
-                            data=data.frame(y=y, x=x$index/max(x$index)))
+                            data=data.frame(y=y, x=(x$index+0.5)/max(x$index+1)))
        }
       if(pointwisebars){
         # pairwise comparisons with referent
-        ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-        pw.diff = c(0,diff(py))
-        pw.vars = numeric(length(pw.diff))
-        pw.vars[pointwiseref] = 0
-        pw.idx = (1:length(py))[-pointwiseref]
-        for(j in pw.idx){
-          pw.vars[j] = sum(ycovmat[c(pointwiseref,j),c(pointwiseref,j)])  
-        }
-        pw.up = py + qnorm(.975)*sqrt(pw.vars)
-        pw.lo = py + qnorm(.025)*sqrt(pw.vars)
-        p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
-                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+        pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
+        py = pwbdat$y.expected
+        pw.up = py + qnorm(.975)*pwbdat$se.diff
+        pw.lo = py + qnorm(.025)*pwbdat$se.diff
+        p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
+                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
       }
      }
-    if(x$msmfit$family$family=='binomial'){
+    if(!is.null(x$msmfit$family) && x$msmfit$family$family=='binomial'){
        y = x$y.expectedmsm # probabilities (not on model scale)
-       #variance/gradient on model scales
-       COV = x$covmat.psi
        intvals = as.numeric(names(table(x$index)))
-       grad = grad.poly(intvals, x$degree)
-       py = tapply(x$y.expectedmsm, x$index, mean)
-       varpy = 0*py   
-       for(i in 1:length(intvals)){
-         varpy[i] = se_comb(expnms = paste0('psi', 1:x$degree), 
-                        covmat=COV, grad = grad[i,])
-       }
-
+       modbounds = modelbound.boot(x)
+       py = modbounds$y.expected
+       
        if(x$msmfit$family$link=='log'){
-         p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)")
-         pyup = pmin(exp(log(py) + qnorm(.975)*sqrt(varpy)), 1)
-         pydo = pmax(exp(log(py) + qnorm(.025)*sqrt(varpy)), 0)       
+         p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
+         pyup = pmin(exp(modbounds$ll.simul), 1)
+         pydo = pmax(exp(modbounds$ul.simul), 0)       
          #pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
          #pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))
        }
        if(x$msmfit$family$link=='logit'){
-         p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)")
-         pyup = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(varpy))))
-         pydo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(varpy))))      
+         p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
+         pyup = pmin(1/(1+exp(-modbounds$ll.simul)), 1)
+         pydo = pmax(1/(1+exp(-modbounds$ul.simul)), 0)       
        }
 
        if(modelband){
          p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                                   fill="Model confidence band"),
-                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              data=data.frame(ymin=pydo, ymax=pyup, x=(intvals+0.5)/max(intvals+1)))
        }
        if(flexfit){
          p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
        }
        if(modelfitline){
          p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
-                            data=data.frame(y=y, x=x$index/max(x$index)))
+                            data=data.frame(y=y, x=(x$index+0.5)/max(x$index+1)))
        }
        if(pointwisebars){
          # pairwise comparisons with referent
-         ycovmat = x$cov.yhat # bootstrap covariance matrix of E(mu|x) from MSM
-         pw.diff = c(0,diff(py))
-         pw.vars = numeric(length(pw.diff))
-         pw.vars[pointwiseref] = 0
-         pw.idx = (1:length(py))[-pointwiseref]
-         for(j in pw.idx){
-           pw.vars[j] = sum(ycovmat[c(pointwiseref,j),c(pointwiseref,j)])  
-         }
+         pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
+         py = pwbdat$y.expected
+         pw.up = py + qnorm(.975)*pwbdat$se.diff
+         pw.lo = py + qnorm(.025)*pwbdat$se.diff
+
          if(x$msmfit$family$link=='log'){
-           pw.up = pmin(exp(log(py) + qnorm(.975)*sqrt(pw.vars)), 1)
-           pw.lo = pmax(exp(log(py) + qnorm(.025)*sqrt(pw.vars)), 0)       
+           pw.up = pmin(exp(log(py) + qnorm(.975)*pwbdat$se.diff), 1)
+           pw.lo = pmax(exp(log(py) + qnorm(.025)*pwbdat$se.diff), 0)       
          }
          if(x$msmfit$family$link=='logit'){
-           pw.up = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*sqrt(pw.vars))))
-           pw.lo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(pw.vars))))      
+           pw.up = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*pwbdat$se.diff)))
+           pw.lo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*pwbdat$se.diff)))      
          }
-         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
-                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
+                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
        }
        
      }
-    if(x$msmfit$family$family!='cox'){
-     # p <- p + geom_smooth(aes(x=x,y=y, color="Smooth fit"),
-     #                     data=data.frame(y=x$y.expected, x=x$index/max(x$index)), 
-     #                     method = 'gam', 
-     #                     formula=y~s(x, k=4,fx=TRUE), se = FALSE) + 
-     #scale_x_continuous(name=("Joint exposure quantile")) + 
-     #scale_y_continuous(name="E(outcome)") 
-    }
     p <- p + scale_fill_grey(name="", start=.9) + 
       scale_colour_grey(name="", start=0.0, end=0.6) + 
       theme_classic()
     if(!suppressprint) print(p)
   }
   if(suppressprint) return(p)
-  #grid.text("Density", x=0.55, y=0.1, gp=gpar(fontsize=14, fontface="bold", fontfamily="Helvetica"))
 }
 
 predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){

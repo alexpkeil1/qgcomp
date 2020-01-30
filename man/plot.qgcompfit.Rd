@@ -11,7 +11,7 @@
   modelfitline = TRUE,
   modelband = TRUE,
   flexfit = TRUE,
-  pointwiseref = 1,
+  pointwiseref = ceiling(x$q/2),
   ...
 )
 }
