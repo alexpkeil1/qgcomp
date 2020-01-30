@@ -75,6 +75,7 @@ zimsm.fit <- function(
   #' @param containmix named list of logical scalars with names "count" and "zero"
   #' @param bayes not used
   #' @param x keep design matrix? (logical)
+  #' @param msmcontrol named list from \code{\link[qgcomp]{zimsm.fit.control}}
   #' @param ... arguments to zeroinfl (e.g. dist)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
   #' @concept variance mixtures
@@ -102,7 +103,7 @@ zimsm.fit <- function(
       if(fit$dist=="negbin") newY = rbinom(MCsize, 1, 1-pmf0)*rnbinom(n=MCsize, size=fit$theta, mu=pmfg0)
       if(fit$dist=="geometric"){
         pg0 = predict(fit, newdata = newdata, type="prob")
-        newY = rbinom(MCsize, 1, 1-pmf0)*rgeom(n=MCsize, mu=pg0) 
+        newY = rbinom(MCsize, 1, 1-pmf0)*rgeom(n=MCsize, prob=pg0) 
       }
     }
     if(msmcontrol$predmethod=="catprobs"){
@@ -354,8 +355,6 @@ qgcomp.zi.boot <- function(f,
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
-  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
-  #'   estimate risk ratio rather than odds ratio
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic.
@@ -385,53 +384,21 @@ qgcomp.zi.boot <- function(f,
   #' # poisson count model, mixture in both portions
   #' \donttest{
   #' res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-  #'     data=dat, q=2, dist="poisson", B=1000, MCsize=5000, parallel=TRUE)
+  #'     data=dat, q=4, dist="poisson", B=1000, MCsize=5000, parallel=TRUE)
   #' qgcomp.zi.noboot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-  #'     data=dat, q=2, dist="poisson")
-  #'   # ...(truncated output)
-  #'   # Mixture log(OR/RR) (Delta method CI):
-  #'   # Prob(Y ~ count):
-  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
-  #'   # (Intercept)  0.27720    0.15033 -0.017445  0.57185  1.8439  0.06519
-  #'   # psi1        -0.06132    0.27058 -0.591644  0.46901 -0.2266  0.82072
-  #'   # Prob(Y ~ zero):
-  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
-  #'   # (Intercept) -0.037799   0.262648 -0.55258  0.47698 -0.1439   0.8856
-  #'   # psi1         0.448493   0.443598 -0.42094  1.31793  1.0110   0.3120
-  
+  #'     data=dat, q=4, dist="poisson")
   #' res
-  #' # Mixture log(OR/RR) (bootstrap CI):
-  #' # Prob(Y ~ count):
-  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
-  #' # (Intercept)  0.2757045  0.1456615 -0.0097867  0.56120  1.8928  0.05839
-  #' # psi1        -0.0072852  0.2577658 -0.5124969  0.49793 -0.0283  0.97745
-  #' # Prob(Y ~ zero):
-  #' #               Estimate Std. Error   Lower CI  Upper CI Z value Pr(>|z|)
-  #' # (Intercept) 0.017946   0.298588 -0.56728  0.60317  0.0601   0.9521
-  #' # psi1        0.480062   0.523181 -0.54535  1.50548  0.9176   0.3588
   #' 
   #' # accuracy for small MCsize is suspect (compare coefficients between boot/noboot versions), 
   #' # so re-check with MCsize set to larger value (this takes a long time to run)
   #' res2 = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-  #'     data=dat, q=2, dist="poisson", B=1000, MCsize=50000, parallel=TRUE)
+  #'     data=dat, q=4, dist="poisson", B=1000, MCsize=50000, parallel=TRUE)
   #'  res2
-  #' # Mixture log(OR/RR) (bootstrap CI):
-  #' #   
-  #' #   Prob(Y ~ count):
-  #' #              Estimate Std. Error   Lower CI Upper CI Z value Pr(>|z|)
-  #' # (Intercept)  0.278000   0.138389  0.0067627  0.54924  2.0088  0.04455
-  #' # psi1        -0.072634   0.246445 -0.5556581  0.41039 -0.2947  0.76820
-  #' #    Prob(Y ~ zero):
-  #' #              Estimate Std. Error   Lower CI Upper CI Z value Pr(>|z|)
-  #' # (Intercept) -0.03056    0.29277 -0.60438  0.54326 -0.1044   0.9169
-  #' # psi1         0.43745    0.50557 -0.55344  1.42834  0.8653   0.3869
-  #'  
-  #'  # better, but could possibly go even higher
   #' plot(density(res2$bootsamps[4,]))
   #' 
   #' # negative binomial count model, mixture and covariate in both portions
   #' qgcomp.zi.boot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
-  #'    data=dat, q=2, dist="negbin", B=10, MCsize=10000) 
+  #'    data=dat, q=4, dist="negbin", B=10, MCsize=10000) 
   #' }
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   

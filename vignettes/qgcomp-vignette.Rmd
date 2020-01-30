@@ -164,7 +164,8 @@ bounds represent comparisons of the expected difference in outcomes at each quan
 to a specific quantile (which can be specified by the user, as below). The pointwise bounds will
 generally give better agreement with statistical tests of model coefficients, as the model bounds
 are not generally useful for determining whether mean outcomes at two specific levels of exposure
-are statistically distinguishable at a given alpha level.
+are statistically distinguishable at a given alpha level. The pointwise bounds can be obtained via the
+pointwise_total.boot function.
 
 ```{r adjusting for covariates, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 
@@ -184,6 +185,8 @@ qcboot.fit3 <- qgcomp.boot(y ~ mage35 + arsenic + barium + cadmium + calcium + c
 qc.fit3
 plot(qcboot.fit3)
 plot(qcboot.fit3, pointwiseref = 3)
+
+pointwise_total.boot(qcboot.fit3, pointwiseref=3)
 
 ```
 

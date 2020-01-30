@@ -55,6 +55,8 @@ hazards ratios}
 
 \item{x}{keep design matrix? (logical)}
 
+\item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm.fit.control}}}
+
 \item{...}{arguments to zeroinfl (e.g. dist)}
 }
 \description{

@@ -596,8 +596,8 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     cov.yhat = cov(hats)
     bootsamps = bootsamps[1:(degree+1),]
     seb <- apply(bootsamps, 1, sd)
-      covmat <- cov(t(bootsamps))
-      colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
+    covmat <- cov(t(bootsamps))
+    colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
     #}
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
@@ -739,6 +739,44 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   res
 }
 
+
+pointwise_total.boot <- function(x, pointwiseref=1){
+  #' @title pointwise_total: calculating pointwise comparisons for qgcomp.boot objects
+  #'
+  #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
+  #' and the standard deviation of the mean difference (link scale) for pointwise comparisons
+  #' 
+  #' @param x "qgcompfit" object from `qgcomp.boot`, 
+  #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+  #' the referent category for calculating all mean differences/standard deviations)
+  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
+  #' @export
+  #' @examples
+  #' set.seed(12)
+  #' \donttest{
+  #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
+  #'                   y=runif(50)+x1+x1^2)
+  #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+  #' pointwise_total.boot(ft, 4)
+  #' }
+  if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
+  # todo: error catching for other functions
+  pwr = pointwiseref+0 # may break this in the future
+  py = tapply(x$y.expectedmsm, x$index, mean)
+  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+  pw.diff = c(0,diff(py))
+  pw.vars = numeric(length(pw.diff))
+  pw.vars[pwr] = 0
+  pw.idx = (1:length(py))[-pwr]
+  for(j in pw.idx){
+    yc = ycovmat[c(pwr,j),c(pwr,j)]
+    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
+    pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
+  }
+  data.frame(quantile = (1:x$q)-1, quantile.midpoint=((1:x$q)-1+0.5)/(x$q), y.expected = py, mean.diff=py-py[pwr], sd.diff=sqrt(pw.vars))
+}
+
+
 coef.qgcompfit <- function(object, ...){
   #' @importFrom stats coef
   #' @export
@@ -817,11 +855,13 @@ print.qgcompfit <- function(x, ...){
     rownames(pdat) <- rnm
     printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
   }
+  invisible(x)
 }
 
 summary.qgcompfit <- function(object, ...){
   #' @export
   print(object)
+  invisible(object)
 }
 
 family.qgcompfit <- function(object, ...){
@@ -1011,7 +1051,7 @@ plot.qgcompfit <- function(x,
   }
   if(x$bootstrap){
     if(is.null(x$msmfit$family)){
-      
+      # 
     }
        # variance based on delta method and knowledge that non-linear
        #functions will always be polynomials in qgcomp
@@ -1081,31 +1121,36 @@ plot.qgcompfit <- function(x,
        if(modelband){
          p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                                   fill="Model confidence band"),
-                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              #data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              data=data.frame(ymin=pydo, ymax=pyup, x=(intvals+0.5)/max(intvals+1)))
        }
        if(flexfit){
          p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              #data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
        }
        if(modelfitline){
          p <- p + geom_line(aes(x=x,y=y, color="MSM fit"),
-                            data=data.frame(y=y, x=x$index/max(x$index)))
+                            data=data.frame(y=y, x=(x$index+0.5)/max(x$index+1)))
        }
       if(pointwisebars){
         # pairwise comparisons with referent
-        ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-        pw.diff = c(0,diff(py))
-        pw.vars = numeric(length(pw.diff))
-        pw.vars[pointwiseref] = 0
-        pw.idx = (1:length(py))[-pointwiseref]
-        for(j in pw.idx){
-          pw.vars[j] = sum(ycovmat[c(pointwiseref,j),c(pointwiseref,j)])  
-        }
-        pw.up = py + qnorm(.975)*sqrt(pw.vars)
-        pw.lo = py + qnorm(.025)*sqrt(pw.vars)
+        pwbdat = pointwise_total.boot(x, pointwiseref=pointwiseref)
+        #ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+        #pw.diff = c(0,diff(py))
+        #pw.vars = numeric(length(pw.diff))
+        #pw.vars[pointwiseref] = 0
+        #pw.idx = (1:length(py))[-pointwiseref]
+        #for(j in pw.idx){
+        #  yc = ycovmat[c(pointwiseref,j),c(pointwiseref,j)]
+        #  pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
+        #}
+        py = pwbdat$y.expected
+        pw.up = py + qnorm(.975)*pwbdat$sd.diff
+        pw.lo = py + qnorm(.025)*pwbdat$sd.diff
         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
-                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
       }
      }
     if(x$msmfit$family$family=='binomial'){
@@ -1137,16 +1182,16 @@ plot.qgcompfit <- function(x,
        if(modelband){
          p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                                   fill="Model confidence band"),
-                              data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                              data=data.frame(ymin=pydo, ymax=pyup, x=(intvals+0.5)/max(intvals+1)))
        }
        if(flexfit){
          p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-                              data=data.frame(y=x$y.expected, x=x$index/max(x$index)))
+                              data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
        }
        if(modelfitline){
          p <- p + geom_line(aes(x=x,y=y, color="Model fit"),
-                            data=data.frame(y=y, x=x$index/max(x$index)))
+                            data=data.frame(y=y, x=(x$index+0.5)/max(x$index+1)))
        }
        if(pointwisebars){
          # pairwise comparisons with referent
@@ -1167,7 +1212,7 @@ plot.qgcompfit <- function(x,
            pw.lo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*sqrt(pw.vars))))      
          }
          p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.05,
-                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=intvals/max(intvals)))
+                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=(intvals+0.5)/max(intvals+1)))
        }
        
      }
