@@ -40,7 +40,7 @@ Namely, the examples below demonstrate use of the package for:
 5. Using qgcomp to fit a time-to-event model to estimate conditional and marginal hazard ratios for the exposure mixture
 
 For analogous approaches to estimating exposure mixture effects, illustrative examples can be seen in the `gQWS` package help files, which implements
-weighte quantile sum (WQS) regression, and at https://jenfb.github.io/bkmr/overview.html, which describes Bayesian kernel machine regression.
+weighted quantile sum (WQS) regression, and at https://jenfb.github.io/bkmr/overview.html, which describes Bayesian kernel machine regression.
 
 The `metals` dataset from the from the package `qgcomp`, comprises a set of simulated well water exposures and two health outcomes (one continuous, one binary/time-to-event). The exposures are transformed to have mean = 0.0, standard deviation = 1.0. The data are used throughout to demonstrate usage and features of the `qgcomp` package.
 
@@ -323,12 +323,12 @@ pl.fit6nonhom + coord_cartesian(ylim=c(-0.75, .75)) +
 ```
 
 #### Caution about graphical approaches
-The underlying condtional model fit can be made extremely flexible, and the graphical representation of this (via the 
+The underlying conditional model fit can be made extremely flexible, and the graphical representation of this (via the 
 smooth conditional fit) can look extremely flexible. Simply matching the overall (MSM) fit to this line is not
 a viable strategy for identifying parsimonious models because that would ignore potential for overfit. Thus,
 caution should be used when judging the accuracy of a fit when comparing the "smooth conditional fit" to the 
 "MSM fit." Here, there is little statistical evidence for even a linear trend, which makes the 
-smoothed conditional fit appear to be overift. The smooth conditional fit can be turned off, as below.
+smoothed conditional fit appear to be overfit. The smooth conditional fit can be turned off, as below.
 ```{r graphical caution, results='markup', fig.show='hold', fig.height=3, fig.width=7.5, cache=FALSE}
 qc.overfit <- qgcomp.boot(y ~ bs(iron) + bs(cadmium) + bs(lead) +
                          mage35 + bs(arsenic) + bs(magnesium) + bs(manganese) + bs(mercury) + 
@@ -381,7 +381,7 @@ plot(qc.fit7c)
 
 ```
 
-Note one restriction on exploring non-linearity: while we can use flexible function such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals (to increase computational speed for the xample), which is far too low.
+Note one restriction on exploring non-linearity: while we can use flexible function such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals (to increase computational speed for the example), which is far too low.
 
 #### Statistical approach explore non-linearity in a correlated subset of exposures using splines
 
@@ -474,6 +474,6 @@ p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific")
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
 Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://arxiv.org/abs/1902.04200> 
 
-## Acknowledgements
+## Acknowledgments
 
 The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing was performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, and Katie O'Brien.

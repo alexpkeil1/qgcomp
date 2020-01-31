@@ -42,7 +42,7 @@ id/cluster)}
 \item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
 in penalized parameter estimation that can help with very highly correlated 
 exposures. Note: this does not lead to fully Bayesian inference in general, 
-so results should be interpereted as frequentist.}
+so results should be interpreted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }
@@ -51,7 +51,7 @@ a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and information on the 
  weights/standardized coefficients in the positive (pos.weights) and 
- negative (nweight) directions.
+ negative (neg.weights) directions.
 }
 \description{
 This function estimates a linear dose-response parameter representing a one quantile

@@ -59,7 +59,7 @@ is quadratic (default = 1).}
 \item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
 in penalized parameter estimation that can help with very highly correlated 
 exposures. Note: this does not lead to fully Bayesian inference in general, 
-so results should be interpereted as frequentist.}
+so results should be interpreted as frequentist.}
 
 \item{parallel}{use (safe) parallel processing from the future and future.apply packages}
 

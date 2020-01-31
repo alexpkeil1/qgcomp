@@ -43,7 +43,7 @@ This function automatically selects between qgcomp.noboot, qgcomp.boot,
  terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
  function being called. For a given linear model, boot and noboot versions will give identical
  inference, though when using survival outcomes, the `boot` version uses simulation based 
- inference, which can vary from the `nonboot` version due to simulation error (which can 
+ inference, which can vary from the `noboot` version due to simulation error (which can 
  be minimized via setting the MCsize parameter very large - see 
  \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
 }

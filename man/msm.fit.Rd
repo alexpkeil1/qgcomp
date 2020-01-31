@@ -47,7 +47,7 @@ id/cluster)}
 \item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
 in penalized parameter estimation that can help with very highly correlated 
 exposures. Note: this does not lead to fully Bayesian inference in general, 
-so results should be interpereted as frequentist.}
+so results should be interpreted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }

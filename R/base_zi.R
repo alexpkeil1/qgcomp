@@ -171,7 +171,7 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   #' 
   #' @details A zero-inflated version of quantile g-computation based on the implementation in the
   #' 'pscl' package. A zero-inflated distribution is a mixture distribution in which one of the
-  #' distributions is a point mass at zero (with probability given by a logistoic model), and the 
+  #' distributions is a point mass at zero (with probability given by a logistic model), and the 
   #' other distribution is a discrete or continuous distribution.
   #' This estimates the effect of a joint increase in all exposures on 1) the odds 
   #' of belonging to the "zero" vs. "count" portions of the distribution and/or 2) the rate parameter
@@ -193,14 +193,14 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   #' id/cluster)
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes not yet implemented
-  #' @param ... arguments to zeroinf (e.g. dist)
+  #' @param ... arguments to zeroinfl (e.g. dist)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.cox.noboot}}, 
   #'  and \code{\link[pscl]{zeroinfl}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
   #'  weights/standardized coefficients in the positive (pos.weights) and 
-  #'  negative (nweight) directions.
+  #'  negative (neg.weights) directions.
   #' @concept variance mixtures
   #' @import stats arm pscl
   #' @export

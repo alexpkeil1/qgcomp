@@ -30,9 +30,9 @@ causing issues when using these breaks to quantize new data.}
 }
 \description{
 Create variables representing indicator functions with cutpoints defined
-by quantiles. Output a list that includes: 1) adataset that is a copy of data, 
+by quantiles. Output a list that includes: 1) a dataset that is a copy of data, 
 except that the variables whose names are included in the `expnms` variable are 
-transformed to their quantized version and 2) an unnammed list of the quantile cutpoints
+transformed to their quantized version and 2) an unnamed list of the quantile cutpoints
 that are used for each of the variables that were quantized
 }
 \details{

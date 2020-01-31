@@ -74,9 +74,9 @@ grad.poly <- function(intvals, degree){
 quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' @title quantizing exposure data
   #' @description Create variables representing indicator functions with cutpoints defined
-  #' by quantiles. Output a list that includes: 1) adataset that is a copy of data, 
+  #' by quantiles. Output a list that includes: 1) a dataset that is a copy of data, 
   #' except that the variables whose names are included in the `expnms` variable are 
-  #' transformed to their quantized version and 2) an unnammed list of the quantile cutpoints
+  #' transformed to their quantized version and 2) an unnamed list of the quantile cutpoints
   #' that are used for each of the variables that were quantized
   #' 
   #' @details This function creates categorical variables in place of the
@@ -201,7 +201,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
   #' exposures. Note: this does not lead to fully Bayesian inference in general, 
-  #' so results should be interpereted as frequentist.
+  #' so results should be interpreted as frequentist.
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
@@ -302,14 +302,14 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
   #' exposures. Note: this does not lead to fully Bayesian inference in general, 
-  #' so results should be interpereted as frequentist.
+  #' so results should be interpreted as frequentist.
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
   #'  weights/standardized coefficients in the positive (pos.weights) and 
-  #'  negative (nweight) directions.
+  #'  negative (neg.weights) directions.
   #' @concept variance mixtures
   #' @import stats arm
   #' @export
@@ -448,7 +448,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
   #' exposures. Note: this does not lead to fully Bayesian inference in general, 
-  #' so results should be interpereted as frequentist.
+  #' so results should be interpreted as frequentist.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
@@ -659,7 +659,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #'  terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
   #'  function being called. For a given linear model, boot and noboot versions will give identical
   #'  inference, though when using survival outcomes, the `boot` version uses simulation based 
-  #'  inference, which can vary from the `nonboot` version due to simulation error (which can 
+  #'  inference, which can vary from the `noboot` version due to simulation error (which can 
   #'  be minimized via setting the MCsize parameter very large - see 
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
   #'
@@ -1398,7 +1398,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #' outcomes only)
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
-  #' in a new set of data based on the qgcomfit object. Note that when making predictions
+  #' in a new set of data based on the qgcompfit object. Note that when making predictions
   #' from an object from qgcomp.boot, the predictions are made from the g-computation
   #' model rather than the marginal structural model. Predictions from the marginal
   #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}

@@ -22,7 +22,7 @@ qgcomp.cox.boot(
 }
 \arguments{
 \item{f}{R style survival formula, which includes \code{\link[survival]{Surv}}
-in the outcome defintion. E.g. \code{Surv(time,event) ~ exposure}}
+in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}}
 
 \item{data}{data frame}
 
@@ -48,7 +48,7 @@ to define cutpoints.}
 \item{MCsize}{integer: sample size for simulation to approximate marginal 
 hazards ratios (if < sample size, then set to sample size). Note that large
 values will slow down the fitting, but will result in higher accuracy - if you 
-run the function multiple times you will see that results vary due to simuation
+run the function multiple times you will see that results vary due to simulation
 error. Ideally, MCsize would be set such that simulation error is negligible
 in the precision reported (e.g. if you report results to 2 decimal places, then
 MCsize should be set high enough that you consistenty get answers that are the same
@@ -80,7 +80,7 @@ This function yields population average effect estimates for
  log(hazard ratio) per quantile increase in the joint exposure to all exposures 
  in `expnms'. This function uses g-computation to estimate the parameters of a
  marginal structural model for the population average effect of increasing all
- expsoures in `expnms' by a single quantile. This approach involves specifying 
+ exposures in `expnms' by a single quantile. This approach involves specifying 
  an underlying conditional outcome model, given all exposures of interest (possibly
  with non-linear basis function representations such as splines or product terms)
  and confounders or covariates of interest. This model is fit first, which is used
@@ -97,7 +97,7 @@ This function yields population average effect estimates for
  
  MCSize is crucial to get accurate point estimates. In order to get marginal
  estimates of the population hazard under different values of the joint exposure
- at a given quantile for all exposures in `expnmns`, `qgcomp.cox.boot` uses
+ at a given quantile for all exposures in `expnms`, `qgcomp.cox.boot` uses
  Monte Carlo simulation to generate outcomes implied by the underlying conditional model
  and then fit a separate (marginal structural) model to those outcomes. In order to get
  accurate results that don't vary much from run-to-run of this approach, MCsize
