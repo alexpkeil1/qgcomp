@@ -2,14 +2,21 @@
 % Please edit documentation in R/base.R
 \name{modelbound.boot}
 \alias{modelbound.boot}
-\title{modelbound.boot: calculating qgcomp regression line confidence bounds}
+\title{estimating qgcomp regression line confidence bounds}
 \usage{
-modelbound.boot(x, alpha = 0.05)
+modelbound.boot(x, alpha = 0.05, pwonly = FALSE)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp.boot`,}
 
 \item{alpha}{alpha level for confidence intervals}
+
+\item{pwonly}{logical: return only pointwise estimates (suppress simultaneous estimates)}
+}
+\value{
+A data frame containing expected values of the outcome at each quantized value
+of all exposures as well as "pointwise" (pw) and "simultaneous" (simul) confidence
+intervals at each each quantized value of all exposures.
 }
 \description{
 Calculates: expected outcome (on the link scale), and upper and lower

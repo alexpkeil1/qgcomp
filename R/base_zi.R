@@ -36,8 +36,7 @@ zimsm.fit <- function(
   x=FALSE,
   msmcontrol=zimsm.fit.control(),
   ...){
-  #' @title estimating the parameters of a marginal structural model (MSM) based on 
-  #' g-computation with quantized exposures
+  #' @title  marginal structural zero-inflated count models (MSM) based on within quantile g-computation
   #' @description this is an internal function called by 
   #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -64,7 +63,7 @@ zimsm.fit <- function(
   #' the exposures of interest (main terms only!)
   #' @param main logical, internal use: produce estimates of exposure effect (psi)
   #'  and expected outcomes under g-computation and the MSM
-  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic. Default=1)
   #' @param id (optional) NULL, or variable name indexing individual units of 
@@ -83,6 +82,7 @@ zimsm.fit <- function(
   #' @examples
   #' set.seed(50)
   #' n=100
+  #' \donttest{
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   #' expnms = c("x1", "x2")
   #' q = 4
@@ -92,6 +92,7 @@ zimsm.fit <- function(
   #'   degree=1, id=NULL, MCsize=10000, containmix=list(count=TRUE, zero=FALSE),  
   #'   x=FALSE)
   #' msmfit$msmfit
+  #' }
 
   if(is.null(id)) {
     id = "id__"
@@ -158,11 +159,15 @@ zimsm.fit <- function(
 
 
 qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
-  #' @title estimating the parameters of a zero-inflated marginal structural model (MSM) based on 
-  #' g-computation with quantized exposures
+  #' @title quantile g-computation for zero-inflated count outcomes under linearity/additivity
   #'
-  #' @description This function mimics the output of a weighted quantile sums regression in 
-  #' large samples. 
+  #' @description This function estimates a linear dose-response parameter representing a one quantile
+  #' increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+  #' limited to linear and additive
+  #' effects of individual components of the exposure. This model estimates the parameters of a marginal 
+  #' structural zero-inflated model (MSM) based on g-computation with quantized exposures. 
+  #' Note: this function is valid only under linear and additive effects of individual components of the exposure, but when
+  #' these hold the model can be fit with very little computational burden.
   #' 
   #' @details A zero-inflated version of quantile g-computation based on the implementation in the
   #' 'pscl' package. A zero-inflated distribution is a mixture distribution in which one of the
@@ -294,8 +299,8 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     covmat.psi = lapply(seb, function(x) c('psi1' = x[-1]^2)),
     ci = lapply(ci, function(x) x[-1,]), 
     coef = estb, 
-    var.coef = lapply(seb, function(x) x^2), 
-    covmat.coef=lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    var.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    covmat.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
     ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=1,
     pos.psi = pos.psi, 
@@ -335,13 +340,39 @@ qgcomp.zi.boot <- function(f,
                            MCsize=10000, 
                            msmcontrol=zimsm.fit.control(),
                           ...){
-  #' @title estimating the parameters of a marginal structural model (MSM) based on 
-  #' g-computation with quantized exposures
+  #' @title quantile g-computation for zero-inflated count outcomes
   #'  
-  #' @description This function yields population average effect estimates for 
-  #'   both continuous and binary outcomes
+  #' @description This function estimates a linear dose-response parameter representing a one quantile
+  #' increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+  #' limited to linear and additive
+  #' effects of individual components of the exposure. This model estimates the parameters of a marginal 
+  #' structural zero-inflated count model (MSM) based on g-computation with quantized exposures. 
+  #' Note: this function  
+  #' allows linear and non-additive effects of individual components of the exposure, as well as
+  #' non-linear joint effects of the mixture via polynomial basis functions, which increase the
+  #' computational computational burden due to the need for non-parametric bootstrapping.
   #'  
-  #' @details Estimates correspond to the average expected change in the
+  #' @details Zero-inflated count models allow excess zeros in standard count outcome (e.g.
+  #'  Poisson distributed outcomes). Such models have two components: 1) the probability of
+  #'  arising from a degenerate distribution at zero (versus arising from a count distribution)
+  #'  and 2) the rate parameter of a count distribution. Thus, one has the option of allowing
+  #'  exposure and covariate effects on the zero distribution, the count distribution, or both. 
+  #'  The zero distribution parameters correspond to log-odds ratios for the probability of arising
+  #'  from the zero distribution. Count distribution parameters correspond to log-rate-ratio parameters. 
+  #'  Test statistics and confidence intervals are based on 
+  #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
+  #'  estimates to estimate the standard error. The bootstrap standard error is 
+  #'  then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+  #'  is done on estimated quantiles of exposure, so these are treated as fixed
+  #'  quantities.
+  #'  
+  #'  Of note, this function yields marginal estimates of the expected outcome under
+  #'  values of the joint exposure quantiles (e.g. the expected outcome if all exposures
+  #'  are below the 1st quartile). These outcomes can be used to derive estimates of the 
+  #'  effect on the marginal expectation of the outcome, irrespective of zero-inflated/count
+  #'  portions of the statistical model. 
+  #'  
+  #'  Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures 
   #'  in `expnms'. Test statistics and confidence intervals are based on 
   #'  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -395,8 +426,9 @@ qgcomp.zi.boot <- function(f,
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   #' # poisson count model, mixture in both portions
   #' \donttest{
+  #' # warning: the examples below can take a long time to run
   #' res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-  #'     data=dat, q=4, dist="poisson", B=1000, MCsize=5000, parallel=TRUE)
+  #'     data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE)
   #' qgcomp.zi.noboot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
   #'     data=dat, q=4, dist="poisson")
   #' res
@@ -530,11 +562,11 @@ qgcomp.zi.boot <- function(f,
     qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit, 
     psi = lapply(estb, function(x) x[-1]), 
     var.psi = lapply(seb, function(x) x[-1]^2), 
-    covmat.psi = lapply(seb, function(x) c('psi1' = x[-1]^2)),
+    covmat.psi = lapply(vcov_mod, function(x) c(x[-1,-1])),
     ci = lapply(ci, function(x) x[-1,]), 
     coef = estb, 
     var.coef = lapply(seb, function(x) x^2), 
-    covmat.coef=lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    covmat.coef=vcov_mod,
     ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=degree,
     pos.psi = pos.psi, 

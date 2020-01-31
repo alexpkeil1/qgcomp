@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{pointwisebound.boot}
 \alias{pointwisebound.boot}
-\title{pointwise_total: calculating pointwise comparisons for qgcomp.boot objects}
+\title{estimating pointwise comparisons for qgcomp.boot objects}
 \usage{
 pointwisebound.boot(x, alpha = 0.05, pointwiseref = 1)
 }
@@ -13,6 +13,11 @@ pointwisebound.boot(x, alpha = 0.05, pointwiseref = 1)
 
 \item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as 
 the referent category for calculating all mean differences/standard deviations)}
+}
+\value{
+A data frame containing expected values of the outcome at each quantized value
+of all exposures as well as a mean difference contrasting the expected outcome at each
+quantized value of all exposures, and associated standard error and confidence intervals.
 }
 \description{
 Calculates: expected outcome (on the link scale), mean difference (link scale)

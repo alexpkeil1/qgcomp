@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{checknames}
 \alias{checknames}
-\title{check for valid model terms if 'expnms' parameter not given}
+\title{check for valid model terms in a qgcomp fit}
 \usage{
 checknames(terms)
 }

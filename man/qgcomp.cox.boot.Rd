@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_surv.R
 \name{qgcomp.cox.boot}
 \alias{qgcomp.cox.boot}
-\title{estimation of quantile g-computation fit for a survival outcome}
+\title{quantile g-computation for survival outcomes}
 \usage{
 qgcomp.cox.boot(
   f,
@@ -54,7 +54,7 @@ in the precision reported (e.g. if you report results to 2 decimal places, then
 MCsize should be set high enough that you consistenty get answers that are the same
 to 2 decimal places).}
 
-\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic.}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{predict.qgcompfit}
 \alias{predict.qgcompfit}
-\title{predict.qgcompfit: default prediction method for a qgcompfit object (non-survival 
+\title{default prediction method for a qgcompfit object (non-survival 
 outcomes only)}
 \usage{
 \method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)

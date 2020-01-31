@@ -1,7 +1,6 @@
 
 se_comb <- function(expnms, covmat, grad=NULL){
-  #' @title Calculate standard error of weighted linear combination of random variables
-  # given a vector of weights and a covariance matrix (not exported)
+  #' @title calculate standard error of weighted linear combination of random variables
   #' @description This function uses the Delta method to calculate standard errors of linear
   #' functions of variables (similar to `lincom` in Stata). Generally, users will not need to 
   #' call this function directly.
@@ -73,15 +72,25 @@ grad.poly <- function(intvals, degree){
 
 
 quantize <- function (data, expnms, q=4, breaks=NULL) {
-  #' @title create variables representing indicator functions with cutpoints defined
-  #' by quantiles
-  #' @description This function creates categorical variables in place of the
+  #' @title quantizing exposure data
+  #' @description Create variables representing indicator functions with cutpoints defined
+  #' by quantiles. Output a list that includes: 1) adataset that is a copy of data, 
+  #' except that the variables whose names are included in the `expnms` variable are 
+  #' transformed to their quantized version and 2) an unnammed list of the quantile cutpoints
+  #' that are used for each of the variables that were quantized
+  #' 
+  #' @details This function creates categorical variables in place of the
   #' exposure variables named in 'expnms.' For example, a continuous exposure
   #' 'x1' will be replaced in the output data by another 'x1' that takes on values
   #' 0:(q-1), where, for example, the value 1 indicates that the original x1 value
   #' falls between the first and the second quantile.
-  #' @details This function is a vectorized version of `quantile_f` from the `gWQS` 
-  #' package that also allows the use of externally defined breaks
+  #' @return A list containing 
+  #' \describe{
+  #' \item{data}{a quantized version of the original dataframe}
+  #' \item{breaks}{a list of the quantile cutpoints used to create the quantized variables which
+  #' includes a very small number for the minimum and a very large number for the maximum to avoid
+  #' causing issues when using these breaks to quantize new data.}
+  #' }
   #' @param data a data frame
   #' @param expnms a character vector with the names of  the columns to be
   #' quantized
@@ -136,7 +145,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 }
 
 checknames <- function(terms){
-  #' @title check for valid model terms if 'expnms' parameter not given
+  #' @title check for valid model terms in a qgcomp fit
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -155,8 +164,7 @@ checknames <- function(terms){
 
 
 msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=NULL, bayes, ...){
-  #' @title fitting marginal structural model (MSM) based on g-computation with
-  #' quantized exposures
+  #' @title fitting marginal structural model (MSM) within quantile g-computation 
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -184,7 +192,7 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=
   #' @param rr logical, estimate log(risk ratio) (family='binomial' only)
   #' @param main logical, internal use: produce estimates of exposure effect (psi)
   #'  and expected outcomes under g-computation and the MSM
-  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic. Default=1)
   #' @param id (optional) NULL, or variable name indexing individual units of 
@@ -257,11 +265,14 @@ msm.fit <- function(f, qdata, intvals, expnms, rr=TRUE, main=TRUE, degree=1, id=
 
 
 qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
-  #' @title estimating the parameters of a marginal structural model (MSM) based on 
-  #' g-computation with quantized exposures
+  #' @title quantile g-computation for continuous and binary outcomes under linearity/additivity
   #'
-  #' @description This function mimics the output of a weighted quantile sums regression in 
-  #' large samples. 
+  #' @description This function estimates a linear dose-response parameter representing a one quantile
+  #' increase in a set of exposures of interest. This function is limited to linear and additive
+  #' effects of individual components of the exposure. This model estimates the parameters of a marginal 
+  #' structural model (MSM) based on g-computation with quantized exposures. Note: this function is  
+  #' valid only under linear and additive effects of individual components of the exposure, but when
+  #' these hold the model can be fit with very little computational burden.
   #' 
   #' @details For continuous outcomes, under a linear model with no 
   #' interaction terms, this is equivalent to g-computation of the effect of
@@ -363,6 +374,7 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     #se.neg.psi <- se_comb(nmneg, covmat = mod$cov.scaled)
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
+    names(estb) <- c('(Intercept)', "psi1")
     res <- list(
       qx = qx, fit = fit, 
       psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=c('psi1' = seb[-1]^2), ci = ci[-1,],
@@ -390,14 +402,16 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
     res
 }
 
-#TODO: explain (log) better - here and in the noboot
 qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, B=200, 
                         rr=TRUE, degree=1, seed=NULL, bayes=FALSE, parallel=FALSE, ...){
-  #' @title estimating the parameters of a marginal structural model (MSM) based on 
-  #' g-computation with quantized exposures
+  #' @title quantile g-computation for continuous and binary outcomes 
   #'  
-  #' @description This function yields population average effect estimates for 
-  #'   both continuous and binary outcomes
+  #' @description This function estimates a linear dose-response parameter representing a one quantile
+  #' increase in a set of exposures of interest. This model estimates the parameters of a marginal 
+  #' structural model (MSM) based on g-computation with quantized exposures. Note: this function  
+  #' allows linear and non-additive effects of individual components of the exposure, as well as
+  #' non-linear joint effects of the mixture via polynomial basis functions, which increase the
+  #' computational computational burden due to the need for non-parametric bootstrapping.
   #'  
   #' @details Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures 
@@ -427,9 +441,9 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' >=200, though it is set lower in examples to improve run-time).
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
   #'   estimate risk ratio rather than odds ratio
-  #' @param degree polynomial basis function for marginal model (e.g. degree = 2
+  #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
-  #'  is quadratic.
+  #'  is quadratic (default = 1).
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
@@ -597,7 +611,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
     bootsamps = bootsamps[1:(degree+1),]
     seb <- apply(bootsamps, 1, sd)
     covmat <- cov(t(bootsamps))
-    colnames(covmat) <- rownames(covmat) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
+    colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
     #}
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
@@ -633,7 +647,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
-  #' @title estimation of quantile g-computation fit
+  #' @title quantile g-computation for continuous, binary, and censored survival outcomes
   #' 
   #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
   #'  qgcomp.cox.noboot, and qgcomp.cox.boot
@@ -741,7 +755,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
 
 
 pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
-  #' @title pointwise_total: calculating pointwise comparisons for qgcomp.boot objects
+  #' @title estimating pointwise comparisons for qgcomp.boot objects
   #'
   #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
   #' and the standard error of the mean difference (link scale) for pointwise comparisons
@@ -765,6 +779,9 @@ pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
   #' @param alpha alpha level for confidence intervals
   #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
   #' the referent category for calculating all mean differences/standard deviations)
+  #' @return A data frame containing expected values of the outcome at each quantized value
+  #' of all exposures as well as a mean difference contrasting the expected outcome at each
+  #' quantized value of all exposures, and associated standard error and confidence intervals.
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
   #' @export
   #' @examples
@@ -794,14 +811,14 @@ pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
              y.expected = py, 
              mean.diff=py-py[pwr], 
              se.diff=sqrt(pw.vars),
-             pw.up = py + qnorm(.975)*sqrt(pw.vars),
-             pw.lo = py + qnorm(.025)*sqrt(pw.vars)
+             ul.pw = py + qnorm(.975)*sqrt(pw.vars),
+             ll.pw = py + qnorm(.025)*sqrt(pw.vars)
              )
 }
 
 
-modelbound.boot <- function(x, alpha=0.05){
-  #' @title modelbound.boot: calculating qgcomp regression line confidence bounds
+modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
+  #' @title estimating qgcomp regression line confidence bounds
   #'
   #' @description Calculates: expected outcome (on the link scale), and upper and lower
   #'  confidence intervals (both pointwise and simultaneous)
@@ -825,6 +842,10 @@ modelbound.boot <- function(x, alpha=0.05){
   #' 
   #' @param x "qgcompfit" object from `qgcomp.boot`, 
   #' @param alpha alpha level for confidence intervals
+  #' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
+  #' @return A data frame containing expected values of the outcome at each quantized value
+  #' of all exposures as well as "pointwise" (pw) and "simultaneous" (simul) confidence
+  #' intervals at each each quantized value of all exposures.
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
   #' @export
   #' @examples
@@ -840,28 +861,35 @@ modelbound.boot <- function(x, alpha=0.05){
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
   pw.vars = diag(ycovmat)
-  coef.boot = x$bootsamps
-  boot.err = t(coef.boot - x$coef)
-  iV = solve(qr(x$covmat.coef, tol=1e-20))
-  chi.boots = sapply(1:nrow(boot.err), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
-  chicrit = qchisq(1-alpha, length(x$coef))
-  C.set = t(coef.boot[,which(chi.boots<chicrit)])
-  fx = function(coef, q=x$q, degree=x$degree){
-    reps = numeric(q)
-    for(q_ in 0:(q-1)){
-      cd = 1
-      iv = integer(0)
-      while(length(iv)<degree){
-        iv = c(iv, q_^cd)
-        cd = cd + 1
+  
+  if(!pwonly){
+    coef.boot = x$bootsamps
+    boot.err = t(coef.boot - x$coef)
+    iV = solve(qr(x$covmat.coef, tol=1e-20))
+    chi.boots = sapply(1:nrow(boot.err), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+    chicrit = qchisq(1-alpha, length(x$coef))
+    C.set = t(coef.boot[,which(chi.boots<chicrit)])
+    fx = function(coef, q=x$q, degree=x$degree){
+      reps = numeric(q)
+      for(q_ in 0:(q-1)){
+        cd = 1
+        iv = integer(0)
+        while(length(iv)<degree){
+          iv = c(iv, q_^cd)
+          cd = cd + 1
+        }
+        reps[q_+1] = c(1, iv) %*% coef
       }
-      reps[q_+1] = c(1, iv) %*% coef
+      reps
     }
-    reps
+    fullset = apply(C.set, 1, fx)
+    ll = apply(fullset, 1, min)
+    ul = apply(fullset, 1, max)
+  } else{
+    ll=NA
+    ul=NA
   }
-  fullset = apply(C.set, 1, fx)
-  ll = apply(fullset, 1, min)
-  ul = apply(fullset, 1, max)
+
 
   data.frame(quantile = (1:x$q)-1, 
              quantile.midpoint=((1:x$q)-1+0.5)/(x$q), 
@@ -879,6 +907,37 @@ coef.qgcompfit <- function(object, ...){
   #' @export
   object$coef
 }
+
+vcov.qgcompfit <- function(object, ...){
+  #' @importFrom stats vcov
+  #' @export
+  object$covmat.coef
+}
+
+AIC.qgcompfit <- function(object, ...){
+  #' @importFrom stats AIC
+  #' @export
+  AIC(object$fit)
+}
+
+BIC.qgcompfit <- function(object, ...){
+  #' @importFrom stats BIC
+  #' @export
+  BIC(object$fit)
+}
+
+logLik.qgcompfit <- function(object, ...){
+  #' @importFrom stats logLik
+  #' @export
+  logLik(object$fit)
+}
+
+anova.qgcompfit <- function(object, ...){
+  #' @importFrom stats anova
+  #' @export
+  anova(object$fit)
+}
+
 
 print.qgcompfit <- function(x, ...){
   #' @title default printing method for a qgcompfit object
@@ -975,7 +1034,7 @@ plot.qgcompfit <- function(x,
                            flexfit=TRUE, 
                            pointwiseref = ceiling(x$q/2),
                            ...){
-  #' @title plot.qgcompfit: default plotting method for a qgcompfit object
+  #' @title default plotting method for a qgcompfit object
   #'
   #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
   #' create a butterfly plot of weights. For qgcomp.boot, this function will create
@@ -1093,7 +1152,7 @@ plot.qgcompfit <- function(x,
         geom_hline(aes(yintercept=0)) + 
         coord_flip(ylim=c(0,1)) + 
         theme_butterfly_l
-      if((length(x$neg.weights)>0 & length(x$pos.weights)>0)){
+      if((length(x$neg.weights)>0 || length(x$pos.weights)>0)){
         maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
         lw = 1+maxstr/20
         p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
@@ -1155,9 +1214,14 @@ plot.qgcompfit <- function(x,
     if(is.null(x$msmfit$family)){
       p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
       if(modelband){
-        message("modelband not implemented for qgcompfit objects of this")
-        #modelbound.boot(x)
-       }
+        #message("modelband not implemented for qgcompfit objects of this type")
+        modbounds = modelbound.boot(x, pwonly = TRUE)
+        p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                                 fill="Model confidence band"),
+                             #data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
+                             data=data.frame(ymin=modbounds$ll.pw, ymax=modbounds$ul.pw, 
+                                             x=modbounds$quantile.midpoint))
+      }
       if(flexfit){
         p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
@@ -1172,10 +1236,10 @@ plot.qgcompfit <- function(x,
         # pairwise comparisons with referent
         pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
         py = pwbdat$y.expected
-        pw.up = py + qnorm(.975)*pwbdat$se.diff
-        pw.lo = py + qnorm(.025)*pwbdat$se.diff
+        ul.pw = py + qnorm(.975)*pwbdat$se.diff
+        ll.pw = py + qnorm(.025)*pwbdat$se.diff
         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
-                               data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
+                               data=data.frame(ymin=ll.pw, ymax=ul.pw, x=pwbdat$quantile.midpoint))
       }
     }    
     if(!is.null(x$msmfit$family) && x$msmfit$family$family=='cox'){
@@ -1238,14 +1302,15 @@ plot.qgcompfit <- function(x,
        #}
        #pyup = py + qnorm(.975)*sqrt(varpy)
        #pydo = py + qnorm(.025)*sqrt(varpy)
-       modbounds = modelbound.boot(x)
+       modbounds = modelbound.boot(x, pwonly = TRUE)
        py = modbounds$y.expected
        
        if(modelband){
          p <- p + geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                                   fill="Model confidence band"),
                               #data=data.frame(ymin=pydo, ymax=pyup, x=intvals/max(intvals)))
-                              data=data.frame(ymin=modbounds$ll.simul, ymax=modbounds$ul.simul, x=modbounds$quantile.midpoint))
+                              data=data.frame(ymin=modbounds$ll.pw, ymax=modbounds$ul.pw, 
+                                              x=modbounds$quantile.midpoint))
        }
        if(flexfit){
          p <- p + geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
@@ -1261,29 +1326,29 @@ plot.qgcompfit <- function(x,
         # pairwise comparisons with referent
         pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
         py = pwbdat$y.expected
-        pw.up = py + qnorm(.975)*pwbdat$se.diff
-        pw.lo = py + qnorm(.025)*pwbdat$se.diff
+        ul.pw = py + qnorm(.975)*pwbdat$se.diff
+        ll.pw = py + qnorm(.025)*pwbdat$se.diff
         p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
-                                  data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
+                                  data=data.frame(ymin=ll.pw, ymax=ul.pw, x=pwbdat$quantile.midpoint))
       }
      }
     if(!is.null(x$msmfit$family) && x$msmfit$family$family=='binomial'){
        y = x$y.expectedmsm # probabilities (not on model scale)
        intvals = as.numeric(names(table(x$index)))
-       modbounds = modelbound.boot(x)
+       modbounds = modelbound.boot(x, pwonly = TRUE)
        py = modbounds$y.expected
        
        if(x$msmfit$family$link=='log'){
          p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
-         pyup = pmin(exp(modbounds$ll.simul), 1)
-         pydo = pmax(exp(modbounds$ul.simul), 0)       
+         pyup = pmin(exp(modbounds$ll.pw), 1)
+         pydo = pmax(exp(modbounds$ul.pw), 0)       
          #pyup = exp(log(py) + qnorm(.975)*sqrt(varpy))
          #pydo = exp(log(py) + qnorm(.025)*sqrt(varpy))
        }
        if(x$msmfit$family$link=='logit'){
          p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
-         pyup = pmin(1/(1+exp(-modbounds$ll.simul)), 1)
-         pydo = pmax(1/(1+exp(-modbounds$ul.simul)), 0)       
+         pyup = pmin(1/(1+exp(-modbounds$ll.pw)), 1)
+         pydo = pmax(1/(1+exp(-modbounds$ul.pw)), 0)       
        }
 
        if(modelband){
@@ -1304,19 +1369,19 @@ plot.qgcompfit <- function(x,
          # pairwise comparisons with referent
          pwbdat = pointwisebound.boot(x, pointwiseref=pointwiseref)
          py = pwbdat$y.expected
-         pw.up = py + qnorm(.975)*pwbdat$se.diff
-         pw.lo = py + qnorm(.025)*pwbdat$se.diff
+         ul.pw = py + qnorm(.975)*pwbdat$se.diff
+         ll.pw = py + qnorm(.025)*pwbdat$se.diff
 
          if(x$msmfit$family$link=='log'){
-           pw.up = pmin(exp(log(py) + qnorm(.975)*pwbdat$se.diff), 1)
-           pw.lo = pmax(exp(log(py) + qnorm(.025)*pwbdat$se.diff), 0)       
+           ul.pw = pmin(exp(log(py) + qnorm(.975)*pwbdat$se.diff), 1)
+           ll.pw = pmax(exp(log(py) + qnorm(.025)*pwbdat$se.diff), 0)       
          }
          if(x$msmfit$family$link=='logit'){
-           pw.up = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*pwbdat$se.diff)))
-           pw.lo = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*pwbdat$se.diff)))      
+           ul.pw = 1/(1+exp(-(log(py/(1-py)) + qnorm(.975)*pwbdat$se.diff)))
+           ll.pw = 1/(1+exp(-(log(py/(1-py)) + qnorm(.025)*pwbdat$se.diff)))      
          }
          p <- p + geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, color="Pointwise 95% CI"), width = 0.03,
-                                data=data.frame(ymin=pw.lo, ymax=pw.up, x=pwbdat$quantile.midpoint))
+                                data=data.frame(ymin=ll.pw, ymax=ul.pw, x=pwbdat$quantile.midpoint))
        }
        
      }
@@ -1329,7 +1394,7 @@ plot.qgcompfit <- function(x,
 }
 
 predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
-  #' @title predict.qgcompfit: default prediction method for a qgcompfit object (non-survival 
+  #' @title default prediction method for a qgcompfit object (non-survival 
   #' outcomes only)
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
@@ -1371,7 +1436,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
 }
 
 msm.predict <- function(object, newdata=NULL){
-  #' @title msm.predict: secondary prediction method for the MSM within a qgcompfit 
+  #' @title secondary prediction method for the MSM within a qgcompfit 
   #' object (non-survival outcomes only). 
   #' 
   #' @description Makes predictions from the MSM (rather than the g-computation 

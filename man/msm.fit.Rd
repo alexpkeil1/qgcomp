@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{msm.fit}
 \alias{msm.fit}
-\title{fitting marginal structural model (MSM) based on g-computation with
-quantized exposures}
+\title{fitting marginal structural model (MSM) within quantile g-computation}
 \usage{
 msm.fit(
   f,
@@ -37,7 +36,7 @@ the exposures of interest (main terms only!)}
 \item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
-\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
 

@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{estimating the parameters of a marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{quantile g-computation for continuous and binary outcomes}
 \usage{
 qgcomp.boot(
   f,
@@ -51,9 +50,9 @@ id/cluster)}
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio}
 
-\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
-is quadratic.}
+is quadratic (default = 1).}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 
@@ -74,8 +73,12 @@ a qgcompfit object, which contains information about the effect
  estimates.
 }
 \description{
-This function yields population average effect estimates for 
-  both continuous and binary outcomes
+This function estimates a linear dose-response parameter representing a one quantile
+increase in a set of exposures of interest. This model estimates the parameters of a marginal 
+structural model (MSM) based on g-computation with quantized exposures. Note: this function  
+allows linear and non-additive effects of individual components of the exposure, as well as
+non-linear joint effects of the mixture via polynomial basis functions, which increase the
+computational computational burden due to the need for non-parametric bootstrapping.
 }
 \details{
 Estimates correspond to the average expected change in the

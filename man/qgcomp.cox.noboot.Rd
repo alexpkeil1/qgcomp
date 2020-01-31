@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_surv.R
 \name{qgcomp.cox.noboot}
 \alias{qgcomp.cox.noboot}
-\title{estimation of quantile g-computation fit for a survival outcome}
+\title{quantile g-computation for survival outcomes under linearity/additivity}
 \usage{
 qgcomp.cox.noboot(
   f,
@@ -44,7 +44,7 @@ id/cluster)}
 a qgcompfit object, which contains information about the effect
  measure of interest (psi) and associated variance (var.psi), as well
  as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pweights) and 
+ weights/standardized coefficients in the positive (pos.weights) and 
  negative (nweight) directions.
 }
 \description{

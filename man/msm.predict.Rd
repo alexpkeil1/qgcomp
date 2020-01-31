@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{msm.predict}
 \alias{msm.predict}
-\title{msm.predict: secondary prediction method for the MSM within a qgcompfit 
+\title{secondary prediction method for the MSM within a qgcompfit 
 object (non-survival outcomes only).}
 \usage{
 msm.predict(object, newdata = NULL)

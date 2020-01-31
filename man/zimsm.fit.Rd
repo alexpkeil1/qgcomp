@@ -2,8 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{zimsm.fit}
 \alias{zimsm.fit}
-\title{estimating the parameters of a marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{marginal structural zero-inflated count models (MSM) based on within quantile g-computation}
 \usage{
 zimsm.fit(
   f,
@@ -38,7 +37,7 @@ the exposures of interest (main terms only!)}
 \item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
-\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
 
@@ -81,6 +80,7 @@ change in the expected outcome given a joint intervention on all exposures.
 \examples{
 set.seed(50)
 n=100
+\donttest{
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
 expnms = c("x1", "x2")
 q = 4
@@ -90,6 +90,7 @@ msmfit <- qgcomp:::zimsm.fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
   degree=1, id=NULL, MCsize=10000, containmix=list(count=TRUE, zero=FALSE),  
   x=FALSE)
 msmfit$msmfit
+}
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}

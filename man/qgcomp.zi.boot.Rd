@@ -2,8 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{qgcomp.zi.boot}
 \alias{qgcomp.zi.boot}
-\title{estimating the parameters of a marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{quantile g-computation for zero-inflated count outcomes}
 \usage{
 qgcomp.zi.boot(
   f,
@@ -77,11 +76,38 @@ a qgcompfit object, which contains information about the effect
  estimates.
 }
 \description{
-This function yields population average effect estimates for 
-  both continuous and binary outcomes
+This function estimates a linear dose-response parameter representing a one quantile
+increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+limited to linear and additive
+effects of individual components of the exposure. This model estimates the parameters of a marginal 
+structural zero-inflated count model (MSM) based on g-computation with quantized exposures. 
+Note: this function  
+allows linear and non-additive effects of individual components of the exposure, as well as
+non-linear joint effects of the mixture via polynomial basis functions, which increase the
+computational computational burden due to the need for non-parametric bootstrapping.
 }
 \details{
-Estimates correspond to the average expected change in the
+Zero-inflated count models allow excess zeros in standard count outcome (e.g.
+ Poisson distributed outcomes). Such models have two components: 1) the probability of
+ arising from a degenerate distribution at zero (versus arising from a count distribution)
+ and 2) the rate parameter of a count distribution. Thus, one has the option of allowing
+ exposure and covariate effects on the zero distribution, the count distribution, or both. 
+ The zero distribution parameters correspond to log-odds ratios for the probability of arising
+ from the zero distribution. Count distribution parameters correspond to log-rate-ratio parameters. 
+ Test statistics and confidence intervals are based on 
+ a non-parametric bootstrap, using the standard deviation of the bootstrap
+ estimates to estimate the standard error. The bootstrap standard error is 
+ then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+ is done on estimated quantiles of exposure, so these are treated as fixed
+ quantities.
+ 
+ Of note, this function yields marginal estimates of the expected outcome under
+ values of the joint exposure quantiles (e.g. the expected outcome if all exposures
+ are below the 1st quartile). These outcomes can be used to derive estimates of the 
+ effect on the marginal expectation of the outcome, irrespective of zero-inflated/count
+ portions of the statistical model. 
+ 
+ Estimates correspond to the average expected change in the
  (log) outcome per quantile increase in the joint exposure to all exposures 
  in `expnms'. Test statistics and confidence intervals are based on 
  a non-parametric bootstrap, using the standard deviation of the bootstrap
@@ -96,8 +122,9 @@ n=100
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
 # poisson count model, mixture in both portions
 \donttest{
+# warning: the examples below can take a long time to run
 res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-    data=dat, q=4, dist="poisson", B=1000, MCsize=5000, parallel=TRUE)
+    data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE)
 qgcomp.zi.noboot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
     data=dat, q=4, dist="poisson")
 res

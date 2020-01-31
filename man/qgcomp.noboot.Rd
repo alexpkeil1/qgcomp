@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{estimating the parameters of a marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{quantile g-computation for continuous and binary outcomes under linearity/additivity}
 \usage{
 qgcomp.noboot(
   f,
@@ -55,8 +54,12 @@ a qgcompfit object, which contains information about the effect
  negative (nweight) directions.
 }
 \description{
-This function mimics the output of a weighted quantile sums regression in 
-large samples.
+This function estimates a linear dose-response parameter representing a one quantile
+increase in a set of exposures of interest. This function is limited to linear and additive
+effects of individual components of the exposure. This model estimates the parameters of a marginal 
+structural model (MSM) based on g-computation with quantized exposures. Note: this function is  
+valid only under linear and additive effects of individual components of the exposure, but when
+these hold the model can be fit with very little computational burden.
 }
 \details{
 For continuous outcomes, under a linear model with no 

@@ -2,8 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{qgcomp.zi.noboot}
 \alias{qgcomp.zi.noboot}
-\title{estimating the parameters of a zero-inflated marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{quantile g-computation for zero-inflated count outcomes under linearity/additivity}
 \usage{
 qgcomp.zi.noboot(
   f,
@@ -52,8 +51,13 @@ a qgcompfit object, which contains information about the effect
  negative (nweight) directions.
 }
 \description{
-This function mimics the output of a weighted quantile sums regression in 
-large samples.
+This function estimates a linear dose-response parameter representing a one quantile
+increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+limited to linear and additive
+effects of individual components of the exposure. This model estimates the parameters of a marginal 
+structural zero-inflated model (MSM) based on g-computation with quantized exposures. 
+Note: this function is valid only under linear and additive effects of individual components of the exposure, but when
+these hold the model can be fit with very little computational burden.
 }
 \details{
 A zero-inflated version of quantile g-computation based on the implementation in the
