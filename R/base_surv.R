@@ -240,7 +240,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
               pos.weights = sort(pos.weights, decreasing = TRUE), 
               neg.weights = sort(neg.weights, decreasing = TRUE), 
               pos.size = sum(abs(wcoef[poscoef])), neg.size = sum(abs(wcoef[negcoef])), 
-              bootstrap = FALSE, zstat = tstat, pval = pvalz)
+              bootstrap = FALSE, zstat = tstat, pval = pvalz, alpha=alpha)
   attr(res, "class") <- "qgcompfit"
   res
 }
@@ -440,7 +440,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     pos.psi = NULL, neg.psi = NULL, 
     pos.weights = NULL,neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
-    bootsamps = bootsamps
+    bootsamps = bootsamps,
+    alpha=alpha
   )
   if(msmfit$fit$family$family=='cox'){
     res$zstat <- tstat

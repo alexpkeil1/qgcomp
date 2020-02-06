@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{zimsm.fit}
 \alias{zimsm.fit}
-\title{marginal structural zero-inflated count models (MSM) based on within quantile g-computation}
+\title{secondary prediction method for the (zero-inflated) qgcomp MSM.}
 \usage{
 zimsm.fit(
   f,

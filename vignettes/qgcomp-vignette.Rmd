@@ -162,11 +162,11 @@ which yields overall model confidence bounds, representing the bounds that, for 
 joint exposure are expected to contain the true regression line over 95% of trials (so-called 95% 
 'pointwise' bounds for the regression line). The pointwise comparison bounds, denoted by error bars 
 on the plot, represent comparisons of the expected difference in outcomes at each quantile, with reference 
-to a specific quantile (which can be specified by the user, as below). (These bounds is similar to the bounds
-created in the bkmr package when plotting the overall effect of all exposures), The pointwise bounds 
+to a specific quantile (which can be specified by the user, as below). These pointwise bounds are similar to the bounds
+created in the bkmr package when plotting the overall effect of all exposures. The pointwise bounds 
 can be obtained via the pointwisebound.boot function. To avoid confusion between "pointwise regression"
 and "pointwise comparison" bounds, the pointwise regression bounds are denoted as the "model confidence
-band" in the plots, since they yield estimate the same type of bounds as the `predict` function in R when
+band" in the plots, since they yield estimates of the same type of bounds as the `predict` function in R when
 applied to linear model fits.
 
 Note that the underlying regression model is on the quantile 'score', which takes on values integer values
@@ -381,11 +381,11 @@ plot(qc.fit7c)
 
 ```
 
-Note one restriction on exploring non-linearity: while we can use flexible function such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals (to increase computational speed for the example), which is far too low.
+Note one restriction on exploring non-linearity: while we can use flexible functions such as splines for individual exposures, the overall fit is limited via the `degree` parameter to polynomial functions (here a quadratic polynomial fits the non-linear model well, and a cubic polynomial fits the non-linear/non-homogenous model well - though this is an informal argument and does not account for the wide confidence intervals). We note here that only 10 bootstrap iterations are used to calculate confidence intervals (to increase computational speed for the example), which is far too low.
 
 #### Statistical approach explore non-linearity in a correlated subset of exposures using splines
 
-The graphical approaches don't give a clear picture of which model might be preferred, but we can compare the model fits using AIC, AICC, or BIC (all various forms of information criterion that weigh model fit with over-parameterization). Both of these criterion suggest the linear model fits best (lowest AIC and BIC), which suggests that the apparently non-linear fits observed in the graphical approaches don't improve prediction of the health outcome, relative to the linear fit, due to the increase in variance associated with including more parameters.
+The graphical approaches don't give a clear picture of which model might be preferred, but we can compare the model fits using AIC, or BIC (information criterion that weigh model fit with over-parameterization). Both of these criterion suggest the linear model fits best (lowest AIC and BIC), which suggests that the apparently non-linear fits observed in the graphical approaches don't improve prediction of the health outcome, relative to the linear fit, due to the increase in variance associated with including more parameters.
 ```{r splines, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 AIC(qc.fit6lin$fit)
 AIC(qc.fit6nonlin$fit)
@@ -416,10 +416,10 @@ BIC(qc.fit6nonhom$fit)
   (including the overall average - which may be slightly different from the observed survival curve, 
   but should more or less agree).
 - All bootstrapped functions in `qgcomp` allow parellelization via the parallel=TRUE parameter
-  (demonstrated with the non-liner fit in`qc.survfit3`). Only 5 bootstrap iterations are used here,
+  (demonstrated with the non-liner fit in `qc.survfit3`). Only 5 bootstrap iterations are used here,
   which is not nearly enough for inference, and will actually be slower for parallel processing due
   to some overhead when setting up the parallel processes.
-- While`qgcompcox.boot` fits a smooth hazard ratio function, the hazard ratios contrasting specific
+- While `qgcompcox.boot` fits a smooth hazard ratio function, the hazard ratios contrasting specific
  quantiles with a referent quantile can be obtained, as demonstrated with `qc.survfit4`. 
  As in `qgcomp.boot` plots, the conditional model fit and the MSM fit are overlaid as a way to judge
  how well the MSM fits the conditional fit (and whether, for example non-linear terms should be added

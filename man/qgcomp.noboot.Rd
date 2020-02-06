@@ -69,7 +69,7 @@ outcomes, this yields a conditional log odds ratio representing the
 change in the expected conditional odds (conditional on covariates)
 from increasing every exposure by 1 quantile. In general, the latter 
 quantity is not equivalent to g-computation estimates. Hypothesis test
-statistics and 95% confidence intervals are based on using the delta
+statistics and confidence intervals are based on using the delta
 estimate variance of a linear combination of random variables.
 }
 \examples{

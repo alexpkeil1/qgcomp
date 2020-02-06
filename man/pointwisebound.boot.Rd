@@ -26,28 +26,34 @@ and the standard error of the mean difference (link scale) for pointwise compari
 \details{
 The comparison of interest following a qgcomp fit is often comparisons of model
 predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
-at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure is 
-given as E(Y|S), where S takes on integer values 0 to q-1. Thus, comparisons are of the type
-E(Y|S=s) - E(Y|S=s2) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
-This function yields E(Y|S) as well as E(Y|S=s) - E(Y|S=p) where s is any value of S and p is
+at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure,
+and marginalized over non-exposure covariates (W), is  
+given as E(Y^s|S) = sum_w E_w(Y|S,W)Pr(W) = sum_i E(Y_i|S) where Pr(W) is the emprical distribution of
+W and S takes on integer values 0 to q-1. 
+Thus, comparisons are of the type
+E_w(Y|S=s) - E_w(Y|S=s2) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
+This function yields E_w(Y|S) as well as E_w(Y|S=s) - E_w(Y|S=p) where s is any value of S and p is
 the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/
 prevalence difference at all values of S, with the referent category S=p-1. The standard error
-of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E(Y|S), such that 
-the standard error for E(Y|S=s) - E(Y|S=p) is given by
+of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E_w(Y|S), such that 
+the standard error for E_w(Y|S=s) - E_w(Y|S=p) is given by
 
-Var(E(Y|S=s)) + - Var(E(Y|S=p)) - 2*Cov(E(Y|S=p), - E(Y|S=s))
+Var(E_w(Y|S=s)) + - Var(E_w(Y|S=p)) - 2*Cov(E_w(Y|S=p), - E_w(Y|S=s))
 
-This is used to create pointwise confidence intervals
+This is used to create pointwise confidence intervals. Note that this differs slightly from the
+\code{\link[qgcomp]{pointwisebound.noboot}} function, which estimates the variance of the conditional
+regression line given by E(Y|S,W=w), where w is a vector of medians of W (i.e. predictions
+are made at the median value of all covariates).
 }
 \examples{
 set.seed(12)
 \donttest{
 dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
                   y=runif(50)+x1+x1^2)
-ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=9)
-pointwisebound.boot(ft, 5)
+ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+pointwisebound.boot(ft, alpha=0.05, pointwiseref=3)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}
+\code{\link[qgcomp]{qgcomp.boot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
 }

@@ -36,7 +36,7 @@ zimsm.fit <- function(
   x=FALSE,
   msmcontrol=zimsm.fit.control(),
   ...){
-  #' @title  marginal structural zero-inflated count models (MSM) based on within quantile g-computation
+  #' @title secondary prediction method for the (zero-inflated) qgcomp MSM.
   #' @description this is an internal function called by 
   #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -310,7 +310,8 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     pos.size = pos.size,
     neg.size = neg.size,
     bootstrap=FALSE,
-    cov.yhat=NULL
+    cov.yhat=NULL,
+    alpha=alpha
   )
   #if(fit$family$family=='gaussian'){
   #  res$tstat <- tstat
@@ -578,7 +579,8 @@ qgcomp.zi.boot <- function(f,
     bootstrap=TRUE,
     cov.yhat=cov.yhat,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
-    bootsamps = bootsamps
+    bootsamps = bootsamps,
+    alpha=alpha
   )
   res$zstat <- tstat
   res$pval <- pvalz

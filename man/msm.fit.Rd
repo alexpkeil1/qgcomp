@@ -13,7 +13,8 @@ msm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
-  bayes,
+  bayes = FALSE,
+  MCsize = nrow(qdata),
   ...
 )
 }
@@ -48,6 +49,12 @@ id/cluster)}
 in penalized parameter estimation that can help with very highly correlated 
 exposures. Note: this does not lead to fully Bayesian inference in general, 
 so results should be interpreted as frequentist.}
+
+\item{MCsize}{integer: sample size for simulation to approximate marginal 
+zero inflated model parameters. This can be left small for testing, but should be as large
+as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
+linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation 
+error at a given value of MCsize)}
 
 \item{...}{arguments to glm (e.g. family)}
 }

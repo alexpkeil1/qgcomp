@@ -13,7 +13,7 @@ qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B =
                dist="negbin", msmcontrol = zimsm.fit.control(predmethod="catprobs"))
 ff = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 100, 
                dist="geometric")
-plot(ff)
+#plot(ff)
 # should cause error
 res <- try(qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin"))
 stopifnot(class(res)=="try-error")

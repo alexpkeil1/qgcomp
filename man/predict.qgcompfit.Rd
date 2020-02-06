@@ -8,7 +8,8 @@ outcomes only)}
 \method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)
 }
 \arguments{
-\item{object}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
+\item{object}{"qgcompfit" object from `qgcomp.noboot`, `qgcomp.boot`, `qgcomp.zi.noboot`, 
+or `qgcomp.zi.boot`functions}
 
 \item{expnms}{character vector of exposures of interest}
 
