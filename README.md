@@ -108,11 +108,8 @@
           seed=125, rr=TRUE)
     print(results4)
     
-    > Mixture log(RR) (bootstrap CI):
+    > Mixture log(RR) (bootstrap CI):    >    >    Estimate Std. Error Lower CI  Upper CI Z value Pr(>|z|)    > (Intercept) -0.56237    0.23724 -1.02736 -0.097379 -2.3704  0.01777    > psi1        -0.16373    0.17196 -0.50076  0.173312 -0.9521  0.34104
     > 
-    >             Estimate Std. Error Lower CI Upper CI Z value  Pr(>|z|)
-    > (Intercept) -0.56237    0.15716 -0.87040 -0.25434 -3.5783 0.0003458
-    > psi1        -0.16373    0.13611 -0.43049  0.10304 -1.2029 0.2290108
 
     # checking whether model fit seems appropriate (note that this appears slightly non-linear
     # because the model is on the log-odds scale, but the plot is on the additive scale

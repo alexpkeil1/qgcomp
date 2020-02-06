@@ -1365,6 +1365,7 @@ plot.qgcompfit <- function(x,
     surv <- NULL # appease R CMD check
     p <- ggplot() 
     if(is.null(x$msmfit$family)){
+      # zero inflated
       p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
       if(modelband){
         #message("modelband not implemented for qgcompfit objects of this type")
