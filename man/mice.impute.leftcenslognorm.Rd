@@ -48,12 +48,15 @@ there will be no benefit in qgcomp from using MICE rather than imputing some sma
 below the LOD.
 }
 \examples{
-dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+N = 100
+set.seed(123)
+dat <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
 true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
 mdat <- dat
 mdat$x1 = ifelse(mdat$x1>0.5, mdat$x1, NA)
-mdat$x1 = ifelse(mdat$x2>0.75, mdat$x2, NA)
-cc = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
+cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=mdat[complete.cases(mdat),], q=2, family=gaussian())
+
 \donttest{
 library("mice")
 library("survival")

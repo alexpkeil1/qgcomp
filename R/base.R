@@ -1185,8 +1185,46 @@ print.qgcompfit <- function(x, ...){
 
 summary.qgcompfit <- function(object, ...){
   #' @export
-  print(object)
-  invisible(object)
+  if (fam == "binomial"){
+    estimand <- 'OR'
+    if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
+    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    testtype = "Z"
+    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
+  }
+  if (fam == "poisson"){
+    message("Poisson family still experimental: use with caution")
+    estimand <- 'RR'
+    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    testtype = "Z"
+    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
+  }
+  if (fam == "gaussian"){
+    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    testtype = "t"
+    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
+  }
+  if (fam == "cox"){
+    cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    testtype = "Z"
+    rnm = c(paste0('psi',1:max(1, length(coef(x)))))
+  }
+  if (!(fam %in% c("poisson", "binomial", "cox", "gaussian"))){
+    warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
+                   and check results thoroughly with simulated data to ensure it works."))
+  }
+  if(is.null(dim(x$ci.coef))){
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
+    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    rownames(pdat) <- rnm
+    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+  } else{
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[,1], "Upper CI"=x$ci.coef[,2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
+    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    rownames(pdat) <- rnm
+    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+  }
+  invisible(list(coefficents=pdat))
 }
 
 family.qgcompfit <- function(object, ...){
