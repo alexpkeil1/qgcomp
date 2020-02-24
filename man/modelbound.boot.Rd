@@ -32,7 +32,9 @@ simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% 
 latter are more conservative and account for the multiple testing implied by the former. Pointwise
 bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
 bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
-sample bounds that assume normality and thus will be underconservative in small samples.
+sample bounds that assume normality and thus will be underconservative in small samples. These
+bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
+should be interpreted cautiously in small samples.
 
 
 Reference:

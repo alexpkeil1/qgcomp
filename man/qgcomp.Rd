@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp}
 \alias{qgcomp}
-\title{quantile g-computation for continuous, binary, and censored survival outcomes}
+\title{quantile g-computation for continuous, binary, count, and censored survival outcomes}
 \usage{
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }

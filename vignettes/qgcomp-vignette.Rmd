@@ -426,6 +426,30 @@ BIC(qc.fit6nonhom$fit)
  or removed from the overall fit via the degree parameter - we note here that we know of no statistical
  test for quantifying the difference between these lines, so this is up to user discretion and the
  plots are provided as visuals to aid in exploratory data analysis).
+- Testing proportional hazards is somewhat complicated with respect to interpretation. Consider first
+ a linear fit from `qgcomp.cox.noboot`. Because the underlying model of a linear qgcomp fit is equivalent
+ to the sum of multiple parameters, it is not clear how proportional hazards might be best tested
+ for the mixtures. One could examine test statistics for each exposure, but there may be some
+ exposures for which the test indicates non-proportional hazards and some for which the test does not.
+ The "GLOBAL" test in the cox.zph function from the `survival` package comes closest to what we might
+ want, and gives an overall asessment of non-proportional hazards for all model terms simultaneously 
+ (including non-mixture covariates). While this seems somewhat undesirable due to non-specificity,
+ it is not necessarily important that only the mixture have proportional hazards, so it is useful
+ and easily interpretable to have a global test of fit via GLOBAL. For a potentially non-linear/
+ non-additive fit from `qgcomp.cox.boot`, the issue is slightly more complicated by the fact that
+ the algorithm will fit both the underlying model and a marginal structural model using the predictions
+ from the underlying model. In order for the predictions to yield valid causal inference, the
+ underlying model must be correct (which implies that proportional hazards hold). The marginal
+ structural model proceeds assuming the underlying model is correct. Currently there is no simple
+ way to allow for non-proportional hazards in the marginal structural model, but non-proportional
+ hazards can be implemented in the conditional model via standard approaches to non-proportional hazards
+ such as time-exposure-interaction terms. This is a rich field and discussion is beyond the scope of this
+ document.
+- Late entry and counting-process style data will currently yield results in qgcomp.cox functions.
+ There has been some testing of this in limited settings, but we note that this is still an experimental
+ feature at this point that may not be valid in all cases and so it is not documented here. 
+ As much effort as possible to validate results through other means is needed  when using qgcomp 
+ in data subject to late-entry or when using counting-process style data.
 
 ```{r time-to-event, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 # non-bootstrapped version estimates a marginal structural model for the 
@@ -440,12 +464,23 @@ qc.survfit1 <- qgcomp.cox.noboot(survival::Surv(disease_time, disease_state) ~ .
 qc.survfit1
 plot(qc.survfit1)
 
+# testing proportional hazards (must set x=TRUE in function call)
+qc.survfit1ph <- qgcomp.cox.noboot(survival::Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state', "mage35")], q=4,
+                         x=TRUE)
+survival::cox.zph(qc.survfit1ph$fit)
+
 # bootstrapped version estimates a marginal structural model for the population average effect
 #library(survival)
 qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
                          B=5, MCsize=1000, parallel=TRUE)
 qc.survfit2
+
+# testing proportional hazards (note that x=TRUE is not needed (and will cause an error if used))
+survival::cox.zph(qc.survfit2$fit)
+
+
 p2 = plot(qc.survfit2, suppressprint = TRUE)  
 p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
 
@@ -455,6 +490,10 @@ qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnm
 qc.survfit3
 p3 = plot(qc.survfit3, suppressprint = TRUE) 
 p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
+
+# testing global proportional hazards for model (note that x=TRUE is not needed (and will cause an error if used))
+phtest3 = survival::cox.zph(qc.survfit3$fit)
+phtest3$table[dim(phtest3$table)[1],, drop=FALSE]
 
 qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
@@ -470,6 +509,52 @@ p4 = plot(qc.survfit4, suppressprint = TRUE)
 p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific") 
 
 ```
+
+### Example 8: clustering
+
+Clustering on the individual or group level means that there are individual or group level characteristics which result in covariance between observations (e.g. within individual variance of an outcome may be much lower than the between individual variance). For linear models, the error term is assumed to be independent between observations, and clustering breaks this assumption. Ways to relax this assumption include empirical variance estimation and cluster-appropriate robust variance estimation (e.g. through the `sandwich` package in R). Another way is to use cluster-based bootstrapping, which samples clusters, rather than individual observations. `qgcomp.boot` can be leveraged to produce clustering consistent estimates of standard errors for independent effects of exposure as well as the effect of the exposure as a whole. This is done using the `id` parameter of `qgcomp.boot` (which can only handle a single variable and so may not efficient for nested clustering, for example).
+
+Below is a simple example with one simulated exposure. First the exposure data are 'pre-quantized' (so that one can verify that standard errors are appropriate using other means - this is just to prove that the clustering works and is not intended to show a suggested practice). Next the data are analyzed using a 1-component mixture in qgcomp - again, this is for verification purposes. The `qgcomp.noboot` result yields a naiive standard error of 0.0310 for the mixture effect, while the `qgcomp.boot` result (MCsize=5000, B=500) yields a corrected standard error of 0.0398, which is much closer to the sandwich estimate of 0.0409 than the naiive estimator (a second `qgcomp.boot` fit with fewer bootstrap iterations and smaller MCsize is included for display, but the more accurate results are commented out to reduce runtime). Here, the standard errors from the uncorrected fit are too low, but this may not always be the case.
+
+```{r clustering, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+set.seed(2123)
+N = 250
+t = 4
+dat <- data.frame(row.names = 1:(N*t))
+dat <- within(dat, {
+  id = do.call("c", lapply(1:N, function(x) rep(x, t)))
+  u =  do.call("c", lapply(1:N, function(x) rep(runif(1), t)))
+  x1 = rnorm(N, u)
+  y = rnorm(N) + u + x1
+})
+
+# pre-quantize
+expnms = c("x1")
+datl = quantize(dat, expnms = expnms)
+
+qgcomp.noboot(y~ x1, data=datl$dat, family=gaussian(), q = NULL)
+
+# neither of these ways yields appropriate clustering
+#qgcomp.noboot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL)
+#qgcomp.boot(y~ x1, data=datl$dat, family=gaussian(), q = NULL, MCsize=1000)
+
+# clustering by specifying id parameter on
+qgcomp.boot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL, MCsize=1000, B = 5)
+#qgcomp.boot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL, MCsize=1000, B = 500)
+#   Mixture slope parameters (bootstrap CI):
+#   
+#               Estimate Std. Error Lower CI Upper CI t value
+#   (Intercept)  -0.4632     0.0730   -0.606    -0.32 3.3e-10
+#   psi1          0.9550     0.0398    0.877     1.03       0
+
+# This can be verified using the `sandwich` package 
+#fitglm = glm(y~x1, data=datl$dat)
+#sw.cov = sandwich::vcovCL(fitglm, cluster=~id, type = "HC0")[2,2]
+#sqrt(sw.cov)
+# [1] 0.0409
+```
+
+
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
 Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://arxiv.org/abs/1902.04200> 

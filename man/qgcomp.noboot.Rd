@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{quantile g-computation for continuous and binary outcomes under linearity/additivity}
+\title{quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
 \usage{
 qgcomp.noboot(
   f,
@@ -35,7 +35,11 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
-id/cluster)}
+id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+standard errors (this parameter is essentially ignored in qgcomp.noboot). 
+Qgcomp.boot can be used for this, which will use bootstrap
+sampling of clusters/individuals to estimate cluster-appropriate standard
+errors via bootstrapping.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -64,9 +68,9 @@ these hold the model can be fit with very little computational burden.
 \details{
 For continuous outcomes, under a linear model with no 
 interaction terms, this is equivalent to g-computation of the effect of
-increasing every exposure by 1 quantile. For binary outcomes
-outcomes, this yields a conditional log odds ratio representing the 
-change in the expected conditional odds (conditional on covariates)
+increasing every exposure by 1 quantile. For binary/count outcomes
+outcomes, this yields a conditional log odds/rate ratio(s) representing the 
+change in the expected conditional odds/rate (conditional on covariates)
 from increasing every exposure by 1 quantile. In general, the latter 
 quantity is not equivalent to g-computation estimates. Hypothesis test
 statistics and confidence intervals are based on using the delta
@@ -74,8 +78,15 @@ estimate variance of a linear combination of random variables.
 }
 \examples{
 set.seed(50)
+# linear model
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+# logistic model
+dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
+# poisson model
+dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=poisson())
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

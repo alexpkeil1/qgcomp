@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.1.3
-Date: 2020-02-06
+Version: 2.2.0
+Date: 2020-02-24
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -27,15 +27,20 @@ Imports:
     arm,
     future,
     future.apply,
+    generics,
     ggplot2,
     grDevices,
     grid,
     gridExtra,
     pscl,
     stats,
-    survival
+    survival,
+    tibble
 Suggests: 
-    knitr
+    broom,
+    knitr,
+    mice,
+    mvtnorm
 VignetteBuilder: 
     knitr
 Encoding: UTF-8

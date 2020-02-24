@@ -25,6 +25,12 @@ dat = dgm(200)
 Xnm = c(paste0("x", 1:6))
 
 
+f = y~x1 + x2 + x3 + I(x3^2)
+qgcomp(f, expnms = c("x1", "x2"), data = dat)
+qgcomp.noboot(f, expnms = c("x1", "x2"), data = dat)
+
+
+
 # should cause errors
 f = y~. + .^2
 res = try(qgcomp(f, data = dat), silent=TRUE)

@@ -259,10 +259,10 @@ msm.fit <- function(f,
     predmat = lapply(intvals, predit, newdata=newdata)
     # fit MSM using g-computation estimates of expected outcomes under joint 
     #  intervention
-    nobs <- dim(qdata)[1]
+    #nobs <- dim(qdata)[1]
     msmdat <- data.frame(
       Ya = unlist(predmat),
-      psi = rep(intvals, each=nobs))
+      psi = rep(intvals, each=MCsize))
     # to do: allow functional form variations for the MSM via specifying the model formula
     if(bayes){
       if(!rr) suppressWarnings(msmfit <- bayesglm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,...))
@@ -284,7 +284,7 @@ msm.fit <- function(f,
 
 
 qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
-  #' @title quantile g-computation for continuous and binary outcomes under linearity/additivity
+  #' @title quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
   #'
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This function is limited to linear and additive
@@ -295,9 +295,9 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #' 
   #' @details For continuous outcomes, under a linear model with no 
   #' interaction terms, this is equivalent to g-computation of the effect of
-  #' increasing every exposure by 1 quantile. For binary outcomes
-  #' outcomes, this yields a conditional log odds ratio representing the 
-  #' change in the expected conditional odds (conditional on covariates)
+  #' increasing every exposure by 1 quantile. For binary/count outcomes
+  #' outcomes, this yields a conditional log odds/rate ratio(s) representing the 
+  #' change in the expected conditional odds/rate (conditional on covariates)
   #' from increasing every exposure by 1 quantile. In general, the latter 
   #' quantity is not equivalent to g-computation estimates. Hypothesis test
   #' statistics and confidence intervals are based on using the delta
@@ -316,7 +316,11 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
-  #' id/cluster)
+  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+  #' standard errors (this parameter is essentially ignored in qgcomp.noboot). 
+  #' Qgcomp.boot can be used for this, which will use bootstrap
+  #' sampling of clusters/individuals to estimate cluster-appropriate standard
+  #' errors via bootstrapping.
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
@@ -334,8 +338,15 @@ qgcomp.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha
   #' @export
   #' @examples
   #' set.seed(50)
+  #' # linear model
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+  #' # logistic model
+  #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
+  #' # poisson model
+  #' dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
+  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=poisson())
   if (is.null(expnms)) {
     expnms <- attr(terms(f, data = data), "term.labels")
     message("Including all model terms as exposures of interest\n")      
@@ -456,7 +467,10 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
-  #' id/cluster)
+  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+  #' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+  #' sampling of clusters/individuals to estimate cluster-appropriate standard
+  #' errors via bootstrapping.
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -473,8 +487,9 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
   #' @param MCsize integer: sample size for simulation to approximate marginal 
   #'  zero inflated model parameters. This can be left small for testing, but should be as large
   #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
-  #'  linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation 
-  #'  error at a given value of MCsize)
+  #'  linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation 
+  #'  error at a given value of MCsize). This likely won't matter much in linear models, but may 
+  #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
@@ -690,7 +705,7 @@ qgcomp.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
-  #' @title quantile g-computation for continuous, binary, and censored survival outcomes
+  #' @title quantile g-computation for continuous, binary, count, and censored survival outcomes
   #' 
   #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
   #'  qgcomp.cox.noboot, and qgcomp.cox.boot
@@ -938,7 +953,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
   se.diff = sapply(qdiff, sediff)
   data.frame(quantile= (1:x$q) - 1, 
-             quantile.mipoint=((1:x$q) - 1 + 0.5)/(x$q),
+             quantile.midpoint=((1:x$q) - 1 + 0.5)/(x$q),
              y.expected = sapply(1:length(py), function(i) switch(link, 
                        identity = (py[i]), 
                        log=exp(py[i]), 
@@ -975,7 +990,9 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   #' latter are more conservative and account for the multiple testing implied by the former. Pointwise
   #' bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
   #' bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
-  #' sample bounds that assume normality and thus will be underconservative in small samples.
+  #' sample bounds that assume normality and thus will be underconservative in small samples. These
+  #' bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
+  #' should be interpreted cautiously in small samples.
   #' 
   #' 
   #' Reference:
