@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.2.0
-Date: 2020-02-24
+Version: 2.2.1
+Date: 2020-02-29
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -39,8 +39,8 @@ Imports:
 Suggests: 
     broom,
     knitr,
-    mice,
-    mvtnorm
+    MASS,
+    mice
 VignetteBuilder: 
     knitr
 Encoding: UTF-8

@@ -12,14 +12,17 @@ coxmsm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
+  weights = NULL,
+  cluster = NULL,
   MCsize = 10000,
   ...
 )
 }
 \arguments{
-\item{f}{an r formula representing the conditional model for the outcome, given all
+\item{f}{an R formula representing the conditional model for the outcome, given all
 exposures and covariates. Interaction terms that include exposure variables
-should be represented via the \code{\link[base]{AsIs}} function}
+should be represented via the \code{\link[base]{AsIs}} function. Offset
+terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
 
 \item{qdata}{a data frame with quantized exposures (as well as outcome and other covariates)}
 
@@ -40,6 +43,10 @@ is quadratic. Default=1)}
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
+
+\item{weights}{not yet implemented}
+
+\item{cluster}{not yet implemented}
 
 \item{MCsize}{integer: sample size for simulation to approximate marginal 
 hazards ratios}

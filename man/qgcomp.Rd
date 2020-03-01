@@ -11,7 +11,9 @@ qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 
 \item{data}{data frame}
 
-\item{family}{`gaussian()`, `binomial()`, `cox()`}
+\item{family}{\code{gaussian()}, \code{binomial()}, \code{cox()}, \code{poisson()} (works as
+argument to 'family' parameter in \code{\link[stats]{glm}}` or 'dist' parameter in 
+\code{\link[pscl]{zeroinfl}})}
 
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
 estimate risk ratio rather than odds ratio. Note, to get population average 
@@ -20,7 +22,7 @@ of interest as population average effects, so if rr=FALSE then a conditional
 OR will be estimated, which cannot be interpreted as a population average
 effect}
 
-\item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q)}
+\item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q) or glm}
 }
 \value{
 a qgcompfit object, which contains information about the effect
@@ -66,7 +68,7 @@ qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial()
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
 qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4, 
 family=binomial())
-}
+
 #survival objects
 set.seed(50)
 N=200
@@ -74,16 +76,18 @@ dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
-qgcomp(f, expnms = expnms, data = dat)
+qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 # note that in the survival models, MCsize should be set to a large number
 #  such that results are repeatable (within an error tolerance such as 2 significant digits)
 # if you run them under different  seed values
 f = survival::Surv(time, d)~x1 + x2 + x1:x2
 qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
+}
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
- \code{\link[qgcomp]{qgcomp.cox.noboot}} and \code{\link[qgcomp]{qgcomp.cox.boot}}
+ \code{\link[qgcomp]{qgcomp.cox.noboot}}, \code{\link[qgcomp]{qgcomp.cox.boot}}
+ \code{\link[qgcomp]{qgcomp.zi.noboot}} and \code{\link[qgcomp]{qgcomp.zi.boot}}
  (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
 }
 \concept{variance mixtures}

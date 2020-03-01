@@ -11,6 +11,7 @@ qgcomp.boot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights = NULL,
   alpha = 0.05,
   B = 200,
   rr = TRUE,
@@ -45,6 +46,8 @@ id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
 standard errors. Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
+
+\item{weights}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 

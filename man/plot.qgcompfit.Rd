@@ -57,6 +57,7 @@ ft
 plot(ft)
 # examining fit
 plot(ft$fit, which=1) # residual vs. fitted is not straight line!
+\donttest{
 
 # using non-linear outcome model
 ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
@@ -66,6 +67,7 @@ plot(ft2$fit, which=1) # much better looking fit diagnostics suggests
 # it is better to include interaction term for x
 plot(ft2) # the msm predictions don't match up with a smooth estimate
 # of the expected outcome, so we should consider a non-linear MSM
+
 # using non-linear marginal structural model
 ft3 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
 data=dat, q=4, B=10, degree=2)
@@ -73,6 +75,34 @@ data=dat, q=4, B=10, degree=2)
 plot(ft3) # the MSM estimates look much closer to the smoothed estimates
 # suggesting the non-linear MSM fits the data better and should be used
 # for inference about the effect of the exposure
+
+# Using survival data ()
+set.seed(50)
+N=200
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+                d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+expnms=paste0("x", 1:2)
+f = survival::Surv(time, d)~x1 + x2
+(fit1 <- survival::coxph(f, data = dat))
+# non-bootstrap method to get a plot of weights
+(obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+plot(obj)
+
+# bootstrap method to get a survival curve
+# this plots the expected survival curve for the underlying (conditional) model
+# as well as the expected survival curve for the MSM under the following scenarios:
+#  1) highest joint exposure category
+#  2) lowest joint exposure category
+#  3) average across all exposure categories 
+# differences between the MSM and conditional fit suggest that the MSM is not flexible
+# enough to accomodate non-linearities in the underlying fit (or they may simply signal that
+# MCSize should be higher). Note that if linearity
+# is assumed in the conditional model, the MSM will typically also appear linear and
+# will certainly appear linear if no non-exposure covariates are included in the model
+# not run (slow when using boot version to proper precision)
+(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
+plot(obj2)
+}
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

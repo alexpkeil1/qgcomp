@@ -81,3 +81,32 @@ printZI <- function(x){
   }
 }
 
+summaryZI <- function(x){
+  if(class(x$fit) == "zeroinfl"){
+    if(x$fit$dist %in% c("poisson", "negbin")){
+      estimand <- 'OR/RR'
+      cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    }
+    #if(x$fit$dist=="gaussian"){
+    #  estimand <- 'log(OR)/mean diff'
+    #  cat(paste0("Mixture ",estimand,"", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    #}
+    testtype = "Z"
+    
+    pdat <- list()
+    for(modtype in names(x$psi)){
+      pdat[[modtype]] <- cbind(Estimate=coef(x)[[modtype]], "Std. Error"=sqrt(x$var.coef[[modtype]]), 
+                               "Lower CI"=x$ci.coef[[modtype]][,1], "Upper CI"=x$ci.coef[[modtype]][,2], 
+                               "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
+      colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
+      numpsi = length(x$psi[[modtype]])
+      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',1:max(1, numpsi))))
+      if(numpsi==0) rnm = c("(Intercept)")
+      rownames(pdat[[modtype]]) <- rnm
+      cat(paste0("Prob(Y ~ ", modtype,"):\n"))
+      #printCoefmat(pdat[[modtype]],has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    }
+  }
+  list(coeffients=pdat)
+}
+
