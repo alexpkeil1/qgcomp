@@ -13,6 +13,7 @@ msm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
+  weights = NULL,
   bayes = FALSE,
   MCsize = nrow(qdata),
   ...
@@ -44,6 +45,8 @@ is quadratic. Default=1)}
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
+
+\item{weights}{not yet implemented}
 
 \item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
 in penalized parameter estimation that can help with very highly correlated 

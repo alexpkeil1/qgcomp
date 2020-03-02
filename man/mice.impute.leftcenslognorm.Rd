@@ -23,11 +23,11 @@ mice.impute.leftcenslognorm(
 
 \item{wy}{Logical vector of length length(y). A TRUE value indicates locations in y for which imputations are created.}
 
-\item{lod}{numeric vector of limits of detection}
+\item{lod}{numeric vector of limits of detection (must correspond to index in original data)}
 
 \item{debug}{logical, print extra info}
 
-\item{...}{arguments to survreg}
+\item{...}{arguments to \code{\link[survival]{survreg}}}
 }
 \value{
 Vector with imputed data, same type as y, and of length sum(wy)
@@ -46,23 +46,29 @@ quantile cutpoint which will yield identical datasets from the MICE procedure in
 of quantized exposure data. If only exposures are missing, and they have low LODs, then
 there will be no benefit in qgcomp from using MICE rather than imputing some small value 
 below the LOD.
+
+This function will likely be relegated to a separate package in the future
 }
 \examples{
 N = 100
 set.seed(123)
 dat <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
-true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+        data=dat, q=2, family=gaussian())
 mdat <- dat
 mdat$x1 = ifelse(mdat$x1>0.5, mdat$x1, NA)
 mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
-cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=mdat[complete.cases(mdat),], q=2, family=gaussian())
+cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+       data=mdat[complete.cases(mdat),], q=2, family=gaussian())
 
 \donttest{
+# note the following example imputes from the wrong parametric model and is expected to be biased
+# as a result (but it demonstrates how to use qgcomp and mice together)
 library("mice")
 library("survival")
 impdat = mice(data = mdat, 
   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
-  lod=c(0.5, 0.75), debug=FALSE)
+  lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
 qc.fit.imp <- list(
   call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
   call1 = impdat$call,

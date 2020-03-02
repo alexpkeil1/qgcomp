@@ -21,7 +21,7 @@ dgm <- function(N){
 }
 
 set.seed(11232)
-dat = dgm(200)
+dat = dgm(100)
 Xnm = c(paste0("x", 1:6))
 
 
@@ -53,50 +53,50 @@ fs = Surv(time,d)~.
 res = try(fit1 <- qgcomp(fs, expnms=Xnm, family=cox(), data = dat), silent=TRUE)
 stopifnot(class(res)=="try-error")
 
-
-f = y~. + .^2
-res = try(fit1 <- qgcomp(f, expnms=Xnm, data = dat), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-fs = Surv(time,d)~. + .^2
-res = try(fit1 <- qgcomp(fs, expnms=Xnm, data = dat, B=5, MCsize=100), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-fs = Surv(time,d)~. + .^2
-res = try(fit1 <- qgcomp(fs, expnms=Xnm, data = dat, B=5, MCsize=100, parallel=TRUE), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-
-
-# splines splines do work
-f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
-res = try(qgcomp(f, data = dat), silent=TRUE)
-stopifnot(class(res)=="try-error") # should give error that expnms not defined
-res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-
-
-# splines splines do work
-f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
-res = try(qgcomp(f, data = dat), silent=TRUE)
-stopifnot(class(res)=="try-error") # should give error that expnms not defined
-res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-# splines splines + bayes
-f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
-res = try(fit2 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2, bayes=TRUE), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
-
-# indicator functions
-f = y ~ factor(x1) + x2 + x3 + x4 + x5 + x6
-res = try(qgcomp(f, data = dat), silent=TRUE)
-stopifnot(class(res)=="try-error") # should give error that expnms not defined
-res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=3), silent=TRUE)
-stopifnot(class(res)=="qgcompfit")
-
+#' \donttest{
+#' f = y~. + .^2
+#' res = try(fit1 <- qgcomp(f, expnms=Xnm, data = dat), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' fs = Surv(time,d)~. + .^2
+#' res = try(fit1 <- qgcomp(fs, expnms=Xnm, data = dat, B=5, MCsize=100), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' fs = Surv(time,d)~. + .^2
+#' res = try(fit1 <- qgcomp(fs, expnms=Xnm, data = dat, B=5, MCsize=100, parallel=TRUE), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' 
+#' 
+#' # splines splines do work
+#' f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
+#' res = try(qgcomp(f, data = dat), silent=TRUE)
+#' stopifnot(class(res)=="try-error") # should give error that expnms not defined
+#' res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' 
+#' 
+#' # splines splines do work
+#' f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
+#' res = try(qgcomp(f, data = dat), silent=TRUE)
+#' stopifnot(class(res)=="try-error") # should give error that expnms not defined
+#' res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' # splines splines + bayes
+#' f = y ~ x2 + x3 + x4 + x5 + x6 + splines::ns(x1, df=2)
+#' res = try(fit2 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=2, bayes=TRUE), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' 
+#' 
+#' # indicator functions
+#' f = y ~ factor(x1) + x2 + x3 + x4 + x5 + x6
+#' res = try(qgcomp(f, data = dat), silent=TRUE)
+#' stopifnot(class(res)=="try-error") # should give error that expnms not defined
+#' res = try(fit1 <- qgcomp(f, expnms=Xnm, q=8, data = dat, deg=3), silent=TRUE)
+#' stopifnot(class(res)=="qgcompfit")
+#' }
 
 
 cat("done")

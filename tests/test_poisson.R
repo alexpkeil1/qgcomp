@@ -58,47 +58,48 @@ m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=5, par
 print(coef(m1), digits=10)
 print(coef(m2$msmfit), digits=10)
 
-
-m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
-m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 50)
-print(coef(m1), digits=10)
-print(coef(m2$msmfit), digits=10)
-
-
-repit <- function(i){
-  dat = dgm(1000)
-  m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
-  m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 100000)
-  res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
-  names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
-  res
-}
-
-
-#res = mclapply(1:1000, repit)
-res = lapply(1:2, repit)
-res = simplify2array(res)
-
-# equality within toleraance
-stopifnot(all.equal(res["psiint",],res["b.psiint",], tolerance=sqrt(0.01)))
-stopifnot(all.equal(res["psi",],res["b.psi",], tolerance=sqrt(0.01)))
-
-
-# bootstrap and regular variance good
-repit2 <- function(i){
-  dat = dgm(500)
-  m1 = qgcomp.noboot(y~., expnms=c("x1", "x2"), data = dat, family=poisson(), q=4)
-  m2 = qgcomp.boot(  y~., expnms=c("x1", "x2"), data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 1000)
-  res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
-  names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
-  res
-}
-
-#res = lapply(1:500, repit2)
-#res = simplify2array(res)
-
-
-#stopifnot(all.equal(res["var",],res["b.var",], tolerance=sqrt(0.01)))
-
-
-cat("done")
+#' \donttest{
+#' m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
+#' m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 50)
+#' print(coef(m1), digits=10)
+#' print(coef(m2$msmfit), digits=10)
+#' 
+#' 
+#' repit <- function(i){
+#'   dat = dgm(1000)
+#'   m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
+#'   m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 100000)
+#'   res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
+#'   names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
+#'   res
+#' }
+#' 
+#' 
+#' #res = mclapply(1:1000, repit)
+#' res = lapply(1:2, repit)
+#' res = simplify2array(res)
+#' 
+#' # equality within toleraance
+#' stopifnot(all.equal(res["psiint",],res["b.psiint",], tolerance=sqrt(0.01)))
+#' stopifnot(all.equal(res["psi",],res["b.psi",], tolerance=sqrt(0.01)))
+#' 
+#' 
+#' # bootstrap and regular variance good
+#' repit2 <- function(i){
+#'   dat = dgm(500)
+#'   m1 = qgcomp.noboot(y~., expnms=c("x1", "x2"), data = dat, family=poisson(), q=4)
+#'   m2 = qgcomp.boot(  y~., expnms=c("x1", "x2"), data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 1000)
+#'   res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
+#'   names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
+#'   res
+#' }
+#' 
+#' #res = lapply(1:500, repit2)
+#' #res = simplify2array(res)
+#' 
+#' 
+#' #stopifnot(all.equal(res["var",],res["b.var",], tolerance=sqrt(0.01)))
+#' 
+#' }
+  cat("done")
+ 

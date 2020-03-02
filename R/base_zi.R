@@ -29,7 +29,8 @@ zimsm.fit <- function(
   expnms, 
   main=TRUE, 
   degree=1, 
-  id=NULL, 
+  id=NULL,
+  weights=NULL,
   MCsize=10000, 
   containmix=list(count=TRUE, zero=TRUE),
   bayes=FALSE,
@@ -69,6 +70,7 @@ zimsm.fit <- function(
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
+  #' @param weights not yet implemented
   #' @param MCsize integer: sample size for simulation to approximate marginal 
   #'  hazards ratios
   #' @param containmix named list of logical scalars with names "count" and "zero"
@@ -93,13 +95,15 @@ zimsm.fit <- function(
   #'   x=FALSE)
   #' msmfit$msmfit
   #' }
-
+  XXweights <- NULL
   if(is.null(id)) {
     id = "id__"
     qdata$id__ = 1:dim(qdata)[1]
   }
   # conditional outcome regression fit
-  if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
+  if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
+                             #weights=weights, 
+                             ...)
   if(bayes) stop("Bayes not yet implemented for this function")
   if(fit$optim$convergence[1]!=0) warning("Conditional outcome regression model did not converge")
   ## get predictions (set exposure to 0,1,...,q-1)
@@ -130,7 +134,12 @@ zimsm.fit <- function(
     #}
     newY
   }
-  newdata <- qdata[sample(1:nrow(qdata), size = MCsize, replace = TRUE),,drop=FALSE]
+  newids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), MCsize, 
+                                        #probs=weights, #bootstrap sampling with weights works with fixed weights, but not time-varying weights
+                                        replace = TRUE
+  )))
+  names(newids) <- id
+  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,]
   predmat = lapply(intvals, predit, newdata=newdata)
   newdata = NULL
   msmdat <- data.frame(
@@ -141,8 +150,16 @@ zimsm.fit <- function(
                ifelse(containmix[["count"]], "+ poly(psi, degree=degree, raw=TRUE) | 1", "| 1"),
                ifelse(containmix[["zero"]], "+ poly(psi, degree=degree, raw=TRUE)", "")
   )
-  
-  msmfit <- zeroinfl(as.formula(fstr), data=msmdat, x=x, ...)
+  #if(!is.null(weights)){
+  #  msmdat[,'__weights'] = newdata[,weights]
+  #}
+  if(is.null(weights)){
+    msmdat[,'XXweights'] = 1
+  }
+
+  msmfit <- zeroinfl(as.formula(fstr), data=msmdat, x=x,
+                     weights=XXweights,
+                     ...)
   if(msmfit$optim$convergence[1]!=0) warning("MSM did not converge")
   
   res = list(fit=fit, msmfit=msmfit)
@@ -158,7 +175,15 @@ zimsm.fit <- function(
 
 
 
-qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, alpha=0.05, bayes=FALSE, ...){
+qgcomp.zi.noboot <- function(f, 
+                             data, 
+                             expnms=NULL, 
+                             q=4, 
+                             breaks=NULL, 
+                             id=NULL,
+                             weights=NULL,
+                             alpha=0.05, 
+                             bayes=FALSE, ...){
   #' @title quantile g-computation for zero-inflated count outcomes under linearity/additivity
   #'
   #' @description This function estimates a linear dose-response parameter representing a one quantile
@@ -191,6 +216,7 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
+  #' @param weights not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes not yet implemented
   #' @param ... arguments to zeroinfl (e.g. dist)
@@ -252,7 +278,9 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
   }
   
 
-  if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
+  if(!bayes) fit <- zeroinfl(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], 
+                             #weights=weights, 
+                             ...)
   if(bayes){
     stop("bayesian zero inflated models not yet implemented")
     #requireNamespace("arm")
@@ -272,7 +300,7 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     if(containmix[[modtype]]){
       estb[[modtype]] = c(fit$coefficients[[modtype]][1], sum(mod$coefficients[[modtype]][expnms,1, drop=TRUE]))
       vc = vcov(fit, modtype)
-      vcov_mod[[modtype]] = vc
+      vcov_mod[[modtype]] = vc_comb(aname="(Intercept)", expnms=expnms, covmat = vc)
       seb[[modtype]] = c(sqrt(vc[1,1]), se_comb(expnms, covmat = vc))
       tstat[[modtype]] = estb[[modtype]]/seb[[modtype]]
       ci[[modtype]] = cbind(estb[[modtype]] + seb[[modtype]] * qnorm(alpha / 2), estb[[modtype]] + seb[[modtype]] * qnorm(1 - alpha / 2))
@@ -300,7 +328,10 @@ qgcomp.zi.noboot <- function(f, data, expnms=NULL, q=4, breaks=NULL, id=NULL, al
     ci = lapply(ci, function(x) x[-1,]), 
     coef = estb, 
     var.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
-    covmat.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    #covmat.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
+    #covmat.coef=c('(Intercept)' = seb[1]^2, 'psi1' = seb[2]^2), 
+    #covmat.coef=lapply(vcov_mod, function(x) vc_comb(aname="(Intercept)", expnms=expnms, covmat = x)),
+    covmat.coef= vcov_mod,
     ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=1,
     pos.psi = pos.psi, 
@@ -331,7 +362,8 @@ qgcomp.zi.boot <- function(f,
                            expnms=NULL, 
                            q=4, 
                            breaks=NULL, 
-                           id=NULL, 
+                           id=NULL,
+                           weights=NULL,
                            alpha=0.05, 
                            B=200, 
                            degree=1, 
@@ -396,6 +428,7 @@ qgcomp.zi.boot <- function(f,
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
+  #' @param weights not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -499,7 +532,10 @@ qgcomp.zi.boot <- function(f,
   }
   ###
   msmfit <- zimsm.fit(f, qdata, intvals, expnms, main=TRUE,
-                      degree=degree, id=id, MCsize=MCsize, containmix=containmix, 
+                      degree=degree, id=id,
+                      #weights=weights, 
+                      weights=NULL, 
+                      MCsize=MCsize, containmix=containmix, 
                       bayes=FALSE, x=FALSE, msmcontrol=msmcontrol, ...)
   #bootstrap to get std. error
   #nobs <- dim(qdata)[1]
@@ -507,7 +543,10 @@ qgcomp.zi.boot <- function(f,
   starttime = Sys.time()
   intvals = (1:length(table(qdata[expnms[1]]))) - 1
   Xpsi = rep(intvals, each=MCsize)
-  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, nids=nids, id=id, ...){
+  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, 
+                       nids=nids, id=id, 
+                       weights=NULL, 
+                       ...){
     if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
       if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
@@ -516,7 +555,9 @@ qgcomp.zi.boot <- function(f,
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
     ft = zimsm.fit(f, qdata_, intvals, expnms, main=FALSE,
-                   degree=degree, id=id, MCsize=MCsize, containmix=containmix, 
+                   degree=degree, id=id,
+                   weights=weights, 
+                   MCsize=MCsize, containmix=containmix, 
                    bayes=FALSE, x=FALSE, msmcontrol=msmcontrol, ...)
     classprob = suppressWarnings(predict(ft$msmfit, type="prob"))
     ncats = ncol(classprob)
@@ -532,17 +573,22 @@ qgcomp.zi.boot <- function(f,
     Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multiprocess)
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-                                             expnms=expnms, degree=degree, nids=nids, id=id, ...)
+                                             expnms=expnms, degree=degree, nids=nids, id=id, 
+                                             #weights=weights, 
+                                             weights=NULL, 
+                                             ...)
     
     future::plan(future::sequential)
   }else{
     bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-                        expnms=expnms, degree=degree, nids=nids, id=id, ...)
+                        expnms=expnms, degree=degree, nids=nids, id=id, 
+                        #weights=weights, 
+                        weights=NULL, 
+                        ...)
     
   }
   maxcidx=1
   for(modtype in names(containmix)){
-    #if(containmix[[modtype]]){
       cidx = grep(paste0("^",modtype), names(unlist(msmfit$msmfit$coefficients)))
       maxcidx = max(cidx, maxcidx)
       estb[[modtype]] = msmfit$msmfit$coefficients[[modtype]]
@@ -550,7 +596,6 @@ qgcomp.zi.boot <- function(f,
       seb[[modtype]] = sqrt(diag(vcov_mod[[modtype]]))
       tstat[[modtype]] = estb[[modtype]]/seb[[modtype]]
       ci[[modtype]] = cbind(estb[[modtype]] + seb[[modtype]] * qnorm(alpha / 2), estb[[modtype]] + seb[[modtype]] * qnorm(1 - alpha / 2))
-    #}
   }
   
   pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))

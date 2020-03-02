@@ -11,12 +11,16 @@ qgcomp.cox.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights = NULL,
+  cluster = NULL,
   alpha = 0.05,
   ...
 )
 }
 \arguments{
-\item{f}{R style formula}
+\item{f}{R style survival formula, which includes \code{\link[survival]{Surv}}
+in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
+terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
 
 \item{data}{data frame}
 
@@ -35,6 +39,10 @@ to define cutpoints.}
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
+
+\item{weights}{not yet implemented}
+
+\item{cluster}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 

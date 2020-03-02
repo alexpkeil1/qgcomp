@@ -11,6 +11,7 @@ qgcomp.zi.boot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights = NULL,
   alpha = 0.05,
   B = 200,
   degree = 1,
@@ -42,6 +43,8 @@ to define cutpoints.}
 \item{id}{(optional) NULL, or variable name indexing individual units of 
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
+
+\item{weights}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
