@@ -11,6 +11,7 @@ qgcomp.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights = NULL,
   alpha = 0.05,
   bayes = FALSE,
   ...
@@ -40,6 +41,8 @@ standard errors (this parameter is essentially ignored in qgcomp.noboot).
 Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
+
+\item{weights}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -86,7 +89,7 @@ dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
 # poisson model
 dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
-qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=poisson())
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

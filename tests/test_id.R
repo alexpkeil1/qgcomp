@@ -237,29 +237,29 @@ expnms = c("x1")
 datl = quantize(dat, expnms = expnms)
 
 
-
-
-# delta method/bootstrap variance ignoring clustering
-noclust = qgcomp.noboot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL)
-noclust.b = qgcomp.boot(y~ x1, data=datl$dat, family=gaussian(), q = NULL, MCsize=1000)
-
-# bootstrap variance with sampling by cluster
-clust.b = qgcomp.boot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL, MCsize=5000, B = 500)
-#clust.g = summary(geeglm(y~x1, data=datl$dat, id=id, corstr = "independence"))
-fitglm = glm(y~x1, data=datl$dat)
-# cluster robust variance
-sw.cov = vcovCL(fitglm, cluster=~id, type = "HC0")[2,2]
-
-stopifnot(all.equal(clust.b$var.psi, sw.cov, tolerance = 0.005))
-
-# change in variance should be the same in gee and bootstrap
-stopifnot( 
-  (clust.b$var.psi > noclust.b$var.psi) & (sw.cov > noclust.b$var.psi) |
-  (clust.b$var.psi < noclust.b$var.psi) & (sw.cov < noclust.b$var.psi) 
-  )
-stopifnot( 
-  (clust.b$var.psi > noclust$var.psi) & (sw.cov > noclust$var.psi) |
-  (clust.b$var.psi < noclust$var.psi) & (sw.cov < noclust$var.psi) 
-)
-
+#' \donttest{
+#' 
+#' # delta method/bootstrap variance ignoring clustering
+#' noclust = qgcomp.noboot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL)
+#' noclust.b = qgcomp.boot(y~ x1, data=datl$dat, family=gaussian(), q = NULL, MCsize=1000)
+#' 
+#' # bootstrap variance with sampling by cluster
+#' clust.b = qgcomp.boot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL, MCsize=5000, B = 500)
+#' #clust.g = summary(geeglm(y~x1, data=datl$dat, id=id, corstr = "independence"))
+#' fitglm = glm(y~x1, data=datl$dat)
+#' # cluster robust variance
+#' sw.cov = vcovCL(fitglm, cluster=~id, type = "HC0")[2,2]
+#' 
+#' stopifnot(all.equal(clust.b$var.psi, sw.cov, tolerance = 0.005))
+#' 
+#' # change in variance should be the same in gee and bootstrap
+#' stopifnot( 
+#'   (clust.b$var.psi > noclust.b$var.psi) & (sw.cov > noclust.b$var.psi) |
+#'   (clust.b$var.psi < noclust.b$var.psi) & (sw.cov < noclust.b$var.psi) 
+#'   )
+#' stopifnot( 
+#'   (clust.b$var.psi > noclust$var.psi) & (sw.cov > noclust$var.psi) |
+#'   (clust.b$var.psi < noclust$var.psi) & (sw.cov < noclust$var.psi) 
+#' )
+#' }
 cat("done")

@@ -3,7 +3,7 @@
 
 
 coxmsm.fit <- function(
-  f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, MCsize=10000, ...){
+  f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, weights=NULL, cluster=NULL, MCsize=10000, ...){
   #' @title marginal structural Cox model (MSM) fitting within quantile g-computation
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
@@ -20,9 +20,10 @@ coxmsm.fit <- function(
   #' Under causal identification assumptions and correct model specification,
   #' the MSM yields a causal exposure-response representing the incremental
   #' change in the expected outcome given a joint intervention on all exposures.
-  #' @param f an r formula representing the conditional model for the outcome, given all
+  #' @param f an R formula representing the conditional model for the outcome, given all
   #' exposures and covariates. Interaction terms that include exposure variables
-  #' should be represented via the \code{\link[base]{AsIs}} function
+  #' should be represented via the \code{\link[base]{AsIs}} function. Offset
+  #' terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
   #' @param qdata a data frame with quantized exposures (as well as outcome and other covariates)
   #' @param intvals sequence, the sequence of integer values that the joint exposure 
   #' is 'set' to for estimating the msm. For quantile g-computation, this is just 
@@ -37,6 +38,8 @@ coxmsm.fit <- function(
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
+  #' @param weights not yet implemented
+  #' @param cluster not yet implemented
   #' @param MCsize integer: sample size for simulation to approximate marginal 
   #'  hazards ratios
   #' @param ... arguments to coxph (e.g. ties)
@@ -58,12 +61,15 @@ coxmsm.fit <- function(
   #' #dat2 <- data.frame(psi=seq(1,4, by=0.1))
   #' #summary(predict(obj))
   #' #summary(predict(obj, newdata=dat2))
+  XXweights <- NULL
   if(is.null(id)) {
     id = "id__"
     qdata$id__ = 1:dim(qdata)[1]
   }
   # conditional outcome regression fit
-  fit <- coxph(f, data = qdata[,which(!(names(qdata) %in% id))] , x=TRUE, y=TRUE, ...)
+  fit <- coxph(f, data = qdata[,which(!(names(qdata) %in% id))] , x=TRUE, y=TRUE, 
+               #weights=weights, cluster=cluster, 
+               ...)
   ## get predictions (set exposure to 0,1,...,q-1)
   if(is.null(intvals)){
     intvals = (1:length(table(qdata[expnms[1]]))) - 1
@@ -72,15 +78,24 @@ coxmsm.fit <- function(
   tval = grep("stop|time",colnames(ymat) , value=TRUE)
   stop = as.numeric(ymat[,tval])
   times = sort(-sort(-unique(stop))[-1])
+  newids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), MCsize, 
+                                         #probs=weights, #bootstrap sampling with weights works with fixed weights, but not time-varying weights
+                                         replace = TRUE
+  )))
+  names(newids) <- id
+  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,] # this might trim one id, keep MCsize large
+  
   predit <- function(idx){
-    newdata <- qdata[sample(1:nrow(qdata), size = MCsize, replace = TRUE),,drop=FALSE]
     newdata[,expnms] <- idx
     # predictions under hypothetically removing competing risks
     # assuming censoring at random and no late entry
     pfit = survfit(fit, newdata=newdata[,], se.fit=FALSE)
     if(any(diff(pfit$n.risk)>0)){
       warning("Late entry/counting process style data is still under 
-              testing in qgcomp.cox.boot: be cautious of output.")
+              testing in qgcomp.cox.boot: be cautious of output. Note
+              that this function should not be used with time varying
+              exposures/covariates in the model (results will be invalid)."
+              )
     }
     ch = pfit$cumhaz
     h1 = ch[1,]
@@ -101,7 +116,14 @@ coxmsm.fit <- function(
     Ya = do.call("c", predmat),
     psi = rep(intvals, each=MCsize)
   )
-  msmfit <- coxph(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, x=TRUE, y=TRUE)
+  #if(!is.null(weights)){
+  #  msmdat[,'__weights'] = newdata[,weights]
+  #}
+  if(is.null(weights)){
+    msmdat[,'XXweights'] = 1
+  }
+  msmfit <- coxph(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, x=TRUE, y=TRUE, 
+                  weights=XXweights)
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
   res = list(fit=fit, msmfit=msmfit)
@@ -132,7 +154,7 @@ coxmsm.fit <- function(
 #}
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
-                               id=NULL, alpha=0.05,...) {
+                               id=NULL, weights=NULL, cluster=NULL, alpha=0.05,...) {
   #' @title quantile g-computation for survival outcomes under linearity/additivity
   #'  
   #'
@@ -149,7 +171,9 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' statistics and 95% confidence intervals are based on using the delta
   #' estimate variance of a linear combination of random variables.
   #' 
-  #' @param f R style formula
+  #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
+  #'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
+  #'   terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param q NULL or number of quantiles used to create quantile indicator variables
@@ -163,6 +187,8 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
+  #' @param weights not yet implemented
+  #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
@@ -202,7 +228,9 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
     br <- breaks
   }
   # original fit
-  fit <- coxph(f, data = qdata, ...)
+  fit <- coxph(f, data = qdata,
+               #weights=weights, cluster=cluster,
+               ...)
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
   fit[['family']] = coxfam # kludge for print function
@@ -246,7 +274,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
 }
 
 qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, 
-                                       id=NULL, alpha=0.05, B=200, MCsize=10000, degree=1, 
+                                       id=NULL, weights=NULL, cluster=NULL, alpha=0.05, B=200, MCsize=10000, degree=1, 
                                        seed=NULL, parallel=FALSE, ...){# bayes=FALSE,rr=TRUE, 
   #' @title quantile g-computation for survival outcomes
   #'  
@@ -282,7 +310,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #'  precision (e.g. 2 significant digits). 
   #'
   #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
-  #'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}
+  #'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
+  #'   terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
   #' @param data data frame
   #' @param expnms character vector of exposures of interest
   #' @param q NULL or number of quantiles used to create quantile indicator variables
@@ -294,6 +323,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
   #' @param id (optional) NULL. Reserved for future use. This does nothing yet.
+  #' @param weights not yet implemented
+  #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -331,7 +362,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
   #' \donttest{
   #' # not run (slow when using boot version to proper precision)
-  #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
+  #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
   #' # using future package, marginalizing over confounder z
   #' (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
   #'                          B=1000, MCsize=20000, parallel=TRUE))
@@ -385,6 +416,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   ###
   environment(f) <- list2env(list(qdata=qdata))
   msmfit <- coxmsm.fit(f, qdata, intvals, expnms, main=TRUE,degree=degree, 
+                       #weights=weights, cluster = cluster,
                        id=id, MCsize=MCsize, ...)
   # main estimate  
   estb <- as.numeric(msmfit$msmfit$coefficients)
@@ -392,7 +424,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #nobs <- dim(qdata)[1]
   nids <- length(unique(qdata[,id, drop=TRUE]))
   starttime = Sys.time()
-  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, 
+  psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree,
+                       #weights=weights, cluster = cluster,
                        nids=nids, id=id, ...){
     if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
@@ -401,7 +434,9 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-    newft = coxmsm.fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, MCsize, ...)
+    newft = coxmsm.fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, 
+                       #weights=weights, cluster = cluster,
+                       MCsize, ...)
     as.numeric(newft$msmfit$coefficients)
   }
   set.seed(seed)

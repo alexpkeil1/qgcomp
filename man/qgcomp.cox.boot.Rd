@@ -11,6 +11,8 @@ qgcomp.cox.boot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights = NULL,
+  cluster = NULL,
   alpha = 0.05,
   B = 200,
   MCsize = 10000,
@@ -22,7 +24,8 @@ qgcomp.cox.boot(
 }
 \arguments{
 \item{f}{R style survival formula, which includes \code{\link[survival]{Surv}}
-in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}}
+in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
+terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
 
 \item{data}{data frame}
 
@@ -39,6 +42,10 @@ break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
 \item{id}{(optional) NULL. Reserved for future use. This does nothing yet.}
+
+\item{weights}{not yet implemented}
+
+\item{cluster}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -115,7 +122,7 @@ f = survival::Surv(time, d)~x1 + x2
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
 \donttest{
 # not run (slow when using boot version to proper precision)
-(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=2000))
+(obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
 # using future package, marginalizing over confounder z
 (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
                          B=1000, MCsize=20000, parallel=TRUE))
