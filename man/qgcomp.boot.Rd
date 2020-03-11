@@ -120,6 +120,10 @@ qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
 qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
  
+# generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
+qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
+ expnms = c('x1', 'x2'), data=dat, q=4, B=200, deg=2)
+ 
 # binary outcome
 dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 
@@ -130,7 +134,7 @@ qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
 #Marginal mixture OR (population average OR - in general, this will not equal the 
 # conditional mixture OR due to non-collapsibility of the OR)
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-  data=dat, q=2, B=3)
+  data=dat, q=2, B=3, rr=FALSE)
   
 # Population average mixture RR
 qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
@@ -149,7 +153,8 @@ res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200, 
   degree=2)
 res2$fit  
-res2$msmfit  
+res2$msmfit  # correct point estimates, incorrect standard errors
+res2  # correct point estimates, correct standard errors
 plot(res2)
 # Log risk ratio per one IQR change in all exposures (not on quantile basis)
 dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))

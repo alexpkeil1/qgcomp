@@ -628,6 +628,10 @@ qgcomp.boot <- function(f,
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
   #'  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
   #'  
+  #' # generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
+  #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
+  #'  expnms = c('x1', 'x2'), data=dat, q=4, B=200, deg=2)
+  #'  
   #' # binary outcome
   #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' 
@@ -638,7 +642,7 @@ qgcomp.boot <- function(f,
   #' #Marginal mixture OR (population average OR - in general, this will not equal the 
   #' # conditional mixture OR due to non-collapsibility of the OR)
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
-  #'   data=dat, q=2, B=3)
+  #'   data=dat, q=2, B=3, rr=FALSE)
   #'   
   #' # Population average mixture RR
   #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
@@ -657,7 +661,8 @@ qgcomp.boot <- function(f,
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200, 
   #'   degree=2)
   #' res2$fit  
-  #' res2$msmfit  
+  #' res2$msmfit  # correct point estimates, incorrect standard errors
+  #' res2  # correct point estimates, correct standard errors
   #' plot(res2)
   #' # Log risk ratio per one IQR change in all exposures (not on quantile basis)
   #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
@@ -875,15 +880,17 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' # note for binary outcome this will 
+  #' # note for binary outcome this will choose the risk ratio (and bootstrap methods) by default
   #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
   #' \donttest{
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, 
-  #'   family=binomial())
-  #'   
-  #' # automatically selects appropriate method
+  #' set.seed(1231)
+  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #' set.seed(1231)
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #'   
+  #' # automatically selects appropriate method when specifying rr or degree explicitly
+  #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=FALSE)
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
   #' qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4, 
   #' family=binomial())
@@ -896,7 +903,9 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
   #' expnms=paste0("x", 1:2)
   #' f = survival::Surv(time, d)~x1 + x2
-  #' qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
+  #' qgcomp(f, expnms = expnms, data = dat)
+  #' # note if B or MCsize are set but the model is linear, an error will result
+  #' try(qgcomp(f, expnms = expnms, data = dat, B1=, MCsize))
   #' # note that in the survival models, MCsize should be set to a large number
   #' #  such that results are repeatable (within an error tolerance such as 2 significant digits)
   #' # if you run them under different  seed values
@@ -1299,6 +1308,7 @@ print.qgcompfit <- function(x, ...){
   if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "t"
+    x$zstat = x$tstat
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "cox"){
@@ -1312,12 +1322,12 @@ print.qgcompfit <- function(x, ...){
   }
   if(is.null(dim(x$ci.coef))){
     pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
-    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
     rownames(pdat) <- rnm
     printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
   } else{
     pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[,1], "Upper CI"=x$ci.coef[,2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
-    colnames(pdat)[5] = eval(paste(testtype, "value"))
+    colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
     rownames(pdat) <- rnm
     printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
   }

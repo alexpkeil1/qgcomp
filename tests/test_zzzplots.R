@@ -8,21 +8,21 @@ n=100
    dat <- data.frame(y=rbinom(n, 1, 0.5), x1=runif(n), x2=runif(n), z=runif(n))
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=binomial())
    plot(ee)
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=20, family=binomial())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=2, family=binomial())
    plot(ff)
 
 # gaussian
    dat <- data.frame(y=rnorm(n), x1=runif(n), x2=runif(n), z=runif(n))
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=gaussian())
    plot(ee)
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=20, family=gaussian())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=2, family=gaussian())
    plot(ff)
    
 # poisson
    dat <- data.frame(y=rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=poisson())
    plot(ee)
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=20, family=poisson())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=3, family=poisson())
    qgcomp::modelbound.boot(ff)
    plot(ff)
       
@@ -34,14 +34,14 @@ n=100
    f = survival::Surv(start,stop, d)~x1 + x2
    suppressWarnings(ee <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
    plot(ee)
-   suppressWarnings(ff <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=12, MCsize=1000))
+   suppressWarnings(ff <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=1000))
    plot(ff)
    
 # zi
   dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   ee = qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, dist="negbin")
   plot(ee)
-  ff = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=10, MCsize=1000, dist="negbin")
+  ff = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=2, MCsize=1000, dist="negbin")
   modelbound.boot(ff, pwonly=TRUE)
   plot(ff)
 
