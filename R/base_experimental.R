@@ -1,3 +1,8 @@
+.devinstall <- function(...){
+  .qgc.require("devtools")
+  install_github("alexpkeil1/qgcomp",...)
+}
+
 # experimental functions that may make it into permanent base files
 
 .split.iid.data <- function(data, prop.train=0.4){

@@ -38,6 +38,7 @@ Imports:
     tibble
 Suggests: 
     broom,
+    devtools,
     knitr,
     MASS,
     mice
