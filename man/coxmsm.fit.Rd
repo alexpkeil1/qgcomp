@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_surv.R
 \name{coxmsm.fit}
 \alias{coxmsm.fit}
-\title{marginal structural Cox model (MSM) fitting within quantile g-computation}
+\title{Marginal structural Cox model (MSM) fitting within quantile g-computation}
 \usage{
 coxmsm.fit(
   f,

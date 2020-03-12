@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{zimsm.fit.control}
 \alias{zimsm.fit.control}
-\title{control of fitting parameters for zero inflated MSMs}
+\title{Control of fitting parameters for zero inflated MSMs}
 \usage{
 zimsm.fit.control(predmethod = c("components", "catprobs"))
 }

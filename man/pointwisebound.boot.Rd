@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{pointwisebound.boot}
 \alias{pointwisebound.boot}
-\title{estimating pointwise comparisons for qgcomp.boot objects}
+\title{Estimating pointwise comparisons for qgcomp.boot objects}
 \usage{
 pointwisebound.boot(x, alpha = 0.05, pointwiseref = 1)
 }

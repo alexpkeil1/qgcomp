@@ -1,6 +1,6 @@
 
 se_comb <- function(expnms, covmat, grad=NULL){
-  #' @title calculate standard error of weighted linear combination of random variables
+  #' @title Calculate standard error of weighted linear combination of random variables
   #' @description This function uses the Delta method to calculate standard errors of linear
   #' functions of variables (similar to `lincom` in Stata). Generally, users will not need to 
   #' call this function directly.
@@ -58,7 +58,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
 }
 
 vc_comb <- function(aname="(Intercept)", expnms, covmat, grad=NULL){
-  #' @title calculate covariance matrix between one random variable and a linear combination of 
+  #' @title Calculate covariance matrix between one random variable and a linear combination of 
   #' random variables
   #' @description This function uses the Delta method to calculate a covariance matrix of linear
   #' functions of variables and is used internally in qgcomp. Generally, users will not need to 
@@ -128,7 +128,7 @@ grad.poly <- function(intvals, degree){
 
 
 quantize <- function (data, expnms, q=4, breaks=NULL) {
-  #' @title quantizing exposure data
+  #' @title Quantizing exposure data
   #' @description Create variables representing indicator functions with cutpoints defined
   #' by quantiles. Output a list that includes: 1) a dataset that is a copy of data, 
   #' except that the variables whose names are included in the `expnms` variable are 
@@ -140,7 +140,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
   #' 'x1' will be replaced in the output data by another 'x1' that takes on values
   #' 0:(q-1), where, for example, the value 1 indicates that the original x1 value
   #' falls between the first and the second quantile.
-  #' @return A list containing 
+  #' @return A list containing the following fields
   #' \describe{
   #' \item{data}{a quantized version of the original dataframe}
   #' \item{breaks}{a list of the quantile cutpoints used to create the quantized variables which
@@ -201,7 +201,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 }
 
 checknames <- function(terms){
-  #' @title check for valid model terms in a qgcomp fit
+  #' @title Check for valid model terms in a qgcomp fit
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -230,7 +230,7 @@ msm.fit <- function(f,
                     weights=NULL,
                     bayes=FALSE, 
                     MCsize=nrow(qdata), ...){
-  #' @title fitting marginal structural model (MSM) within quantile g-computation 
+  #' @title Fitting marginal structural model (MSM) within quantile g-computation 
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -375,7 +375,7 @@ qgcomp.noboot <- function(f,
                           alpha=0.05, 
                           bayes=FALSE, 
                           ...){
-  #' @title quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
+  #' @title Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
   #'
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This function is limited to linear and additive
@@ -546,7 +546,7 @@ qgcomp.boot <- function(f,
                         bayes=FALSE, 
                         MCsize=nrow(data), 
                         parallel=FALSE, ...){
-  #' @title quantile g-computation for continuous and binary outcomes 
+  #' @title Quantile g-computation for continuous and binary outcomes 
   #'  
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This model estimates the parameters of a marginal 
@@ -830,7 +830,7 @@ qgcomp.boot <- function(f,
 
 
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
-  #' @title quantile g-computation for continuous, binary, count, and censored survival outcomes
+  #' @title Quantile g-computation for continuous, binary, count, and censored survival outcomes
   #' 
   #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
   #'  qgcomp.cox.noboot, and qgcomp.cox.boot
@@ -955,7 +955,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
 
 
 pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
-  #' @title estimating pointwise comparisons for qgcomp.boot objects
+  #' @title Estimating pointwise comparisons for qgcomp.boot objects
   #'
   #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
   #' and the standard error of the mean difference (link scale) for pointwise comparisons
@@ -1024,7 +1024,7 @@ pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
 }
 
 pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
-  #' @title estimating pointwise comparisons for qgcomp.noboot objects
+  #' @title Estimating pointwise comparisons for qgcomp.noboot objects
   #'
   #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
   #' and the standard error of the mean difference (link scale) for pointwise comparisons
@@ -1118,7 +1118,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
 
 
 modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
-  #' @title estimating qgcomp regression line confidence bounds
+  #' @title Estimating qgcomp regression line confidence bounds
   #'
   #' @description Calculates: expected outcome (on the link scale), and upper and lower
   #'  confidence intervals (both pointwise and simultaneous)
@@ -1208,6 +1208,14 @@ coef.qgcompfit <- function(object, ...){
   object$coef
 }
 
+
+df.residual.qgcompfit <- function(object, ...){
+  #' @importFrom stats df.residual
+  #' @export
+  object$fit$df.residual
+}
+
+
 vcov.qgcompfit <- function(object, ...){
   #' @importFrom stats vcov
   #' @export
@@ -1247,8 +1255,8 @@ confint.qgcompfit <- function(object, ...){
 
 
 
-print.qgcompfit <- function(x, ...){
-  #' @title default printing method for a qgcompfit object
+print.qgcompfit <- function(x, showweights=TRUE, ...){
+  #' @title Default printing method for a qgcompfit object
   #' 
   #' @description Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
   #' is called. For `qgcomp.noboot` will output final estimate of joint exposure
@@ -1260,6 +1268,7 @@ print.qgcompfit <- function(x, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
+  #' @param weights logical: should weights be printed, if estimated?
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
@@ -1274,17 +1283,17 @@ print.qgcompfit <- function(x, ...){
   #' print(obj2)
   fam <- x$fit$family$family
   if(is.null(fam)){
-    printZI(x)
+    printZI(x, showweights=showweights, ...)
     return(invisible(x))
   }
-  if(!is.null(x$pos.size)) {
+  if(!is.null(x$pos.size) & showweights) {
     cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$pos.size, 3) , ")\n"))
     if (length(x$pos.weights) > 0) {
       print(x$pos.weights, digits = 3)
     } else cat("None\n")
     cat("\n")
   }
-  if(!is.null(x$neg.size)) {
+  if(!is.null(x$neg.size) & showweights) {
     cat(paste0("Scaled effect size (negative direction, sum of negative coefficients = ", signif(-x$neg.size, 3) , ")\n"))
     if (length(x$neg.weights) > 0) {
       print(x$neg.weights, digits = 3)
@@ -1397,7 +1406,7 @@ plot.qgcompfit <- function(x,
                            flexfit=TRUE, 
                            pointwiseref = ceiling(x$q/2),
                            ...){
-  #' @title default plotting method for a qgcompfit object
+  #' @title Default plotting method for a qgcompfit object
   #'
   #' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
   #' create a butterfly plot of weights. For qgcomp.boot, this function will create
@@ -1431,6 +1440,7 @@ plot.qgcompfit <- function(x,
   #'                   y=runif(100)+x1+x1^2)
   #' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
   #' ft
+  #' # display weights
   #' plot(ft)
   #' # examining fit
   #' plot(ft$fit, which=1) # residual vs. fitted is not straight line!
@@ -1540,10 +1550,11 @@ plot.qgcompfit <- function(x,
         stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                       data=data.frame(w=x$neg.weights, v=names(x$neg.weights)),
                       fill=gray(1-poscolwt)) + 
-        scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+        scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()) +
         scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
         geom_hline(aes(yintercept=0)) + 
-        coord_flip(ylim=c(0,1)) + 
+        #coord_flip(ylim=c(0,1), expand = FALSE) + 
+        coord_flip() + 
         theme_butterfly_l
       if((length(x$neg.weights)>0 || length(x$pos.weights)>0)){
         maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
@@ -1828,7 +1839,7 @@ plot.qgcompfit <- function(x,
 }
 
 predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response", ...){
-  #' @title default prediction method for a qgcompfit object (non-survival 
+  #' @title Default prediction method for a qgcompfit object (non-survival 
   #' outcomes only)
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
@@ -1871,7 +1882,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
 }
 
 msm.predict <- function(object, newdata=NULL){
-  #' @title secondary prediction method for the (non-survival) qgcomp MSM.
+  #' @title Secondary prediction method for the (non-survival) qgcomp MSM.
   #' 
   #' @description this is an internal function called by 
   #'  \code{\link[qgcomp]{qgcomp.boot}},

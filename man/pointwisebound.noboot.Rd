@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{pointwisebound.noboot}
 \alias{pointwisebound.noboot}
-\title{estimating pointwise comparisons for qgcomp.noboot objects}
+\title{Estimating pointwise comparisons for qgcomp.noboot objects}
 \usage{
 pointwisebound.noboot(x, alpha = 0.05, pointwiseref = 1)
 }

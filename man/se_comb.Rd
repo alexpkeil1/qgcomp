@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{se_comb}
 \alias{se_comb}
-\title{calculate standard error of weighted linear combination of random variables}
+\title{Calculate standard error of weighted linear combination of random variables}
 \usage{
 se_comb(expnms, covmat, grad = NULL)
 }

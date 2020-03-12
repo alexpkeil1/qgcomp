@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_surv.R
 \name{qgcomp.cox.boot}
 \alias{qgcomp.cox.boot}
-\title{quantile g-computation for survival outcomes}
+\title{Quantile g-computation for survival outcomes}
 \usage{
 qgcomp.cox.boot(
   f,

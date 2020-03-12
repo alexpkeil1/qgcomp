@@ -2,7 +2,7 @@
 zimsm.fit.control <- function(
   predmethod=c("components", "catprobs")
 ){
-  #' @title control of fitting parameters for zero inflated MSMs
+  #' @title Control of fitting parameters for zero inflated MSMs
   #' @description this is an internal function called by 
   #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -37,7 +37,7 @@ zimsm.fit <- function(
   x=FALSE,
   msmcontrol=zimsm.fit.control(),
   ...){
-  #' @title secondary prediction method for the (zero-inflated) qgcomp MSM.
+  #' @title Secondary prediction method for the (zero-inflated) qgcomp MSM.
   #' @description this is an internal function called by 
   #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -184,7 +184,7 @@ qgcomp.zi.noboot <- function(f,
                              weights=NULL,
                              alpha=0.05, 
                              bayes=FALSE, ...){
-  #' @title quantile g-computation for zero-inflated count outcomes under linearity/additivity
+  #' @title Quantile g-computation for zero-inflated count outcomes under linearity/additivity
   #'
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
@@ -373,7 +373,7 @@ qgcomp.zi.boot <- function(f,
                            MCsize=10000, 
                            msmcontrol=zimsm.fit.control(),
                           ...){
-  #' @title quantile g-computation for zero-inflated count outcomes
+  #' @title Quantile g-computation for zero-inflated count outcomes
   #'  
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest for zero-inflated count outcomes. This function is 

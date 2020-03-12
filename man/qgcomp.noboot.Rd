@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
+\title{Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
 \usage{
 qgcomp.noboot(
   f,

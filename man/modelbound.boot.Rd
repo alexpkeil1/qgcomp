@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{modelbound.boot}
 \alias{modelbound.boot}
-\title{estimating qgcomp regression line confidence bounds}
+\title{Estimating qgcomp regression line confidence bounds}
 \usage{
 modelbound.boot(x, alpha = 0.05, pwonly = FALSE)
 }

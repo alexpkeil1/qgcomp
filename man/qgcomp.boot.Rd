@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.boot}
 \alias{qgcomp.boot}
-\title{quantile g-computation for continuous and binary outcomes}
+\title{Quantile g-computation for continuous and binary outcomes}
 \usage{
 qgcomp.boot(
   f,

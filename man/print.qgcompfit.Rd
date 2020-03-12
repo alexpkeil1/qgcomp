@@ -2,15 +2,17 @@
 % Please edit documentation in R/base.R
 \name{print.qgcompfit}
 \alias{print.qgcompfit}
-\title{default printing method for a qgcompfit object}
+\title{Default printing method for a qgcompfit object}
 \usage{
-\method{print}{qgcompfit}(x, ...)
+\method{print}{qgcompfit}(x, showweights = TRUE, ...)
 }
 \arguments{
 \item{x}{"qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
 function}
 
 \item{...}{unused}
+
+\item{weights}{logical: should weights be printed, if estimated?}
 }
 \description{
 Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`

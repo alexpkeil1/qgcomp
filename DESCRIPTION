@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.2.4
-Date: 2020-03-11
+Version: 2.2.5
+Date: 2020-03-12
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -28,7 +28,7 @@ Imports:
     future,
     future.apply,
     generics,
-    ggplot2,
+    ggplot2 (>= 3.3.0),
     grDevices,
     grid,
     gridExtra,

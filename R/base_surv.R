@@ -4,7 +4,7 @@
 
 coxmsm.fit <- function(
   f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, weights=NULL, cluster=NULL, MCsize=10000, ...){
-  #' @title marginal structural Cox model (MSM) fitting within quantile g-computation
+  #' @title Marginal structural Cox model (MSM) fitting within quantile g-computation
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
@@ -155,7 +155,7 @@ coxmsm.fit <- function(
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
                                id=NULL, weights=NULL, cluster=NULL, alpha=0.05,...) {
-  #' @title quantile g-computation for survival outcomes under linearity/additivity
+  #' @title Quantile g-computation for survival outcomes under linearity/additivity
   #'  
   #'
   #' @description This function performs quantile g-computation in a survival
@@ -276,7 +276,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
 qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, 
                                        id=NULL, weights=NULL, cluster=NULL, alpha=0.05, B=200, MCsize=10000, degree=1, 
                                        seed=NULL, parallel=FALSE, ...){# bayes=FALSE,rr=TRUE, 
-  #' @title quantile g-computation for survival outcomes
+  #' @title Quantile g-computation for survival outcomes
   #'  
   #' @description This function yields population average effect estimates for 
   #'   (possibly right censored) time-to event outcomes

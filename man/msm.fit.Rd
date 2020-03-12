@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{msm.fit}
 \alias{msm.fit}
-\title{fitting marginal structural model (MSM) within quantile g-computation}
+\title{Fitting marginal structural model (MSM) within quantile g-computation}
 \usage{
 msm.fit(
   f,

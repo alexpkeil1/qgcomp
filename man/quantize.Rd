@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{quantize}
 \alias{quantize}
-\title{quantizing exposure data}
+\title{Quantizing exposure data}
 \usage{
 quantize(data, expnms, q = 4, breaks = NULL)
 }
@@ -20,7 +20,7 @@ break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 }
 \value{
-A list containing 
+A list containing the following fields
 \describe{
 \item{data}{a quantized version of the original dataframe}
 \item{breaks}{a list of the quantile cutpoints used to create the quantized variables which

@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_surv.R
 \name{qgcomp.cox.noboot}
 \alias{qgcomp.cox.noboot}
-\title{quantile g-computation for survival outcomes under linearity/additivity}
+\title{Quantile g-computation for survival outcomes under linearity/additivity}
 \usage{
 qgcomp.cox.noboot(
   f,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{plot.qgcompfit}
 \alias{plot.qgcompfit}
-\title{default plotting method for a qgcompfit object}
+\title{Default plotting method for a qgcompfit object}
 \usage{
 \method{plot}{qgcompfit}(
   x,
@@ -54,6 +54,7 @@ dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(1
                   y=runif(100)+x1+x1^2)
 ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 ft
+# display weights
 plot(ft)
 # examining fit
 plot(ft$fit, which=1) # residual vs. fitted is not straight line!

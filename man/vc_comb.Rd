@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{vc_comb}
 \alias{vc_comb}
-\title{calculate covariance matrix between one random variable and a linear combination of 
+\title{Calculate covariance matrix between one random variable and a linear combination of 
 random variables}
 \usage{
 vc_comb(aname = "(Intercept)", expnms, covmat, grad = NULL)

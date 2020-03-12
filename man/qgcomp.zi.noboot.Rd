@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{qgcomp.zi.noboot}
 \alias{qgcomp.zi.noboot}
-\title{quantile g-computation for zero-inflated count outcomes under linearity/additivity}
+\title{Quantile g-computation for zero-inflated count outcomes under linearity/additivity}
 \usage{
 qgcomp.zi.noboot(
   f,

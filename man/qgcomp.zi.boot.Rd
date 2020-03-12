@@ -2,7 +2,7 @@
 % Please edit documentation in R/base_zi.R
 \name{qgcomp.zi.boot}
 \alias{qgcomp.zi.boot}
-\title{quantile g-computation for zero-inflated count outcomes}
+\title{Quantile g-computation for zero-inflated count outcomes}
 \usage{
 qgcomp.zi.boot(
   f,
