@@ -1268,7 +1268,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' 
   #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
   #' function
-  #' @param weights logical: should weights be printed, if estimated?
+  #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures

@@ -109,8 +109,7 @@ qgcomp.partials <- function(
   #'     traindata=traindata,validdata=validdata, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres
   #' \donttest{
-  #' #
-  #'  under the null, both should give null results
+  #' # under the null, both should give null results
   #' set.seed(123223)
   #' dat <- qgcomp:::.dgm_quantized(N=1000, coef=c(0,0,0,0), ncor=1)
   #' # 40% training/60% validation
@@ -182,11 +181,11 @@ qgcomp.partials <- function(
   )
   posnms = names(train.fit$pos.weights)
   negnms = names(train.fit$neg.weights)
-  if(all(posnms==c("count", "zero"))){
+  if(length(posnms)==1 && all(posnms==c("count", "zero"))){
     posnms = names(train.fit$pos.weights$count)
     negnms = names(train.fit$neg.weights$count)
   }
-  res = list()
+  res = list(train.fit=train.fit)
   res$negmix <- res$posmix <- "none"
   if(length(posnms)>0){
     res$posmix = posnms

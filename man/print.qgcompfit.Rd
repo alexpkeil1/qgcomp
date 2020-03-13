@@ -10,9 +10,9 @@
 \item{x}{"qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
 function}
 
-\item{...}{unused}
+\item{showweights}{logical: should weights be printed, if estimated?}
 
-\item{weights}{logical: should weights be printed, if estimated?}
+\item{...}{unused}
 }
 \description{
 Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
