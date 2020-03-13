@@ -8,8 +8,8 @@
 .split.iid.data <- function(data, prop.train=0.4){
   trainidx <- sort(sample(1:nrow(data), round(nrow(data)*prop.train)))
   valididx <- setdiff(1:nrow(data),trainidx)
-  traindata <- dat[trainidx,]
-  validdata <- dat[valididx,]
+  traindata <- data[trainidx,]
+  validdata <- data[valididx,]
   list(
     trainidx = trainidx,
     valididx = valididx,
