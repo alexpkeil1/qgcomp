@@ -6,8 +6,8 @@
 # experimental functions that may make it into permanent base files
 
 .split.iid.data <- function(data, prop.train=0.4){
-  trainidx <- sort(sample(1:nrow(dat), round(nrow(dat)*prop.train)))
-  valididx <- setdiff(1:nrow(dat),trainidx)
+  trainidx <- sort(sample(1:nrow(data), round(nrow(data)*prop.train)))
+  valididx <- setdiff(1:nrow(data),trainidx)
   traindata <- dat[trainidx,]
   validdata <- dat[valididx,]
   list(
@@ -19,14 +19,14 @@
 }
 
 .split.cluster.data <- function(data, cluster="id", prop.train=0.4){
-  ids = sort(unique(dat[[cluster]]))
+  ids = sort(unique(data[[cluster]]))
   trainids = sort(sample(1:length(ids), round(length(ids)*prop.train)))
   validids = setdiff(ids,trainids)
   
-  trainidx <- which(dat[[cluster]] %in% trainids)
-  valididx <- which(dat[[cluster]] %in% validids)
-  traindata <- dat[trainidx,]
-  validdata <- dat[valididx,]
+  trainidx <- which(data[[cluster]] %in% trainids)
+  valididx <- which(data[[cluster]] %in% validids)
+  traindata <- data[trainidx,]
+  validdata <- data[valididx,]
   list(
     trainidx = trainidx,
     valididx = valididx,

@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
 Version: 2.2.5
-Date: 2020-03-12
+Date: 2020-03-13
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
