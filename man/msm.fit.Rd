@@ -13,7 +13,7 @@ msm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
-  weights = NULL,
+  weights,
   bayes = FALSE,
   MCsize = nrow(qdata),
   ...
@@ -46,7 +46,8 @@ is quadratic. Default=1)}
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
 in penalized parameter estimation that can help with very highly correlated 

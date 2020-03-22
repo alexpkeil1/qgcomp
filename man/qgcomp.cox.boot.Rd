@@ -11,7 +11,7 @@ qgcomp.cox.boot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights = NULL,
+  weights,
   cluster = NULL,
   alpha = 0.05,
   B = 200,
@@ -41,9 +41,15 @@ characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL. Reserved for future use. This does nothing yet.}
+\item{id}{(optional) NULL, or variable name indexing individual units of 
+observation (only needed if analyzing data with multiple observations per 
+id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+sampling of clusters/individuals to estimate cluster-appropriate standard
+errors via bootstrapping.}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[survival]{coxph}}}
 
 \item{cluster}{not yet implemented}
 
@@ -123,6 +129,9 @@ f = survival::Surv(time, d)~x1 + x2
 \donttest{
 # not run (slow when using boot version to proper precision)
 (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
+
+# weighted analysis
+
 # using future package, marginalizing over confounder z
 (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
                          B=1000, MCsize=20000, parallel=TRUE))
@@ -130,6 +139,11 @@ f = survival::Surv(time, d)~x1 + x2
 (obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
                          expnms = expnms, data = dat, 
                          B=1000, MCsize=20000, parallel=FALSE, degree=1))
+                         
+# weighted analysis
+dat$w = runif(N)
+(objw1 <- qgcomp.cox.noboot(f, expnms = expnms, data = dat, weights=w))
+(objw2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, weights=w, B=5, MCsize=20000))
 }
 }
 \seealso{

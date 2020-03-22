@@ -11,7 +11,7 @@ qgcomp.cox.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights = NULL,
+  weights,
   cluster = NULL,
   alpha = 0.05,
   ...
@@ -40,7 +40,8 @@ to define cutpoints.}
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[survival]{coxph}}}
 
 \item{cluster}{not yet implemented}
 
@@ -80,6 +81,14 @@ f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
 \donttest{
+
+# weighted analysis
+dat$w = runif(N)
+qdata = quantize(dat, expnms=expnms)
+(obj2 <- qgcomp.cox.noboot(f, expnms = expnms, data = dat, weight=w))
+obj2$fit
+survival::coxph(f, data = qdata$data, weight=w)
+
 # not run: bootstrapped version is much slower
 (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
 }

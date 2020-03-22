@@ -3,7 +3,7 @@
 
 
 coxmsm.fit <- function(
-  f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, weights=NULL, cluster=NULL, MCsize=10000, ...){
+  f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, weights, cluster=NULL, MCsize=10000, ...){
   #' @title Marginal structural Cox model (MSM) fitting within quantile g-computation
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
@@ -38,7 +38,8 @@ coxmsm.fit <- function(
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
-  #' @param weights not yet implemented
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[survival]{coxph}}
   #' @param cluster not yet implemented
   #' @param MCsize integer: sample size for simulation to approximate marginal 
   #'  hazards ratios
@@ -61,14 +62,35 @@ coxmsm.fit <- function(
   #' #dat2 <- data.frame(psi=seq(1,4, by=0.1))
   #' #summary(predict(obj))
   #' #summary(predict(obj, newdata=dat2))
-  XXweights <- NULL
+  msmweights <- NULL
+
+  newform <- terms(f, data = qdata)
+  class(newform) <- "formula"
+
+  nobs = nrow(qdata)
+  thecall <- match.call(expand.dots = FALSE)
+  names(thecall) <- gsub("f", "formula", names(thecall))
+  names(thecall) <- gsub("qdata", "data", names(thecall))
+  m <- match(c("formula", "data", "weights", "offset"), names(thecall), 0L)
+  #m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+  thecall <- thecall[c(1L, m)]
+  thecall$drop.unused.levels <- TRUE
+  
+  thecall[[1L]] <- quote(stats::model.frame)
+  thecalle <- eval(thecall, parent.frame())
+  if(hasweights){
+    qdata$weights <- as.vector(model.weights(thecalle))
+  } else qdata$weights = rep(1, nobs)
+
   if(is.null(id)) {
     id = "id__"
     qdata$id__ = 1:dim(qdata)[1]
   }
   # conditional outcome regression fit
-  fit <- coxph(f, data = qdata[,which(!(names(qdata) %in% id))] , x=TRUE, y=TRUE, 
-               #weights=weights, cluster=cluster, 
+  environment(newform) <- list2env(list(qdata=qdata))
+  fit <- coxph(newform, data = qdata, x=TRUE, y=TRUE, 
+               weights=weights,# cluster=cluster, 
                ...)
   ## get predictions (set exposure to 0,1,...,q-1)
   if(is.null(intvals)){
@@ -79,7 +101,7 @@ coxmsm.fit <- function(
   stop = as.numeric(ymat[,tval])
   times = sort(-sort(-unique(stop))[-1])
   newids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), MCsize, 
-                                         #probs=weights, #bootstrap sampling with weights works with fixed weights, but not time-varying weights
+                                         #probs=weights, #weighted bootstrap sampling works with fixed weights, but not time-varying weights
                                          replace = TRUE
   )))
   names(newids) <- id
@@ -89,7 +111,7 @@ coxmsm.fit <- function(
     newdata[,expnms] <- idx
     # predictions under hypothetically removing competing risks
     # assuming censoring at random and no late entry
-    pfit = survfit(fit, newdata=newdata[,], se.fit=FALSE)
+    pfit = survfit(fit, newdata=newdata, se.fit=FALSE)
     if(any(diff(pfit$n.risk)>0)){
       warning("Late entry/counting process style data is still under 
               testing in qgcomp.cox.boot: be cautious of output. Note
@@ -114,16 +136,18 @@ coxmsm.fit <- function(
   predmat = lapply(intvals, predit)
   msmdat <- data.frame(
     Ya = do.call("c", predmat),
-    psi = rep(intvals, each=MCsize)
+    psi = rep(intvals, each=MCsize),
+    msmweights = newdata$weights
   )
   #if(!is.null(weights)){
   #  msmdat[,'__weights'] = newdata[,weights]
   #}
-  if(is.null(weights)){
-    msmdat[,'XXweights'] = 1
-  }
+  #if(is.null(weights)){
+  #  msmdat[,'XXweights'] = 1
+  #}
   msmfit <- coxph(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, x=TRUE, y=TRUE, 
-                  weights=XXweights)
+                  weights=msmweights
+                  )
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
   res = list(fit=fit, msmfit=msmfit)
@@ -154,7 +178,7 @@ coxmsm.fit <- function(
 #}
 
 qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
-                               id=NULL, weights=NULL, cluster=NULL, alpha=0.05,...) {
+                               id=NULL, weights, cluster=NULL, alpha=0.05,...) {
   #' @title Quantile g-computation for survival outcomes under linearity/additivity
   #'  
   #'
@@ -187,7 +211,8 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
-  #' @param weights not yet implemented
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[survival]{coxph}}
   #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
@@ -211,12 +236,43 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
   #' \donttest{
+  #' 
+  #' # weighted analysis
+  #' dat$w = runif(N)
+  #' qdata = quantize(dat, expnms=expnms)
+  #' (obj2 <- qgcomp.cox.noboot(f, expnms = expnms, data = dat, weight=w))
+  #' obj2$fit
+  #' survival::coxph(f, data = qdata$data, weight=w)
+  #' 
   #' # not run: bootstrapped version is much slower
   #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
   #' }
+
+  of <- f
+  newform <- terms(f, data = data)
+  class(newform) <- "formula"
+
+  nobs = nrow(data)
+  origcall <- thecall <- match.call(expand.dots = FALSE)
+  names(thecall) <- gsub("f", "formula", names(thecall))
+  m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  #m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+  thecall <- thecall[c(1L, m)]
+  thecall$drop.unused.levels <- TRUE
+  
+  thecall[[1L]] <- quote(stats::model.frame)
+  thecalle <- eval(thecall, parent.frame())
+  if(hasweights){
+    data$weights <- as.vector(model.weights(thecalle))
+  } else data$weights = rep(1, nobs)
+
   if (is.null(expnms)) {
     message("Including all model terms as exposures of interest")
-    expnms <- attr(terms(f, data = data), "term.labels")
+  
+    #expnms <- attr(terms(f, data = data), "term.labels")
+    expnms <- attr(newform, "term.labels")
+  
   }
   if (!is.null(q) | !is.null(breaks)) {
     ql <- quantize(data, expnms, q, breaks)
@@ -228,8 +284,10 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
     br <- breaks
   }
   # original fit
-  fit <- coxph(f, data = qdata,
-               #weights=weights, cluster=cluster,
+  environment(newform) <- list2env(list(qdata=qdata))
+  fit <- coxph(newform, data = qdata,
+               weights=weights, 
+               #cluster=cluster,
                ...)
   coxfam = list(family='cox', link='log', linkfun=log)
   class(coxfam) = "family"
@@ -268,13 +326,13 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
               pos.weights = sort(pos.weights, decreasing = TRUE), 
               neg.weights = sort(neg.weights, decreasing = TRUE), 
               pos.size = sum(abs(wcoef[poscoef])), neg.size = sum(abs(wcoef[negcoef])), 
-              bootstrap = FALSE, zstat = tstat, pval = pvalz, alpha=alpha)
+              bootstrap = FALSE, zstat = tstat, pval = pvalz, alpha=alpha, call=origcall)
   attr(res, "class") <- "qgcompfit"
   res
 }
 
 qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL, 
-                                       id=NULL, weights=NULL, cluster=NULL, alpha=0.05, B=200, MCsize=10000, degree=1, 
+                                       id=NULL, weights, cluster=NULL, alpha=0.05, B=200, MCsize=10000, degree=1, 
                                        seed=NULL, parallel=FALSE, ...){# bayes=FALSE,rr=TRUE, 
   #' @title Quantile g-computation for survival outcomes
   #'  
@@ -322,8 +380,14 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' characterize the minimum value of each category for which to 
   #' break up the variables named in expnms. This is an alternative to using 'q'
   #' to define cutpoints.
-  #' @param id (optional) NULL. Reserved for future use. This does nothing yet.
-  #' @param weights not yet implemented
+  #' @param id (optional) NULL, or variable name indexing individual units of 
+  #' observation (only needed if analyzing data with multiple observations per 
+  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+  #' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+  #' sampling of clusters/individuals to estimate cluster-appropriate standard
+  #' errors via bootstrapping.
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[survival]{coxph}}
   #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
@@ -363,6 +427,9 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' \donttest{
   #' # not run (slow when using boot version to proper precision)
   #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
+  #' 
+  #' # weighted analysis
+  #' 
   #' # using future package, marginalizing over confounder z
   #' (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
   #'                          B=1000, MCsize=20000, parallel=TRUE))
@@ -370,13 +437,40 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' (obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
   #'                          expnms = expnms, data = dat, 
   #'                          B=1000, MCsize=20000, parallel=FALSE, degree=1))
+  #'                          
+  #' # weighted analysis
+  #' dat$w = runif(N)
+  #' (objw1 <- qgcomp.cox.noboot(f, expnms = expnms, data = dat, weights=w))
+  #' (objw2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, weights=w, B=5, MCsize=20000))
   #' }
   requireNamespace("survival")
   
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
+
+  newform <- terms(f, data = data)
+  class(newform) <- "formula"
+
+  nobs = nrow(data)
+  origcall <- thecall <- match.call(expand.dots = FALSE)
+  names(thecall) <- gsub("f", "formula", names(thecall))
+  m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  #m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+  thecall <- thecall[c(1L, m)]
+  thecall$drop.unused.levels <- TRUE
+  
+  thecall[[1L]] <- quote(stats::model.frame)
+  thecalle <- eval(thecall, parent.frame())
+  if(hasweights){
+    data$weights <- as.vector(model.weights(thecalle))
+  } else data$weights = rep(1, nobs)
+
   if (is.null(expnms)) {
-    expnms <- attr(terms(f, data = data), "term.labels")
-    message("Including all model terms as exposures of interest\n")      
+    message("Including all model terms as exposures of interest")
+  
+    #expnms <- attr(terms(f, data = data), "term.labels")
+    expnms <- attr(newform, "term.labels")
+  
   }
   lin = checknames(expnms)
   if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
@@ -414,9 +508,10 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   }
   if(dim(qdata)[1]>MCsize) MCsize = dim(qdata)[1]
   ###
-  environment(f) <- list2env(list(qdata=qdata))
-  msmfit <- coxmsm.fit(f, qdata, intvals, expnms, main=TRUE,degree=degree, 
-                       #weights=weights, cluster = cluster,
+  environment(newform) <- list2env(list(qdata=qdata))
+  msmfit <- coxmsm.fit(newform, qdata, intvals, expnms, main=TRUE,degree=degree, 
+                       weights=weights,
+                       # cluster = cluster,
                        id=id, MCsize=MCsize, ...)
   # main estimate  
   estb <- as.numeric(msmfit$msmfit$coefficients)
@@ -425,7 +520,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   nids <- length(unique(qdata[,id, drop=TRUE]))
   starttime = Sys.time()
   psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree,
-                       #weights=weights, cluster = cluster,
+                       weights=weights, #cluster = cluster,
                        nids=nids, id=id, ...){
     if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
@@ -435,8 +530,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
     newft = coxmsm.fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, 
-                       #weights=weights, cluster = cluster,
-                       MCsize, ...)
+                       weights=weights, #cluster = cluster,
+                       MCsize=MCsize, ...)
     as.numeric(newft$msmfit$coefficients)
   }
   set.seed(seed)
@@ -444,13 +539,15 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multiprocess)
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,
-                                    f=f, qdata=qdata, intvals=intvals, 
-                                    expnms=expnms, degree=degree, nids=nids, id=id, ...)
+                                    f=newform, qdata=qdata, intvals=intvals, 
+                                    expnms=expnms, degree=degree, nids=nids, id=id,
+                                    weights=qdata$weights, ...)
     future::plan(future::sequential)
   }else {
     bootsamps <- sapply(X=1:B, FUN=psi.only,
-                        f=f, qdata=qdata, intvals=intvals, 
-                        expnms=expnms, degree=degree, nids=nids, id=id, ...)
+                        f=newform, qdata=qdata, intvals=intvals, 
+                        expnms=expnms, degree=degree, nids=nids, id=id, 
+                        weights=weights, ...)
   }
   if(is.null(dim(bootsamps))) {
     seb <- sd(bootsamps)
@@ -476,7 +573,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     pos.weights = NULL,neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
     bootsamps = bootsamps,
-    alpha=alpha
+    alpha=alpha, call=origcall
   )
   if(msmfit$fit$family$family=='cox'){
     res$zstat <- tstat

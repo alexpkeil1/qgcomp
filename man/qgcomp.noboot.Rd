@@ -11,7 +11,7 @@ qgcomp.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights = NULL,
+  weights,
   alpha = 0.05,
   bayes = FALSE,
   ...
@@ -42,7 +42,8 @@ Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -90,6 +91,15 @@ qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=
 # poisson model
 dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
+# weighted model
+N=5000
+dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
+dat4$w=runif(N)*2
+qdata = quantize(dat4, expnms = c("x1", "x2"))$data
+(qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+                         family=gaussian(), weights=w))
+qgcfit$fit
+glm(y ~ z + x1 + x2, data = qdata, weights=w)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

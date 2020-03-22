@@ -12,7 +12,7 @@ zimsm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
-  weights = NULL,
+  weights,
   MCsize = 10000,
   containmix = list(count = TRUE, zero = TRUE),
   bayes = FALSE,

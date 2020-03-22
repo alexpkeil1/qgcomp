@@ -227,7 +227,7 @@ msm.fit <- function(f,
                     main=TRUE, 
                     degree=1, 
                     id=NULL,
-                    weights=NULL,
+                    weights,
                     bayes=FALSE, 
                     MCsize=nrow(qdata), ...){
   #' @title Fitting marginal structural model (MSM) within quantile g-computation 
@@ -264,7 +264,8 @@ msm.fit <- function(f,
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
   #' id/cluster)
-  #' @param weights not yet implemented
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
   #' exposures. Note: this does not lead to fully Bayesian inference in general, 
@@ -287,20 +288,36 @@ msm.fit <- function(f,
   #'         expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4, bayes=FALSE)
   #' summary(mod$fit) # outcome regression model
   #' summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
-    XXweights <- NULL
+  
+    newform <- terms(f, data = qdata)
+    nobs = nrow(qdata)
+    thecall <- match.call(expand.dots = FALSE)
+    names(thecall) <- gsub("qdata", "data", names(thecall))
+    names(thecall) <- gsub("f", "formula", names(thecall))
+    m <- match(c("formula", "data", "weights", "offset"), names(thecall), 0L)
+    hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+    thecall <- thecall[c(1L, m)]
+    thecall$drop.unused.levels <- TRUE
+    
+    thecall[[1L]] <- quote(stats::model.frame)
+    thecalle <- eval(thecall, parent.frame())
+    if(hasweights){
+      qdata$weights <- as.vector(model.weights(thecalle))
+    } else qdata$weights = rep(1, nobs)
+  
     if(is.null(id)) {
       id <- "id__"
       qdata$id__ <- 1:dim(qdata)[1]
     }
     # conditional outcome regression fit
     nidx = which(!(names(qdata) %in% id))
-    if(!bayes) fit <- glm(f, data = qdata[,nidx,drop=FALSE],
-                          #weights-weights, 
+    if(!bayes) fit <- glm(newform, data = qdata,
+                          weights=weights, 
                           ...)
     if(bayes){
       requireNamespace("arm")
       fit <- bayesglm(f, data = qdata[,nidx,drop=FALSE],
-                      #weights-weights, 
+                      weights=weights, 
                       ...)
     } 
     if(fit$family$family %in% c("gaussian", "poisson")) rr=FALSE
@@ -330,29 +347,25 @@ msm.fit <- function(f,
     #nobs <- dim(qdata)[1]
     msmdat <- data.frame(
       Ya = unlist(predmat),
-      psi = rep(intvals, each=MCsize))
-    #if(!is.null(weights)){
-    #  msmdat[,'__weights'] = newdata[,weights]
-    #}
-    #if(is.null(weights)){
-    #  msmdat[,'XXweights'] = 1
-    #}
+      psi = rep(intvals, each=MCsize),
+      weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
+      )
     # to do: allow functional form variations for the MSM via specifying the model formula
     if(bayes){
       if(!rr) suppressWarnings(msmfit <- bayesglm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
-                                                  weights=XXweights, x=TRUE,
+                                                  weights=weights, x=TRUE,
                                                   ...))
       if(rr)  suppressWarnings(msmfit <- bayesglm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, 
                                                   family=binomial(link='log'), start=rep(-0.0001, degree+1),
-                                                  weights=XXweights, x=TRUE))
+                                                  weights=weights, x=TRUE))
     }
     if(!bayes){
       if(!rr) suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
-                                             weights=XXweights, x=TRUE,
+                                             weights=weights, x=TRUE,
                                              ...))
       if(rr)  suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat, 
                                              family=binomial(link='log'), start=rep(-0.0001, degree+1),
-                                             weights=XXweights, x=TRUE))
+                                             weights=weights, x=TRUE))
     }
     res <- list(fit=fit, msmfit=msmfit)
     if(main) {
@@ -371,7 +384,7 @@ qgcomp.noboot <- function(f,
                           q=4, 
                           breaks=NULL, 
                           id=NULL, 
-                          weights=NULL, 
+                          weights, 
                           alpha=0.05, 
                           bayes=FALSE, 
                           ...){
@@ -412,7 +425,8 @@ qgcomp.noboot <- function(f,
   #' Qgcomp.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
-  #' @param weights not yet implemented
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated 
@@ -439,8 +453,39 @@ qgcomp.noboot <- function(f,
   #' # poisson model
   #' dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
+  #' # weighted model
+  #' N=5000
+  #' dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
+  #' dat4$w=runif(N)*2
+  #' qdata = quantize(dat4, expnms = c("x1", "x2"))$data
+  #' (qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+  #'                          family=gaussian(), weights=w))
+  #' qgcfit$fit
+  #' glm(y ~ z + x1 + x2, data = qdata, weights=w)
+
+  newform <- terms(f, data = data)
+
+  nobs = nrow(data)
+  origcall <- thecall <- match.call(expand.dots = FALSE)
+  names(thecall) <- gsub("f", "formula", names(thecall))
+  m <- match(c("formula", "data", "weights", "offset"), names(thecall), 0L)
+  #m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
+  hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+  thecall <- thecall[c(1L, m)]
+  thecall$drop.unused.levels <- TRUE
+  
+  thecall[[1L]] <- quote(stats::model.frame)
+  thecalle <- eval(thecall, parent.frame())
+  if(hasweights){
+    data$weights <- as.vector(model.weights(thecalle))
+  } else data$weights = rep(1, nobs)
+
+
   if (is.null(expnms)) {
-    expnms <- attr(terms(f, data = data), "term.labels")
+  
+    #expnms <- attr(terms(f, data = data), "term.labels")
+    expnms <- attr(newform, "term.labels")
+  
     message("Including all model terms as exposures of interest\n")      
   }
   lin = checknames(expnms)
@@ -458,15 +503,27 @@ qgcomp.noboot <- function(f,
       id = "id__"
       qdata$id__ = 1:dim(qdata)[1]
     }
-    if(!bayes) fit <- glm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
-                          #weights=weights,
-                          ...)
-    if(bayes){
-      requireNamespace("arm")
-      fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
-                      #weights=weights,
-                      ...)
-    }
+  
+  if(!bayes) fit <- glm(newform, data = qdata,
+                        weights=weights,
+                        ...)
+  if(bayes){
+    requireNamespace("arm")
+    fit <- bayesglm(newform, data = qdata,
+                    weights=weights,
+                    ...)
+  }
+  
+
+    #if(!bayes) fit <- glm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
+    #                      #weights=weights,
+    #                      ...)
+    #if(bayes){
+    #  requireNamespace("arm")
+    #  fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
+    #                  #weights=weights,
+    #                  ...)
+    #}
     mod <- summary(fit)
     if(length(setdiff(expnms, rownames(mod$coefficients)))>0){
       stop("Model aliasing occurred, likely due to perfectly correlated quantized exposures. 
@@ -516,7 +573,8 @@ qgcomp.noboot <- function(f,
       neg.size = sum(abs(wcoef[neg.coef])),
       bootstrap=FALSE,
       cov.yhat=NULL,
-      alpha=alpha
+      alpha=alpha,
+      call=origcall
     )
       if(fit$family$family=='gaussian'){
         res$tstat <- tstat
@@ -537,7 +595,7 @@ qgcomp.boot <- function(f,
                         q=4, 
                         breaks=NULL, 
                         id=NULL, 
-                        weights=NULL, 
+                        weights, 
                         alpha=0.05, 
                         B=200, 
                         rr=TRUE, 
@@ -581,7 +639,8 @@ qgcomp.boot <- function(f,
   #' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
-  #' @param weights not yet implemented
+  #' @param weights "case weights" - passed to the "weight" argument of 
+  #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be
   #' >=200, though it is set lower in examples to improve run-time).
@@ -678,14 +737,60 @@ qgcomp.boot <- function(f,
   #' qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
   #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200, 
   #'   degree=2, parallel=TRUE)
+  #'
+  #'
+  #' # weighted model
+  #' N=5000
+  #' dat4 <- data.frame(id=1:N, x1=runif(N), x2=runif(N), z=runif(N))
+  #' dat4$y <- with(dat4, rnorm(N, x1*z + z, 1))
+  #' dat4$w=runif(N) + dat4$z*5
+  #' qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
+  #' # first equivalent models with no covariates
+  #' qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
+  #' qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+  #'               weights=w)
+  #' 
+  #' set.seed(13)
+  #' qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+  #'             weights=w)
+  #' # using the correct model
+  #' set.seed(13)
+  #' qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+  #'             weights=w, id="id")
+  #' (qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+  #'                        family=gaussian(), weights=w))
+  #' qgcfit$fit
+  #' summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))
   #' }
   # character names of exposure mixture components
     oldq = NULL
     if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
+  
+    newform <- terms(f, data = data)
+    class(newform) <- "formula"
+  
+    nobs = nrow(data)
+    origcall <- thecall <- match.call(expand.dots = FALSE)
+    names(thecall) <- gsub("f", "formula", names(thecall))
+    m <- match(c("formula", "data", "weights", "offset"), names(thecall), 0L)
+    hasweights = ifelse("weights" %in% names(thecall), TRUE, FALSE)
+    thecall <- thecall[c(1L, m)]
+    thecall$drop.unused.levels <- TRUE
+    
+    thecall[[1L]] <- quote(stats::model.frame)
+    thecalle <- eval(thecall, parent.frame())
+    if(hasweights){
+      data$weights <- as.vector(model.weights(thecalle))
+    } else data$weights = rep(1, nobs)
+  
+  
     if (is.null(expnms)) {
-      expnms <- attr(terms(f, data = data), "term.labels")
+    
+      #expnms <- attr(terms(f, data = data), "term.labels")
+      expnms <- attr(newform, "term.labels")
+    
       message("Including all model terms as exposures of interest\n")      
-    }
+    }    
     lin = checknames(expnms)
     if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 
                   please use `expnms` parameter to define the variables making up the exposure")
@@ -732,10 +837,10 @@ qgcomp.boot <- function(f,
       qdata$id__ <- 1:dim(qdata)[1]
     }
     ###
-    msmfit <- msm.fit(f, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, bayes, 
+    msmfit <- msm.fit(newform, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, 
+                      weights, 
+                      bayes, 
                       MCsize=MCsize, 
-                      #weights=weights, 
-                      weights=NULL,
                       ...)
     # main estimate  
     #estb <- as.numeric(msmfit$msmfit$coefficients[-1])
@@ -746,7 +851,7 @@ qgcomp.boot <- function(f,
     starttime = Sys.time()
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, 
                          nids=nids, id=id,
-                         weights=NULL,
+                         weights,
                          ...){
       if(i==2 & !parallel){
         timeiter = as.numeric(Sys.time() - starttime)
@@ -758,8 +863,7 @@ qgcomp.boot <- function(f,
                                              )))
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-      ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, bayes, MCsize=MCsize,
-                   weights=weights,
+      ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
                    ...)
       yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])
       as.numeric(
@@ -772,16 +876,14 @@ qgcomp.boot <- function(f,
       future::plan(strategy = future::multiprocess)
       bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          #weights=weights, 
-                          weights=NULL, 
+                          weights=qdata$weights,
                           ...)
       
       future::plan(future::sequential)
     }else{
       bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          #weights=weights, 
-                          weights=NULL, 
+                          weights=weights, 
                           ...)
       
     }
@@ -813,7 +915,8 @@ qgcomp.boot <- function(f,
       y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
       bootsamps = bootsamps,
       cov.yhat=cov.yhat,
-      alpha=alpha
+      alpha=alpha,
+      call=origcall
     )
       if(msmfit$fit$family$family=='gaussian'){
         res$tstat <- tstat

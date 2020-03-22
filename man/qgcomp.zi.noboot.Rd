@@ -11,7 +11,7 @@ qgcomp.zi.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights = NULL,
+  weights,
   alpha = 0.05,
   bayes = FALSE,
   ...
@@ -38,7 +38,8 @@ to define cutpoints.}
 observation (only needed if analyzing data with multiple observations per 
 id/cluster)}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[pscl]{zeroinfl}}.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -75,19 +76,30 @@ for the "count" portion of the distribution.
 set.seed(50)
 n=100
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
+
 # poisson count model, mixture in both portions
 qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
     data=dat, q=2, dist="poisson")
+    
 # negative binomial count model, mixture and covariate in both portions
 qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z + x1 + x2, expnms = c('x1', 'x2'), 
    data=dat, q=2, dist="negbin")  
 qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
    data=dat, q=2, dist="negbin") # equivalent
+   
 # negative binomial count model, mixture only in the 'count' portion of the model
 qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
+
+# weighted analysis
+dat$w = runif(n)*5
+qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
+    data=dat, q=2, dist="poisson", weights=w)
+# Expect this:     
+# Warning message:
+# In eval(family$initialize) : non-integer #successes in a binomial glm!
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.cox.noboot}}, 
- and \code{\link[pscl]{zeroinfl}}
+\code{\link[qgcomp]{qgcomp.zi.boot}},\code{\link[qgcomp]{qgcomp.noboot}}, 
+\code{\link[qgcomp]{qgcomp.cox.noboot}},  and \code{\link[pscl]{zeroinfl}}
 }
 \concept{variance mixtures}

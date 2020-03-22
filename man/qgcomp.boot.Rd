@@ -11,7 +11,7 @@ qgcomp.boot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights = NULL,
+  weights,
   alpha = 0.05,
   B = 200,
   rr = TRUE,
@@ -47,7 +47,8 @@ standard errors. Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{not yet implemented}
+\item{weights}{"case weights" - passed to the "weight" argument of 
+\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -170,6 +171,30 @@ res2
 qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200, 
   degree=2, parallel=TRUE)
+
+
+# weighted model
+N=5000
+dat4 <- data.frame(id=1:N, x1=runif(N), x2=runif(N), z=runif(N))
+dat4$y <- with(dat4, rnorm(N, x1*z + z, 1))
+dat4$w=runif(N) + dat4$z*5
+qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
+# first equivalent models with no covariates
+qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
+qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+              weights=w)
+
+set.seed(13)
+qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+            weights=w)
+# using the correct model
+set.seed(13)
+qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+            weights=w, id="id")
+(qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+                       family=gaussian(), weights=w))
+qgcfit$fit
+summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))
 }
 }
 \seealso{
