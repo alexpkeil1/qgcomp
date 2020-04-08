@@ -47,7 +47,7 @@ set.seed(12)
 \donttest{
 dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
                   y=runif(50)+x1+x1^2)
-ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=9)
+ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
 modelbound.boot(ft, 0.05)
 }
 }

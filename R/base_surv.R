@@ -137,7 +137,8 @@ coxmsm.fit <- function(
   msmdat <- data.frame(
     Ya = do.call("c", predmat),
     psi = rep(intvals, each=MCsize),
-    msmweights = newdata$weights
+    #msmweights = newdata$weights
+    msmweights = rep(newdata$weights, times=length(intvals))
   )
   #if(!is.null(weights)){
   #  msmdat[,'__weights'] = newdata[,weights]

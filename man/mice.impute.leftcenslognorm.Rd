@@ -46,8 +46,6 @@ quantile cutpoint which will yield identical datasets from the MICE procedure in
 of quantized exposure data. If only exposures are missing, and they have low LODs, then
 there will be no benefit in qgcomp from using MICE rather than imputing some small value 
 below the LOD.
-
-This function will likely be relegated to a separate package in the future
 }
 \examples{
 N = 100

@@ -159,7 +159,8 @@ zimsm.fit <- function(
   newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,]
   predmat <- lapply(intvals, predit, newdata=newdata)
   msmdat <- data.frame(
-    weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
+   # weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
+    weights = rep(newdata$weights, times=length(intvals))
   )
   newdata = NULL
   msmdat$Ya = do.call("c", predmat)
@@ -272,10 +273,8 @@ qgcomp.zi.noboot <- function(f,
   #' # Expect this:     
   #' # Warning message:
   #' # In eval(family$initialize) : non-integer #successes in a binomial glm!
-  
-  
-  
-  
+  #' 
+
   # list containers
   estb <- vcov_mod <- seb <- tstat <- pvalz <- allterms <- containmix <- pos.weights <- neg.weights <- 
     pos.coef <- neg.coef <- pos.psi <- neg.psi <- pos.size <- neg.size <- wcoef <- ci <- tstat <- list()
@@ -542,6 +541,16 @@ qgcomp.zi.boot <- function(f,
   #' # In eval(family$initialize) : non-integer #successes in a binomial glm!
   #' qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
   #'     data=dat, q=4, dist="poisson", B=5, MCsize=50000, parallel=FALSE, weights=w)
+
+  #' # Log rr per one IQR change in all exposures (not on quantile basis)
+  #' dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
+  #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
+  #' # note that I(x>...) now operates on the untransformed value of x,
+  #' # rather than the quantized value
+  #' res2 = qgcomp.zi.boot(y ~ z + x1iqr + x2iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9) | x1iqr + x2iqr, 
+  #'                    family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, B=2, 
+  #'                    degree=2, MCsize=200, dist="poisson")
+  #' res2
   #' }
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   message("qgcomp.zi.boot function is still experimental. Please use with caution and be sure results are reasonable.\n")      
@@ -577,11 +586,20 @@ qgcomp.zi.boot <- function(f,
   
     message("Including all model terms as exposures of interest (count and zero parts must be identical)\n")      
   }
+  expterms = match(all.vars(f, unique=FALSE), expnms, nomatch = -99)
+  expterms = expterms[expterms>0]
+  if((length(expterms) != 2*length(expnms) & length(expterms) != length(expnms))){
+    warning("Ensure that all of the 
+    variables in 'expnms' are in either the count model, the zero model, or both,
+    and that neither model contains only a subset of exposures (this can sometimes be on purpose but will often cause errors)."
+    )
+    
+  }
   for(modtype in c("count", "zero")){
     containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
-    if (!containmix[[modtype]] & any(expnms %in% allterms[[modtype]])) stop("Ensure that all of the 
-    variables in 'expnms' are in either the count model, the zero model, or both,
-    and that neither model contains only a subset of exposures.")
+  #  if (!containmix[[modtype]] & any(expnms %in% allterms[[modtype]])) warning("Ensure that all of the 
+  #  variables in 'expnms' are in either the count model, the zero model, or both,
+  #  and that neither model contains only a subset of exposures (this can sometimes be on purpose but will often cause errors).")
   }
   #lin = checknames(expnms)
   #if(!lin) stop("Model appears to be non-linear and I'm having trouble parsing it: 

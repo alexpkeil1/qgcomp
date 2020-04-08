@@ -97,6 +97,7 @@ qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'),
 # Expect this:     
 # Warning message:
 # In eval(family$initialize) : non-integer #successes in a binomial glm!
+
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.zi.boot}},\code{\link[qgcomp]{qgcomp.noboot}}, 

@@ -108,7 +108,6 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' there will be no benefit in qgcomp from using MICE rather than imputing some small value 
   #' below the LOD.
   #' 
-  #' This function will likely be relegated to a separate package in the future
   #' @param y Vector to be imputed
   #' @param ry Logical vector of length length(y) indicating the the subset y[ry] of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.
   #' @param x Numeric design matrix with length(y) rows with predictors for y. Matrix x may have no missing values.

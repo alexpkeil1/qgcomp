@@ -153,6 +153,15 @@ qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'),
 # In eval(family$initialize) : non-integer #successes in a binomial glm!
 qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
     data=dat, q=4, dist="poisson", B=5, MCsize=50000, parallel=FALSE, weights=w)
+# Log rr per one IQR change in all exposures (not on quantile basis)
+dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
+dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
+# note that I(x>...) now operates on the untransformed value of x,
+# rather than the quantized value
+res2 = qgcomp.zi.boot(y ~ z + x1iqr + x2iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9) | x1iqr + x2iqr, 
+                   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, B=2, 
+                   degree=2, MCsize=200, dist="poisson")
+res2
 }
 }
 \seealso{

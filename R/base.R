@@ -346,9 +346,12 @@ msm.fit <- function(f,
     #  intervention
     #nobs <- dim(qdata)[1]
     msmdat <- data.frame(
-      Ya = unlist(predmat),
-      psi = rep(intvals, each=MCsize),
-      weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
+      cbind(
+        Ya = unlist(predmat),
+        psi = rep(intvals, each=MCsize),
+        weights = rep(newdata$weights, times=length(intvals))
+                      #times=length(table(qdata[expnms[1]])))
+      )
       )
     # to do: allow functional form variations for the MSM via specifying the model formula
     if(bayes){
@@ -1096,8 +1099,9 @@ pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
   #' @examples
   #' set.seed(12)
   #' \donttest{
-  #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
-  #'                   y=runif(50)+x1+x1^2)
+  #' n=100
+  #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
+  #'                   y=runif(100)+x1+x1^2)
   #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
   #' pointwisebound.boot(ft, alpha=0.05, pointwiseref=3)
   #' }
@@ -1258,7 +1262,7 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   #' \donttest{
   #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
   #'                   y=runif(50)+x1+x1^2)
-  #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=9)
+  #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
   #' modelbound.boot(ft, 0.05)
   #' }
   if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
