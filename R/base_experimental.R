@@ -19,20 +19,21 @@
 }
 
 .split.cluster.data <- function(data, cluster="id", prop.train=0.4){
-  ids = sort(unique(data[[cluster]]))
-  trainids = sort(sample(1:length(ids), round(length(ids)*prop.train)))
-  validids = setdiff(ids,trainids)
-  
-  trainidx <- which(data[[cluster]] %in% trainids)
-  valididx <- which(data[[cluster]] %in% validids)
-  traindata <- data[trainidx,]
-  validdata <- data[valididx,]
-  list(
+ ids = sort(unique(data[[cluster]]))
+ trididx = sort(sample(1:length(ids), round(length(ids) * 
+                                               prop.train)))
+ trainids = ids[trididx]
+ validids = setdiff(ids, trainids)
+ trainidx <- which(data[[cluster]] %in% trainids)
+ valididx <- which(data[[cluster]] %in% validids)
+ traindata <- data[trainidx, ]
+ validdata <- data[valididx, ]
+ list(
     trainidx = trainidx,
     valididx = valididx,
     traindata = traindata,
     validdata = validdata
-  )
+ )
 }
 
 qgcomp.partials <- function(

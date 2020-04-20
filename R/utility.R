@@ -46,7 +46,7 @@ zi <- function(){
 #printing of zero-inflated results
 
 printZI <- function(x, showweights=TRUE, ...){
-  if(class(x$fit) == "zeroinfl"){
+  if(class(x$fit) %in% c("zeroinfl", "hurdle")){
     if(!is.null(x$pos.size$count) & showweights) {
       cat("Prob(Y ~ count):\n")
       cat(paste0("Scaled effect size (positive direction, sum of positive coefficients = ", signif(x$pos.size$count, 3) , ")\n"))
@@ -78,7 +78,7 @@ printZI <- function(x, showweights=TRUE, ...){
       cat("\n")
     }
     
-    if(x$fit$dist %in% c("poisson", "negbin")){
+    if(x$fit$dist[[1]] %in% c("poisson", "negbin")){
       estimand <- 'OR/RR'
       cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     }
@@ -106,8 +106,8 @@ printZI <- function(x, showweights=TRUE, ...){
 }
 
 summaryZI <- function(x){
-  if(class(x$fit) == "zeroinfl"){
-    if(x$fit$dist %in% c("poisson", "negbin")){
+  if(class(x$fit) %in% c("zeroinfl", "hurdle")){
+    if(x$fit$dist[[1]] %in% c("poisson", "negbin")){
       estimand <- 'OR/RR'
       cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     }
