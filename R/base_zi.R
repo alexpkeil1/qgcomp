@@ -84,7 +84,7 @@ zimsm.fit <- function(
   #' @examples
   #' set.seed(50)
   #' n=100
-  #' \donttest{
+  #' \dontrun{
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   #' expnms = c("x1", "x2")
   #' q = 4
@@ -483,8 +483,8 @@ qgcomp.zi.boot <- function(f,
   #' @param weights "case weights" - passed to the "weight" argument of 
   #' \code{\link[pscl]{zeroinfl}}. NOTE - this does not work with parallel=TRUE!
   #' @param alpha alpha level for confidence limit calculation
-  #' @param B integer: number of bootstrap iterations (this should typically be
-  #' >=200, though it is set lower in examples to improve run-time).
+  #' @param B integer: number of bootstrap iterations (this should typically be >=200,
+  #'  though it is set lower in examples to improve run-time).
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic.
@@ -513,7 +513,7 @@ qgcomp.zi.boot <- function(f,
   #' n=100
   #' dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   #' # poisson count model, mixture in both portions
-  #' \donttest{
+  #' \dontrun{
   #' # warning: the examples below can take a long time to run
   #' res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
   #'     data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE)
@@ -586,9 +586,10 @@ qgcomp.zi.boot <- function(f,
   
     message("Including all model terms as exposures of interest (count and zero parts must be identical)\n")      
   }
+  #intvals = (1:length(table(qdata[expnms[1]]))) - 1 # this needs to be up here
   expterms = match(all.vars(f, unique=FALSE), expnms, nomatch = -99)
   expterms = expterms[expterms>0]
-  if((length(expterms) != 2*length(expnms) & length(expterms) != length(expnms))){
+  if((length(expterms) < 2*length(expnms) & length(unique(expterms)) != length(expnms))){
     warning("Ensure that all of the 
     variables in 'expnms' are in either the count model, the zero model, or both,
     and that neither model contains only a subset of exposures (this can sometimes be on purpose but will often cause errors)."
@@ -626,8 +627,9 @@ qgcomp.zi.boot <- function(f,
     # then draw distribution values from quantiles of all the exposures
     # pooled together
     # TODO: allow user specification of this
-    cat("\nNote: using quantiles of all exposures combined in order to set 
-          proposed intervention values for overall effect (25th, 50th, 75th %ile)\n")
+    message("\nNote: using quantiles of all exposures combined in order to set 
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)
+        You can ensure this is valid by scaling all variables in expnms to have similar ranges.")
     intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
     br <- NULL
   }
@@ -645,11 +647,11 @@ qgcomp.zi.boot <- function(f,
   #nobs <- dim(qdata)[1]
   nids <- length(unique(qdata[,id, drop=TRUE]))
   starttime = Sys.time()
-  intvals = (1:length(table(qdata[expnms[1]]))) - 1
   Xpsi = rep(intvals, each=MCsize)
   psi.only <- function(i=1, f=newform, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree, 
                        nids=nids, id=id, 
                        weights=weights,
+                       MCsize=MCsize,
                        ...){
     
     if(i==2 & !parallel){
@@ -681,6 +683,7 @@ qgcomp.zi.boot <- function(f,
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                                              expnms=expnms, degree=degree, nids=nids, id=id, 
                                              weights=qdata$weights,
+                                             MCsize=MCsize,
                                              ...)
     
     future::plan(future::sequential)
@@ -688,6 +691,7 @@ qgcomp.zi.boot <- function(f,
     bootsamps <- sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 
                         weights=weights, 
+                        MCsize=MCsize,
                         ...)
     
   }

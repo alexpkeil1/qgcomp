@@ -16,10 +16,10 @@
 )
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.noboot`,  `qgcomp.boot`, 
-`qgcomp.cox.noboot`,  `qgcomp.cox.boot`, `qgcomp.zi.noboot` or `qgcomp.zi.boot` functions}
+\item{x}{"qgcompfit" object from \code{qgcomp.noboot},  \code{qgcomp.boot},
+\code{qgcomp.cox.noboot},  \code{qgcomp.cox.boot}, \code{qgcomp.zi.noboot} or \code{qgcomp.zi.boot} functions}
 
-\item{suppressprint}{If TRUE, suppresses the plot, rather than printing it 
+\item{suppressprint}{If TRUE, suppresses the plot, rather than printing it
 by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
 inflated model) and used programmatically)
 (default = FALSE)}
@@ -32,10 +32,10 @@ of E(Y|joint exposure) to the smooth regression line plot}
 
 \item{modelband}{If TRUE, adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)}
 
-\item{flexfit}{(boot.gcomp only) if TRUE, adds flexible interpolation of predictions from 
+\item{flexfit}{(boot.gcomp only) if TRUE, adds flexible interpolation of predictions from
 underlying (conditional) model}
 
-\item{pointwiseref}{(boot.gcomp only) integer: which category of exposure (from 1 to q) 
+\item{pointwiseref}{(boot.gcomp only) integer: which category of exposure (from 1 to q)
 should serve as the referent category for pointwise comparisons? (default=1)}
 
 \item{...}{unused}
@@ -58,7 +58,7 @@ ft
 plot(ft)
 # examining fit
 plot(ft$fit, which=1) # residual vs. fitted is not straight line!
-\donttest{
+\dontrun{
 
 # using non-linear outcome model
 ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 

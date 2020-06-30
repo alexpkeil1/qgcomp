@@ -58,7 +58,7 @@ m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=5, par
 print(coef(m1), digits=10)
 print(coef(m2$msmfit), digits=10)
 
-#' \donttest{
+#' \dontrun{
 #' m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
 #' m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=poisson(), q=4, B=5, parallel=TRUE, MCsize = 50)
 #' print(coef(m1), digits=10)

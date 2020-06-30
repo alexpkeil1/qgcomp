@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.3.2
-Date: 2020-04-20
+Version: 2.4.0
+Date: 2020-06-30
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -31,6 +31,7 @@ Imports:
     grDevices,
     grid,
     gridExtra,
+    markdown,
     pscl,
     stats,
     survival,
@@ -46,4 +47,5 @@ VignetteBuilder:
 Encoding: UTF-8
 Language: en-US
 LazyData: true
-RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0

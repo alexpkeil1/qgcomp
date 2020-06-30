@@ -24,7 +24,7 @@ stopifnot(all.equal(
   c(-0.63497247,0.06082349 ), 
   check.names=FALSE, tolerance = 1e-4))
 
-#' \donttest{
+#' \dontrun{
 #' ##### survival
 #' set.seed(123123)
 #' f1 = survival::Surv(tmg, d) ~ x1 + x2

@@ -237,7 +237,7 @@ expnms = c("x1")
 datl = quantize(dat, expnms = expnms)
 
 
-#' \donttest{
+#' \dontrun{
 #' 
 #' # delta method/bootstrap variance ignoring clustering
 #' noclust = qgcomp.noboot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL)

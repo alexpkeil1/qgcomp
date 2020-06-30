@@ -31,16 +31,16 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[survival]{coxph}}}
 
 \item{cluster}{not yet implemented}
@@ -51,24 +51,24 @@ id/cluster)}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pos.weights) and 
- negative (neg.weights) directions.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+weights/standardized coefficients in the positive (pos.weights) and
+negative (neg.weights) directions.
 }
 \description{
 This function performs quantile g-computation in a survival
-setting. The approach estimates the covariate-conditional hazard ratio for 
+setting. The approach estimates the covariate-conditional hazard ratio for
 a joint change of 1 quantile in each exposure variable specified in expnms
 parameter
 }
 \details{
-For survival outcomes (as specified using methods from the 
-survival package), this yields a conditional log hazard ratio representing  
+For survival outcomes (as specified using methods from the
+survival package), this yields a conditional log hazard ratio representing
 a change in the expected conditional hazard (conditional on covariates)
-from increasing every exposure by 1 quantile. In general, this quantity 
+from increasing every exposure by 1 quantile. In general, this quantity
 quantity is not equivalent to g-computation estimates. Hypothesis test
-statistics and 95% confidence intervals are based on using the delta
+statistics and 95\% confidence intervals are based on using the delta
 estimate variance of a linear combination of random variables.
 }
 \examples{
@@ -80,7 +80,7 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-\donttest{
+\dontrun{
 
 # weighted analysis
 dat$w = runif(N)
@@ -94,7 +94,7 @@ survival::coxph(f, data = qdata$data, weight=w)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
-  and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}},
+and \code{\link[qgcomp]{qgcomp}}
 }
 \concept{variance mixtures}

@@ -21,7 +21,7 @@ glance.qgcompfit <- function(x, ...){
   #' @param ... Not used
   #' @export
   #' @importFrom generics glance
-  # @importFrom broom unrowname finish_glance glance
+  #' @importFrom tibble as_tibble
   .qgc.require("broom")
   s <- summary(x$fit)
   # taken from broom package
@@ -30,7 +30,10 @@ glance.qgcompfit <- function(x, ...){
     x
   }
   ret <- unrowname(as.data.frame(s[c("null.deviance", "df.null", "df.residual")]))
-  broom::finish_glance(ret, x)
+  ret$logLik <- tryCatch(as.numeric(logLik(x)), error = function(e) NULL)
+  ret$AIC    <- tryCatch(AIC(x), error = function(e) NULL)
+  ret$BIC    <- tryCatch(BIC(x), error = function(e) NULL)
+  tibble::as_tibble(ret, rownames = NULL)
 }
 
 
@@ -109,7 +112,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' below the LOD.
   #' 
   #' @param y Vector to be imputed
-  #' @param ry Logical vector of length length(y) indicating the the subset y[ry] of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.
+  #' @param ry Logical vector of length length(y) indicating the the subset of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.
   #' @param x Numeric design matrix with length(y) rows with predictors for y. Matrix x may have no missing values.
   #' @param wy Logical vector of length length(y). A TRUE value indicates locations in y for which imputations are created.
   #' @param lod numeric vector of limits of detection (must correspond to index in original data)
@@ -131,7 +134,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
   #'        data=mdat[complete.cases(mdat),], q=2, family=gaussian())
   #' 
-  #' \donttest{
+  #' \dontrun{
   #' # note the following example imputes from the wrong parametric model and is expected to be biased
   #' # as a result (but it demonstrates how to use qgcomp and mice together)
   #' library("mice")

@@ -7,11 +7,11 @@
 pointwisebound.noboot(x, alpha = 0.05, pointwiseref = 1)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.boot`,}
+\item{x}{"qgcompfit" object from \code{qgcomp.noboot},}
 
 \item{alpha}{alpha level for confidence intervals}
 
-\item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+\item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as
 the referent category for calculating all mean differences/standard deviations)}
 }
 \value{
@@ -26,8 +26,8 @@ and the standard error of the mean difference (link scale) for pointwise compari
 \details{
 The comparison of interest following a qgcomp fit is often comparisons of model
 predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
-at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure 
-and at a given level of non-exposure covariates (W) is 
+at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure
+and at a given level of non-exposure covariates (W) is
 given as E(Y|S,W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type
 E(Y|S=s,W=w) - E(Y|S=s2,W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
 This function yields E(Y|S,W=w) as well as E(Y|S=s,W=w) - E(Y|S=p,W=w) where s is any value of S and p is
@@ -35,15 +35,15 @@ the value chosen via "pointwise ref" - e.g. for binomial variables this will equ
 prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped
 version of quantile g-computation (under a linear model)
 
- \eqn{f(\beta) = \sum_i^p \beta_i}
-given gradient vector 
+\eqn{f(\beta) = \sum_i^p \beta_i}
+given gradient vector
 \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
   ...,
   \partial(f(\beta))/\partial\beta_3k= 1]
   }
 \eqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
-and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient and G is the 
-"gradient vector". The vector G takes on values that equal the difference in quantiles of 
+and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient and G is the
+"gradient vector". The vector G takes on values that equal the difference in quantiles of
 S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category,
 G is a vector of 2s)
 
@@ -51,7 +51,7 @@ This is used to create pointwise confidence intervals
 }
 \examples{
 set.seed(12)
-\donttest{
+\dontrun{
 n = 100
 dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
                   y=rnorm(n)+x1 + x2 - x3 +z)
@@ -65,6 +65,9 @@ ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=
 ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
 pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
+dat$z = as.factor(sample(1:3, n, replace=TRUE))
+ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+pointwisebound.noboot(ftf, alpha=0.05, pointwiseref=3)
 }  
 }
 \seealso{

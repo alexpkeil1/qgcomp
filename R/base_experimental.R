@@ -109,7 +109,7 @@ qgcomp.partials <- function(
   #' splitres <- qgcomp:::qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
   #'     traindata=traindata,validdata=validdata, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres
-  #' \donttest{
+  #' \dontrun{
   #' # under the null, both should give null results
   #' set.seed(123223)
   #' dat <- qgcomp:::.dgm_quantized(N=1000, coef=c(0,0,0,0), ncor=1)

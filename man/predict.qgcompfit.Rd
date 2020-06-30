@@ -2,25 +2,25 @@
 % Please edit documentation in R/base.R
 \name{predict.qgcompfit}
 \alias{predict.qgcompfit}
-\title{Default prediction method for a qgcompfit object (non-survival 
+\title{Default prediction method for a qgcompfit object (non-survival
 outcomes only)}
 \usage{
 \method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)
 }
 \arguments{
-\item{object}{"qgcompfit" object from `qgcomp.noboot`, `qgcomp.boot`, `qgcomp.zi.noboot`, 
-or `qgcomp.zi.boot`functions}
+\item{object}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot}, \code{qgcomp.zi.noboot},
+or \code{qgcomp.zi.boot}functions}
 
 \item{expnms}{character vector of exposures of interest}
 
 \item{newdata}{(optional) new set of data with all predictors from "qgcompfit" object}
 
-\item{type}{(from predict.glm) the type of prediction required. The default 
-is on the scale of the linear predictors; the alternative "response" is on 
-the scale of the response  variable. Thus for a default binomial model the 
-default predictions are of log-odds (probabilities on logit scale) and 
-type = "response" gives the predicted probabilities. The "terms" option 
-returns a matrix giving the fitted values of each term in the model formula 
+\item{type}{(from predict.glm) the type of prediction required. The default
+is on the scale of the linear predictors; the alternative "response" is on
+the scale of the response  variable. Thus for a default binomial model the
+default predictions are of log-odds (probabilities on logit scale) and
+type = "response" gives the predicted probabilities. The "terms" option
+returns a matrix giving the fitted values of each term in the model formula
 on the linear predictor scale.}
 
 \item{...}{arguments to predict.glm}

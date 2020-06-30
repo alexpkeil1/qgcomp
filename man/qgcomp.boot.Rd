@@ -35,27 +35,27 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
 standard errors. Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{B}{integer: number of bootstrap iterations (this should typically be
->=200, though it is set lower in examples to improve run-time).}
+\item{B}{integer: number of bootstrap iterations (this should typically be >=200,
+though it is set lower in examples to improve run-time).}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
 estimate risk ratio rather than odds ratio}
 
 \item{degree}{polynomial bases for marginal model (e.g. degree = 2
@@ -64,16 +64,16 @@ is quadratic (default = 1).}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 
-\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
-in penalized parameter estimation that can help with very highly correlated 
-exposures. Note: this does not lead to fully Bayesian inference in general, 
+\item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results
+in penalized parameter estimation that can help with very highly correlated
+exposures. Note: this does not lead to fully Bayesian inference in general,
 so results should be interpreted as frequentist.}
 
-\item{MCsize}{integer: sample size for simulation to approximate marginal 
+\item{MCsize}{integer: sample size for simulation to approximate marginal
 zero inflated model parameters. This can be left small for testing, but should be as large
-as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
-linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation 
-error at a given value of MCsize). This likely won't matter much in linear models, but may 
+as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
+linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation
+error at a given value of MCsize). This likely won't matter much in linear models, but may
 be important with binary or count outcomes.}
 
 \item{parallel}{use (safe) parallel processing from the future and future.apply packages}
@@ -82,28 +82,28 @@ be important with binary or count outcomes.}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- marginal structural model (msmfit) used to estimate the final effect
- estimates.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+marginal structural model (msmfit) used to estimate the final effect
+estimates.
 }
 \description{
 This function estimates a linear dose-response parameter representing a one quantile
-increase in a set of exposures of interest. This model estimates the parameters of a marginal 
-structural model (MSM) based on g-computation with quantized exposures. Note: this function  
+increase in a set of exposures of interest. This model estimates the parameters of a marginal
+structural model (MSM) based on g-computation with quantized exposures. Note: this function
 allows linear and non-additive effects of individual components of the exposure, as well as
 non-linear joint effects of the mixture via polynomial basis functions, which increase the
 computational computational burden due to the need for non-parametric bootstrapping.
 }
 \details{
 Estimates correspond to the average expected change in the
- (log) outcome per quantile increase in the joint exposure to all exposures 
- in `expnms'. Test statistics and confidence intervals are based on 
- a non-parametric bootstrap, using the standard deviation of the bootstrap
- estimates to estimate the standard error. The bootstrap standard error is 
- then used to estimate Wald-type confidence intervals. Note that no bootstrapping
- is done on estimated quantiles of exposure, so these are treated as fixed
- quantities
+(log) outcome per quantile increase in the joint exposure to all exposures
+in `expnms'. Test statistics and confidence intervals are based on
+a non-parametric bootstrap, using the standard deviation of the bootstrap
+estimates to estimate the standard error. The bootstrap standard error is
+then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+is done on estimated quantiles of exposure, so these are treated as fixed
+quantities
 }
 \examples{
 set.seed(30)
@@ -113,7 +113,7 @@ dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 # Marginal linear slope (population average slope, for a purely linear, 
 #  additive model this will equal the conditional)
- \donttest{
+ \dontrun{
 qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
   family=gaussian(), B=200) # B should be at least 200 in actual examples
   

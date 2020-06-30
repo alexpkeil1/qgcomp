@@ -29,16 +29,16 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[pscl]{zeroinfl}}.}
 
 \item{alpha}{alpha level for confidence limit calculation}
@@ -49,26 +49,26 @@ id/cluster)}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pos.weights) and 
- negative (neg.weights) directions.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+weights/standardized coefficients in the positive (pos.weights) and
+negative (neg.weights) directions.
 }
 \description{
 This function estimates a linear dose-response parameter representing a one quantile
-increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+increase in a set of exposures of interest for zero-inflated count outcomes. This function is
 limited to linear and additive
-effects of individual components of the exposure. This model estimates the parameters of a marginal 
-structural zero-inflated model (MSM) based on g-computation with quantized exposures. 
+effects of individual components of the exposure. This model estimates the parameters of a marginal
+structural zero-inflated model (MSM) based on g-computation with quantized exposures.
 Note: this function is valid only under linear and additive effects of individual components of the exposure, but when
 these hold the model can be fit with very little computational burden.
 }
 \details{
 A zero-inflated version of quantile g-computation based on the implementation in the
 'pscl' package. A zero-inflated distribution is a mixture distribution in which one of the
-distributions is a point mass at zero (with probability given by a logistic model), and the 
+distributions is a point mass at zero (with probability given by a logistic model), and the
 other distribution is a discrete or continuous distribution.
-This estimates the effect of a joint increase in all exposures on 1) the odds 
+This estimates the effect of a joint increase in all exposures on 1) the odds
 of belonging to the "zero" vs. "count" portions of the distribution and/or 2) the rate parameter
 for the "count" portion of the distribution.
 }
@@ -100,7 +100,7 @@ qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2, expnms = c('x1', 'x2'),
 
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.zi.boot}},\code{\link[qgcomp]{qgcomp.noboot}}, 
+\code{\link[qgcomp]{qgcomp.zi.boot}},\code{\link[qgcomp]{qgcomp.noboot}},
 \code{\link[qgcomp]{qgcomp.cox.noboot}},  and \code{\link[pscl]{zeroinfl}}
 }
 \concept{variance mixtures}

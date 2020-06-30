@@ -28,8 +28,8 @@ should be represented via the \code{\link[base]{AsIs}} function}
 
 \item{qdata}{a data frame with quantized exposures (as well as outcome and other covariates)}
 
-\item{intvals}{sequence, the sequence of integer values that the joint exposure 
-is 'set' to for estimating the msm. For quantile g-computation, this is just 
+\item{intvals}{sequence, the sequence of integer values that the joint exposure
+is 'set' to for estimating the msm. For quantile g-computation, this is just
 0:(q-1), where q is the number of quantiles of exposure.}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
@@ -42,13 +42,13 @@ and expected outcomes under g-computation and the MSM}
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
 \item{weights}{not yet implemented}
 
-\item{MCsize}{integer: sample size for simulation to approximate marginal 
+\item{MCsize}{integer: sample size for simulation to approximate marginal
 hazards ratios}
 
 \item{containmix}{named list of logical scalars with names "count" and "zero"}
@@ -62,10 +62,10 @@ hazards ratios}
 \item{...}{arguments to zeroinfl (e.g. dist)}
 }
 \description{
-this is an internal function called by 
- \code{\link[qgcomp]{qgcomp.zi.boot}},
- but is documented here for clarity. Generally, users will not need to call
- this function directly.
+this is an internal function called by
+\code{\link[qgcomp]{qgcomp.zi.boot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
 }
 \details{
 This function first computes expected outcomes under hypothetical
@@ -83,7 +83,7 @@ change in the expected outcome given a joint intervention on all exposures.
 \examples{
 set.seed(50)
 n=100
-\donttest{
+\dontrun{
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
 expnms = c("x1", "x2")
 q = 4

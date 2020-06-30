@@ -36,31 +36,31 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
 standard errors. Qgcomp.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[survival]{coxph}}}
 
 \item{cluster}{not yet implemented}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{B}{integer: number of bootstrap iterations (this should typically be
->=200, though it is set lower in examples to improve run-time).}
+\item{B}{integer: number of bootstrap iterations (this should typically be >=200,
+though it is set lower in examples to improve run-time).}
 
-\item{MCsize}{integer: sample size for simulation to approximate marginal 
+\item{MCsize}{integer: sample size for simulation to approximate marginal
 hazards ratios (if < sample size, then set to sample size). Note that large
-values will slow down the fitting, but will result in higher accuracy - if you 
+values will slow down the fitting, but will result in higher accuracy - if you
 run the function multiple times you will see that results vary due to simulation
 error. Ideally, MCsize would be set such that simulation error is negligible
 in the precision reported (e.g. if you report results to 2 decimal places, then
@@ -79,43 +79,41 @@ is quadratic.}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- marginal structural model (msmfit) used to estimate the final effect
- estimates.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+marginal structural model (msmfit) used to estimate the final effect
+estimates.
 }
 \description{
-This function yields population average effect estimates for 
-  (possibly right censored) time-to event outcomes
+This function yields population average effect estimates for
+(possibly right censored) time-to event outcomes
 }
 \details{
-`qgcomp.cox.boot' estimates the
- log(hazard ratio) per quantile increase in the joint exposure to all exposures 
- in `expnms'. This function uses g-computation to estimate the parameters of a
- marginal structural model for the population average effect of increasing all
- exposures in `expnms' by a single quantile. This approach involves specifying 
- an underlying conditional outcome model, given all exposures of interest (possibly
- with non-linear basis function representations such as splines or product terms)
- and confounders or covariates of interest. This model is fit first, which is used
- to generate expected outcomes at each quantile of all exposures, which is then
- used in a second model to estimate a population average dose-response curve that
- is linear or follows a simple polynomial function. See section on MCSize below
- 
- Test statistics and confidence intervals are based on 
- a non-parametric bootstrap, using the standard deviation of the bootstrap
- estimates to estimate the standard error. The bootstrap standard error is 
- then used to estimate Wald-type confidence intervals. Note that no bootstrapping
- is done on estimated quantiles of exposure, so these are treated as fixed
- quantities
- 
- MCSize is crucial to get accurate point estimates. In order to get marginal
- estimates of the population hazard under different values of the joint exposure
- at a given quantile for all exposures in `expnms`, `qgcomp.cox.boot` uses
- Monte Carlo simulation to generate outcomes implied by the underlying conditional model
- and then fit a separate (marginal structural) model to those outcomes. In order to get
- accurate results that don't vary much from run-to-run of this approach, MCsize
- must be set large enough so that results are stable across runs according to a pre-determined
- precision (e.g. 2 significant digits).
+\verb{qgcomp.cox.boot' estimates the log(hazard ratio) per quantile increase in the joint exposure to all exposures  in }expnms'. This function uses g-computation to estimate the parameters of a
+marginal structural model for the population average effect of increasing all
+exposures in `expnms' by a single quantile. This approach involves specifying
+an underlying conditional outcome model, given all exposures of interest (possibly
+with non-linear basis function representations such as splines or product terms)
+and confounders or covariates of interest. This model is fit first, which is used
+to generate expected outcomes at each quantile of all exposures, which is then
+used in a second model to estimate a population average dose-response curve that
+is linear or follows a simple polynomial function. See section on MCSize below
+
+Test statistics and confidence intervals are based on
+a non-parametric bootstrap, using the standard deviation of the bootstrap
+estimates to estimate the standard error. The bootstrap standard error is
+then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+is done on estimated quantiles of exposure, so these are treated as fixed
+quantities
+
+MCSize is crucial to get accurate point estimates. In order to get marginal
+estimates of the population hazard under different values of the joint exposure
+at a given quantile for all exposures in \code{expnms}, \code{qgcomp.cox.boot} uses
+Monte Carlo simulation to generate outcomes implied by the underlying conditional model
+and then fit a separate (marginal structural) model to those outcomes. In order to get
+accurate results that don't vary much from run-to-run of this approach, MCsize
+must be set large enough so that results are stable across runs according to a pre-determined
+precision (e.g. 2 significant digits).
 }
 \examples{
 set.seed(50)
@@ -126,7 +124,7 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-\donttest{
+\dontrun{
 # not run (slow when using boot version to proper precision)
 (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
 

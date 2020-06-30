@@ -7,28 +7,28 @@
 msm.predict(object, newdata = NULL)
 }
 \arguments{
-\item{object}{"qgcompfit" object from `qgcomp.boot` function}
+\item{object}{"qgcompfit" object from \code{qgcomp.boot} function}
 
-\item{newdata}{(optional) new set of data (data frame) with a variable 
-called `psi` representing the joint exposure level of all exposures
+\item{newdata}{(optional) new set of data (data frame) with a variable
+called \code{psi} representing the joint exposure level of all exposures
 under consideration}
 }
 \description{
-this is an internal function called by 
- \code{\link[qgcomp]{qgcomp.boot}},
- but is documented here for clarity. Generally, users will not need to call
- this function directly.
+this is an internal function called by
+\code{\link[qgcomp]{qgcomp.boot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
 
 Get predicted values from a qgcompfit object from
 \code{\link[qgcomp]{qgcomp.boot}}.
 }
 \details{
-(Not usually called by user) Makes predictions from the MSM 
-(rather than the conditional g-computation 
-fit) from a "qgcompfit" object. Generally, this should not be used in 
+(Not usually called by user) Makes predictions from the MSM
+(rather than the conditional g-computation
+fit) from a "qgcompfit" object. Generally, this should not be used in
 favor of the default \code{\link[qgcomp]{predict.qgcompfit}} function. This
-function can only be used following the `qgcomp.boot` function. For the 
-`qgcomp.noboot` function, \code{\link[qgcomp]{predict.qgcompfit}} gives 
+function can only be used following the \code{qgcomp.boot} function. For the
+\code{qgcomp.noboot} function, \code{\link[qgcomp]{predict.qgcompfit}} gives
 identical inference to predicting from an MSM.
 }
 \examples{

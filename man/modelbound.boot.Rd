@@ -7,7 +7,7 @@
 modelbound.boot(x, alpha = 0.05, pwonly = FALSE)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.boot`,}
+\item{x}{"qgcompfit" object from \code{qgcomp.boot},}
 
 \item{alpha}{alpha level for confidence intervals}
 
@@ -20,15 +20,15 @@ intervals at each each quantized value of all exposures.
 }
 \description{
 Calculates: expected outcome (on the link scale), and upper and lower
- confidence intervals (both pointwise and simultaneous)
+confidence intervals (both pointwise and simultaneous)
 }
 \details{
 This method leverages the bootstrap distribution of qgcomp model coefficients
 to estimate pointwise regression line confidence bounds. These are defined as the bounds
 that, for each value of the independent variable X (here, X is the joint exposure quantiles)
-the 95% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
-true value of E(Y|X) in 95% of studies. The "simultaneous" bounds are also calculated, and the 95%  
-simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% of studies. The
+the 95\% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
+true value of E(Y|X) in 95\% of studies. The "simultaneous" bounds are also calculated, and the 95\%
+simultaneous bounds contain the true value of E(Y|X) for all values of X in 95\% of studies. The
 latter are more conservative and account for the multiple testing implied by the former. Pointwise
 bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
 bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
@@ -36,15 +36,14 @@ sample bounds that assume normality and thus will be underconservative in small 
 bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
 should be interpreted cautiously in small samples.
 
-
 Reference:
 
-Cheng, Russell CH. "Bootstrapping simultaneous confidence bands." 
+Cheng, Russell CH. "Bootstrapping simultaneous confidence bands."
 Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
 }
 \examples{
 set.seed(12)
-\donttest{
+\dontrun{
 dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
                   y=runif(50)+x1+x1^2)
 ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)

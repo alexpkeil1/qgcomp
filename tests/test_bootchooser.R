@@ -53,7 +53,7 @@ fs = Surv(time,d)~.
 res = try(fit1 <- qgcomp(fs, expnms=Xnm, family=cox(), data = dat), silent=TRUE)
 stopifnot(class(res)=="try-error")
 
-#' \donttest{
+#' \dontrun{
 #' f = y~. + .^2
 #' res = try(fit1 <- qgcomp(f, expnms=Xnm, data = dat), silent=TRUE)
 #' stopifnot(class(res)=="qgcompfit")

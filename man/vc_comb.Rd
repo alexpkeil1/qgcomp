@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{vc_comb}
 \alias{vc_comb}
-\title{Calculate covariance matrix between one random variable and a linear combination of 
+\title{Calculate covariance matrix between one random variable and a linear combination of
 random variables}
 \usage{
 vc_comb(aname = "(Intercept)", expnms, covmat, grad = NULL)
@@ -15,7 +15,7 @@ A in the examples given in the details section)}
 of interest in the covariance matrix for a which a standard error will be
 calculated (e.g. same as expnms in qgcomp fit)}
 
-\item{covmat}{covariance matrix for parameters, e.g. from a model or 
+\item{covmat}{covariance matrix for parameters, e.g. from a model or
 bootstrap procedure}
 
 \item{grad}{not yet used}
@@ -25,12 +25,12 @@ A covariance matrix
 }
 \description{
 This function uses the Delta method to calculate a covariance matrix of linear
-functions of variables and is used internally in qgcomp. Generally, users will not need to 
+functions of variables and is used internally in qgcomp. Generally, users will not need to
 call this function directly.
 }
 \details{
 This function takes inputs of a name of random variable (character), as
-set of exposure names (character vector) and a covariance matrix (with colnames/rownames 
+set of exposure names (character vector) and a covariance matrix (with colnames/rownames
 that contain the indepdendent variable and the full set
 of exposure names). See \code{\link[qgcomp]{se_comb}} for details on variances of sums
 of random variables. Briefly, for variables A, B and C with covariance matrix Cov(A,B,C),

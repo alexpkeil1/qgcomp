@@ -26,8 +26,8 @@ terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}}
 
 \item{qdata}{a data frame with quantized exposures (as well as outcome and other covariates)}
 
-\item{intvals}{sequence, the sequence of integer values that the joint exposure 
-is 'set' to for estimating the msm. For quantile g-computation, this is just 
+\item{intvals}{sequence, the sequence of integer values that the joint exposure
+is 'set' to for estimating the msm. For quantile g-computation, this is just
 0:(q-1), where q is the number of quantiles of exposure.}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
@@ -40,25 +40,25 @@ and expected outcomes under g-computation and the MSM}
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[survival]{coxph}}}
 
 \item{cluster}{not yet implemented}
 
-\item{MCsize}{integer: sample size for simulation to approximate marginal 
+\item{MCsize}{integer: sample size for simulation to approximate marginal
 hazards ratios}
 
 \item{...}{arguments to coxph (e.g. ties)}
 }
 \description{
 this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
- \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
- but is documented here for clarity. Generally, users will not need to call
- this function directly.
+\code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
 }
 \details{
 This function first computes expected outcomes under hypothetical

@@ -35,22 +35,22 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
-\item{weights}{"case weights" - passed to the "weight" argument of 
+\item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[pscl]{zeroinfl}}. NOTE - this does not work with parallel=TRUE!}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{B}{integer: number of bootstrap iterations (this should typically be
->=200, though it is set lower in examples to improve run-time).}
+\item{B}{integer: number of bootstrap iterations (this should typically be >=200,
+though it is set lower in examples to improve run-time).}
 
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
@@ -62,10 +62,10 @@ is quadratic.}
 
 \item{parallel}{use (safe) parallel processing from the future and future.apply packages}
 
-\item{MCsize}{integer: sample size for simulation to approximate marginal 
+\item{MCsize}{integer: sample size for simulation to approximate marginal
 zero inflated model parameters. This can be left small for testing, but should be as large
-as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
-linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation 
+as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
+linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize)}
 
 \item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm.fit.control}}}
@@ -74,58 +74,58 @@ error at a given value of MCsize)}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- marginal structural model (msmfit) used to estimate the final effect
- estimates.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+marginal structural model (msmfit) used to estimate the final effect
+estimates.
 }
 \description{
 This function estimates a linear dose-response parameter representing a one quantile
-increase in a set of exposures of interest for zero-inflated count outcomes. This function is 
+increase in a set of exposures of interest for zero-inflated count outcomes. This function is
 limited to linear and additive
-effects of individual components of the exposure. This model estimates the parameters of a marginal 
-structural zero-inflated count model (MSM) based on g-computation with quantized exposures. 
-Note: this function  
+effects of individual components of the exposure. This model estimates the parameters of a marginal
+structural zero-inflated count model (MSM) based on g-computation with quantized exposures.
+Note: this function
 allows linear and non-additive effects of individual components of the exposure, as well as
 non-linear joint effects of the mixture via polynomial basis functions, which increase the
 computational computational burden due to the need for non-parametric bootstrapping.
 }
 \details{
 Zero-inflated count models allow excess zeros in standard count outcome (e.g.
- Poisson distributed outcomes). Such models have two components: 1) the probability of
- arising from a degenerate distribution at zero (versus arising from a count distribution)
- and 2) the rate parameter of a count distribution. Thus, one has the option of allowing
- exposure and covariate effects on the zero distribution, the count distribution, or both. 
- The zero distribution parameters correspond to log-odds ratios for the probability of arising
- from the zero distribution. Count distribution parameters correspond to log-rate-ratio parameters. 
- Test statistics and confidence intervals are based on 
- a non-parametric bootstrap, using the standard deviation of the bootstrap
- estimates to estimate the standard error. The bootstrap standard error is 
- then used to estimate Wald-type confidence intervals. Note that no bootstrapping
- is done on estimated quantiles of exposure, so these are treated as fixed
- quantities.
- 
- Of note, this function yields marginal estimates of the expected outcome under
- values of the joint exposure quantiles (e.g. the expected outcome if all exposures
- are below the 1st quartile). These outcomes can be used to derive estimates of the 
- effect on the marginal expectation of the outcome, irrespective of zero-inflated/count
- portions of the statistical model. 
- 
- Estimates correspond to the average expected change in the
- (log) outcome per quantile increase in the joint exposure to all exposures 
- in `expnms'. Test statistics and confidence intervals are based on 
- a non-parametric bootstrap, using the standard deviation of the bootstrap
- estimates to estimate the standard error. The bootstrap standard error is 
- then used to estimate Wald-type confidence intervals. Note that no bootstrapping
- is done on estimated quantiles of exposure, so these are treated as fixed
- quantities
+Poisson distributed outcomes). Such models have two components: 1) the probability of
+arising from a degenerate distribution at zero (versus arising from a count distribution)
+and 2) the rate parameter of a count distribution. Thus, one has the option of allowing
+exposure and covariate effects on the zero distribution, the count distribution, or both.
+The zero distribution parameters correspond to log-odds ratios for the probability of arising
+from the zero distribution. Count distribution parameters correspond to log-rate-ratio parameters.
+Test statistics and confidence intervals are based on
+a non-parametric bootstrap, using the standard deviation of the bootstrap
+estimates to estimate the standard error. The bootstrap standard error is
+then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+is done on estimated quantiles of exposure, so these are treated as fixed
+quantities.
+
+Of note, this function yields marginal estimates of the expected outcome under
+values of the joint exposure quantiles (e.g. the expected outcome if all exposures
+are below the 1st quartile). These outcomes can be used to derive estimates of the
+effect on the marginal expectation of the outcome, irrespective of zero-inflated/count
+portions of the statistical model.
+
+Estimates correspond to the average expected change in the
+(log) outcome per quantile increase in the joint exposure to all exposures
+in `expnms'. Test statistics and confidence intervals are based on
+a non-parametric bootstrap, using the standard deviation of the bootstrap
+estimates to estimate the standard error. The bootstrap standard error is
+then used to estimate Wald-type confidence intervals. Note that no bootstrapping
+is done on estimated quantiles of exposure, so these are treated as fixed
+quantities
 }
 \examples{
 set.seed(50)
 n=100
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
 # poisson count model, mixture in both portions
-\donttest{
+\dontrun{
 # warning: the examples below can take a long time to run
 res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
     data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE)
@@ -165,7 +165,7 @@ res2
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.zi.noboot}},\code{\link[qgcomp]{qgcomp.boot}}, 
+\code{\link[qgcomp]{qgcomp.zi.noboot}},\code{\link[qgcomp]{qgcomp.boot}},
 \code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{zeroinfl}}
 }
 \concept{variance mixtures}

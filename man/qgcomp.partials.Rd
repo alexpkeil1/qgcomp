@@ -13,8 +13,8 @@ qgcomp.partials(
 )
 }
 \arguments{
-\item{fun}{character variable in the set "qgcomp.noboot" (binary, count, continuous outcomes), 
-"qgcomp.cox.noboot" (survival outcomes), 
+\item{fun}{character variable in the set "qgcomp.noboot" (binary, count, continuous outcomes),
+"qgcomp.cox.noboot" (survival outcomes),
 "qgcomp.zi.noboot" (zero inflated outcomes). This describes which qgcomp package
 function is used to fit the model. (default = "qgcomp.noboot")}
 
@@ -24,32 +24,32 @@ function is used to fit the model. (default = "qgcomp.noboot")}
 
 \item{expnms}{Exposure mixture of interest}
 
-\item{...}{Arguments to \code{\link[qgcomp]{qgcomp.noboot}}, 
-\code{\link[qgcomp]{qgcomp.cox.noboot}}, or 
+\item{...}{Arguments to \code{\link[qgcomp]{qgcomp.noboot}},
+\code{\link[qgcomp]{qgcomp.cox.noboot}}, or
 \code{\link[qgcomp]{qgcomp.zi.noboot}}}
 }
 \value{
 A 'qgcompmultifit' object, which inherits from \code{\link[base]{list}}, which contains
 \describe{
-\item{posmix}{character vector of variable names with positive coefficients in the qgcomp model 
-  fit to the training data} 
-\item{negmix}{character vector of variable names with negative coefficients in the qgcomp model 
-  fit to the training data} 
+\item{posmix}{character vector of variable names with positive coefficients in the qgcomp model
+fit to the training data}
+\item{negmix}{character vector of variable names with negative coefficients in the qgcomp model
+fit to the training data}
 \item{pos.fit}{a qgcompfit object fit to the validation data, in which the exposures of
- interest are contained in 'posmix'} 
+interest are contained in 'posmix'}
 \item{neg.fit}{a qgcompfit object fit to the validation data, in which the exposures of
- interest are contained in 'negmix'}
- }
+interest are contained in 'negmix'}
+}
 }
 \description{
 Obtain effect estimates for "partial positive" and "partial
 negative" effects using quantile g-computation. This approach uses sample
-splitting to evaluate the overall impact of a set of variables with 
+splitting to evaluate the overall impact of a set of variables with
 effects in a single direction, where, using training data, all variables
 with effects in the same direction are grouped.
 }
 \details{
-In the basic (non bootstrapped) `qgcomp` functions, the positive and 
+In the basic (non bootstrapped) \code{qgcomp} functions, the positive and
 negative "sums
 of coefficients" or "partial effect sizes" are given, which equal the sum
 of the negative and positive coefficients in the underlying model. Unfortunately,
@@ -60,10 +60,10 @@ sample splitting, however, we can obtain better estimates of these partial effec
 Sample splitting proceeds by partitioning the data into two samples (40/60 training/validtion
 split seems acceptable in many circumstances). The "overall mixture effect" is then
 estimated in the training data, and the mixture variables with positive and negative coefficients
-are split into separate groups. These two different groups are then used as 
+are split into separate groups. These two different groups are then used as
 "the mixture of interest" in two additional qgcomp fits, where the mixture of interest
 is adjusted for the other exposure variables. For example, if the "positive partial effect"
-is of interest, then this effect is equal to the sum of the coefficients in the 
+is of interest, then this effect is equal to the sum of the coefficients in the
 qgcomp model fit to the validation data, with the mixture of interest selected by the
 original fit to the training data (note that some of these coefficients may be negative
 in the fit to the validation data - this is expected and necessary for valid hypothesis tests).
@@ -87,7 +87,7 @@ validdata = dat[valididx,]
 splitres <- qgcomp:::qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
     traindata=traindata,validdata=validdata, expnms=c("x1", "x2", "x3", "x4"))
 splitres
-\donttest{
+\dontrun{
 # under the null, both should give null results
 set.seed(123223)
 dat <- qgcomp:::.dgm_quantized(N=1000, coef=c(0,0,0,0), ncor=1)

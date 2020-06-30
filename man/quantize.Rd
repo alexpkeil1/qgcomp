@@ -14,8 +14,8 @@ quantized}
 
 \item{q}{integer, number of quantiles used in creating quantized variables}
 
-\item{breaks}{(optional) list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 }
@@ -30,8 +30,8 @@ causing issues when using these breaks to quantize new data.}
 }
 \description{
 Create variables representing indicator functions with cutpoints defined
-by quantiles. Output a list that includes: 1) a dataset that is a copy of data, 
-except that the variables whose names are included in the `expnms` variable are 
+by quantiles. Output a list that includes: 1) a dataset that is a copy of data,
+except that the variables whose names are included in the \code{expnms} variable are
 transformed to their quantized version and 2) an unnamed list of the quantile cutpoints
 that are used for each of the variables that were quantized
 }

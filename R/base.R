@@ -645,8 +645,8 @@ qgcomp.boot <- function(f,
   #' @param weights "case weights" - passed to the "weight" argument of 
   #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param alpha alpha level for confidence limit calculation
-  #' @param B integer: number of bootstrap iterations (this should typically be
-  #' >=200, though it is set lower in examples to improve run-time).
+  #' @param B integer: number of bootstrap iterations (this should typically be >=200,
+  #'  though it is set lower in examples to improve run-time).
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
   #'   estimate risk ratio rather than odds ratio
   #' @param degree polynomial bases for marginal model (e.g. degree = 2
@@ -682,7 +682,7 @@ qgcomp.boot <- function(f,
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear, 
   #' #  additive model this will equal the conditional)
-  #'  \donttest{
+  #'  \dontrun{
   #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #'   
@@ -829,8 +829,9 @@ qgcomp.boot <- function(f,
         
         br <- lapply(1:p, function(x) c(-1e16, intvals[2:nvals]-1e-16, 1e16))
       }else{
-        message("\nNote: using quantiles of all exposures combined in order to set 
-            proposed intervention values for overall effect (25th, 50th, 75th %ile)\n")
+    message("\nNote: using quantiles of all exposures combined in order to set 
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)
+        You can ensure this is valid by scaling all variables in expnms to have similar ranges.")
         intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
         br <- NULL
       }
@@ -854,14 +855,13 @@ qgcomp.boot <- function(f,
     starttime = Sys.time()
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree, 
                          nids=nids, id=id,
-                         weights,
+                         weights,MCsize=MCsize,
                          ...){
       if(i==2 & !parallel){
         timeiter = as.numeric(Sys.time() - starttime)
         if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
       }
       bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, 
-                                             #probs=weights, #bootstrap sampling with weights works with fixed weights, but not time-varying weights
                                              replace = TRUE
                                              )))
       names(bootids) <- id
@@ -879,14 +879,14 @@ qgcomp.boot <- function(f,
       future::plan(strategy = future::multiprocess)
       bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          weights=qdata$weights,
+                          weights=qdata$weights,MCsize=MCsize,
                           ...)
       
       future::plan(future::sequential)
     }else{
       bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          weights=weights, 
+                          weights=weights, MCsize=MCsize,
                           ...)
       
     }
@@ -988,7 +988,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will choose the risk ratio (and bootstrap methods) by default
   #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
-  #' \donttest{
+  #' \dontrun{
   #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' set.seed(1231)
   #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
@@ -1098,7 +1098,7 @@ pointwisebound.boot <- function(x, alpha=0.05, pointwiseref=1){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' \donttest{
+  #' \dontrun{
   #' n=100
   #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
   #'                   y=runif(100)+x1+x1^2)
@@ -1161,7 +1161,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
   #' 
   #' This is used to create pointwise confidence intervals
   #' 
-  #' @param x "qgcompfit" object from `qgcomp.boot`, 
+  #' @param x "qgcompfit" object from `qgcomp.noboot`, 
   #' @param alpha alpha level for confidence intervals
   #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
   #' the referent category for calculating all mean differences/standard deviations)
@@ -1172,7 +1172,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' \donttest{
+  #' \dontrun{
   #' n = 100
   #' dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
   #'                   y=rnorm(n)+x1 + x2 - x3 +z)
@@ -1186,12 +1186,24 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref = 1){
   #' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
   #' pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
   #' pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
+  #' dat$z = as.factor(sample(1:3, n, replace=TRUE))
+  #' ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+  #' pointwisebound.noboot(ftf, alpha=0.05, pointwiseref=3)
   #' }  
+  if(is.null(x$fit$family$family) || x$fit$family$family %in%  c("cox")){
+    stop("pointwisebound.noboot not implemented for this method")
+  }
   q = x$q
   link = x$fit$family$link
   coefs = x$fit$coefficients
+  #####
+  modmat = model.matrix(x$fit)
+  #####
   zvars = coefs[-which(names(coefs) %in% c("(Intercept)", x$expnms))]
-  av = apply(x$fit$data[names(zvars)],2, median)
+  #####
+  #av = apply(x$fit$data[names(zvars)],2, median)
+  av = apply(modmat[,names(zvars), drop=FALSE],2, median)
+  #####
   # predict at median of non exposure variables
   py = cbind(rep(1, q), 0:(q-1), matrix(rep(av, q), byrow=TRUE, nrow = q)) %*% c(coef(x), zvars)
   px = length(x$expnms)
@@ -1259,7 +1271,7 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   #' @export
   #' @examples
   #' set.seed(12)
-  #' \donttest{
+  #' \dontrun{
   #' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
   #'                   y=runif(50)+x1+x1^2)
   #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
@@ -1528,11 +1540,11 @@ plot.qgcompfit <- function(x,
   #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
   #'   inflated model) and used programmatically)
   #'   (default = FALSE)
-  #' @param pointwisebars (boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
+  #' @param pointwisebars (boot.gcomp only) If TRUE, adds 95%  error bars for pointwise comparisons
   #' of E(Y|joint exposure) to the smooth regression line plot
   #' @param modelfitline (boot.gcomp only) If TRUE, adds fitted (MSM) regression line
   #' of E(Y|joint exposure) to the smooth regression line plot
-  #' @param modelband If TRUE, adds 95\% prediction bands for E(Y|joint exposure) (the MSM fit)
+  #' @param modelband If TRUE, adds 95% prediction bands for E(Y|joint exposure) (the MSM fit)
   #' @param flexfit (boot.gcomp only) if TRUE, adds flexible interpolation of predictions from 
   #' underlying (conditional) model
   #' @param pointwiseref (boot.gcomp only) integer: which category of exposure (from 1 to q) 
@@ -1551,7 +1563,7 @@ plot.qgcompfit <- function(x,
   #' plot(ft)
   #' # examining fit
   #' plot(ft$fit, which=1) # residual vs. fitted is not straight line!
-  #' \donttest{
+  #' \dontrun{
   #' 
   #' # using non-linear outcome model
   #' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 

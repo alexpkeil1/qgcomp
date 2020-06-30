@@ -236,7 +236,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' f = survival::Surv(time, d)~x1 + x2
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-  #' \donttest{
+  #' \dontrun{
   #' 
   #' # weighted analysis
   #' dat$w = runif(N)
@@ -391,8 +391,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' \code{\link[survival]{coxph}}
   #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
-  #' @param B integer: number of bootstrap iterations (this should typically be
-  #' >=200, though it is set lower in examples to improve run-time).
+  #' @param B integer: number of bootstrap iterations (this should typically be >=200,
+  #'  though it is set lower in examples to improve run-time).
   #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic.
@@ -425,7 +425,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' f = survival::Surv(time, d)~x1 + x2
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-  #' \donttest{
+  #' \dontrun{
   #' # not run (slow when using boot version to proper precision)
   #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
   #' 
@@ -499,7 +499,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     # pooled together
     # TODO: allow user specification of this
     message("\nNote: using quantiles of all exposures combined in order to set 
-        proposed intervention values for overall effect (25th, 50th, 75th %ile)")
+          proposed intervention values for overall effect (25th, 50th, 75th %ile)
+        You can ensure this is valid by scaling all variables in expnms to have similar ranges.")
     intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
     br <- NULL
   }
@@ -522,7 +523,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   starttime = Sys.time()
   psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree,
                        weights=weights, #cluster = cluster,
-                       nids=nids, id=id, ...){
+                       nids=nids, id=id, MCsize=MCsize, ...){
     if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
       if((timeiter*B/60)>0.5) message(paste0("Expected time to finish: ", round(B*timeiter/60, 2), " minutes \n"))
@@ -542,13 +543,13 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,
                                     f=newform, qdata=qdata, intvals=intvals, 
                                     expnms=expnms, degree=degree, nids=nids, id=id,
-                                    weights=qdata$weights, ...)
+                                    weights=qdata$weights, MCsize=MCsize, ...)
     future::plan(future::sequential)
   }else {
     bootsamps <- sapply(X=1:B, FUN=psi.only,
                         f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 
-                        weights=weights, ...)
+                        weights=weights, MCsize=MCsize, ...)
   }
   if(is.null(dim(bootsamps))) {
     seb <- sd(bootsamps)

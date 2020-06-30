@@ -7,11 +7,11 @@
 pointwisebound.boot(x, alpha = 0.05, pointwiseref = 1)
 }
 \arguments{
-\item{x}{"qgcompfit" object from `qgcomp.boot`,}
+\item{x}{"qgcompfit" object from \code{qgcomp.boot},}
 
 \item{alpha}{alpha level for confidence intervals}
 
-\item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+\item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as
 the referent category for calculating all mean differences/standard deviations)}
 }
 \value{
@@ -27,15 +27,15 @@ and the standard error of the mean difference (link scale) for pointwise compari
 The comparison of interest following a qgcomp fit is often comparisons of model
 predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
 at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure,
-and marginalized over non-exposure covariates (W), is  
+and marginalized over non-exposure covariates (W), is
 given as E(Y^s|S) = sum_w E_w(Y|S,W)Pr(W) = sum_i E(Y_i|S) where Pr(W) is the emprical distribution of
-W and S takes on integer values 0 to q-1. 
+W and S takes on integer values 0 to q-1.
 Thus, comparisons are of the type
 E_w(Y|S=s) - E_w(Y|S=s2) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
 This function yields E_w(Y|S) as well as E_w(Y|S=s) - E_w(Y|S=p) where s is any value of S and p is
 the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/
 prevalence difference at all values of S, with the referent category S=p-1. The standard error
-of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E_w(Y|S), such that 
+of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E_w(Y|S), such that
 the standard error for E_w(Y|S=s) - E_w(Y|S=p) is given by
 
 Var(E_w(Y|S=s)) + - Var(E_w(Y|S=p)) - 2*Cov(E_w(Y|S=p), - E_w(Y|S=s))
@@ -47,7 +47,7 @@ are made at the median value of all covariates).
 }
 \examples{
 set.seed(12)
-\donttest{
+\dontrun{
 n=100
 dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
                   y=runif(100)+x1+x1^2)

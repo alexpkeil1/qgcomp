@@ -17,7 +17,7 @@ mice.impute.leftcenslognorm(
 \arguments{
 \item{y}{Vector to be imputed}
 
-\item{ry}{Logical vector of length length(y) indicating the the subset y[ry] of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.}
+\item{ry}{Logical vector of length length(y) indicating the the subset of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.}
 
 \item{x}{Numeric design matrix with length(y) rows with predictors for y. Matrix x may have no missing values.}
 
@@ -40,11 +40,11 @@ censored log-normal distribution.
 While this function has utility far beyond qgcomp,
 it is included in the qgcomp package because it will be useful for a variety of
 settings in which qgcomp is useful. Note that LOD problems where the LOD is small,
-and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.noboot}} or 
+and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.noboot}} or
 \code{\link[qgcomp]{qgcomp.boot}} is not large, the LOD may be below the lowest
 quantile cutpoint which will yield identical datasets from the MICE procedure in terms
 of quantized exposure data. If only exposures are missing, and they have low LODs, then
-there will be no benefit in qgcomp from using MICE rather than imputing some small value 
+there will be no benefit in qgcomp from using MICE rather than imputing some small value
 below the LOD.
 }
 \examples{
@@ -59,7 +59,7 @@ mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
 cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
        data=mdat[complete.cases(mdat),], q=2, family=gaussian())
 
-\donttest{
+\dontrun{
 # note the following example imputes from the wrong parametric model and is expected to be biased
 # as a result (but it demonstrates how to use qgcomp and mice together)
 library("mice")

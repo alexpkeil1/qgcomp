@@ -12,24 +12,24 @@
 \item{conf.level}{Real number between 0 and 1 corresponding to nominal percentage/100 of confidence limit
 (e.g. conf.level=0.95 means 95 per cent confidence intervals). Defaults to 1-alpha level of qgcompfit.}
 
-\item{exponentiate}{Logical indicating whether or not to exponentiate the the coefficient 
-estimates. This is typical for logistic and multinomial regressions, but a bad idea if there 
+\item{exponentiate}{Logical indicating whether or not to exponentiate the the coefficient
+estimates. This is typical for logistic and multinomial regressions, but a bad idea if there
 is no log or logit link. Defaults to FALSE.}
 
-\item{quick}{Logical indiciating if the only the term and estimate columns should be returned. 
+\item{quick}{Logical indiciating if the only the term and estimate columns should be returned.
 Often useful to avoid time consuming covariance and standard error calculations. Defaults to FALSE.}
 
-\item{...}{Additional arguments. Not used. Needed to match generic signature only. 
-Cautionary note: Misspelled arguments will be absorbed in ..., where they will be ignored. 
-If the misspelled argument has a default value, the default value will be used. For example, 
-if you pass conf.lvel = 0.9, all computation will proceed using conf.level = 0.95. 
-Additionally, if you pass newdata = my_tibble to an augment() method that does not 
+\item{...}{Additional arguments. Not used. Needed to match generic signature only.
+Cautionary note: Misspelled arguments will be absorbed in ..., where they will be ignored.
+If the misspelled argument has a default value, the default value will be used. For example,
+if you pass conf.lvel = 0.9, all computation will proceed using conf.level = 0.95.
+Additionally, if you pass newdata = my_tibble to an augment() method that does not
 accept a newdata argument, it will use the default value for the data argument.}
 }
 \description{
-Tidy summarizes information about the components of a model. A model component 
-might be a single term in a regression, a single hypothesis, a cluster, or a class. 
-Exactly what tidy considers to be a model component varies cross models but is usually 
-self-evident. If a model has several distinct types of components, you will need to 
+Tidy summarizes information about the components of a model. A model component
+might be a single term in a regression, a single hypothesis, a cluster, or a class.
+Exactly what tidy considers to be a model component varies cross models but is usually
+self-evident. If a model has several distinct types of components, you will need to
 specify which components to return. (Description taken from \code{tidyr::tidy} help file.)
 }
