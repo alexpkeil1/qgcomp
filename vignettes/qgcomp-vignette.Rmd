@@ -599,10 +599,64 @@ covars = c('nitrate','nitrite','sulfate','ph', 'total_alkalinity','total_hardnes
 ```
 As shown from these results, the essential metals and minerals demonstrate an overall positive joint association with the outcome (controlling for non-essentials), wheras the partial effect of non-essential metals and minerals is close to null. This is close to the interpretation of the data adaptive selection of partial effects demonstrated above, but is much more interpretable in terms of how we might intervene (e.g. increase consumption of foods that are higher in essential metals and minerals).
 
+## Missing data, limits of detection and multiple imputation
+When carrying out data analysis using quantile g-computation, on can address missing data in much the same way as in standard regression analyses. A common approach is complete case analysis. While regression functions in R will automatically carry out complete case analyses when variables take on the value `NA` (denoting missingness in R), when using quantile g-computation it is encouraged that one explicitly create the complete case dataset explicitly and use that complete case dataset. Using the pre-installed R packages, this can be accomplished with the `complete.cases` function. 
+
+The reason for this recommendation is that, while the regression analysis will be performed on complete cases (i.e. observations with non-missing values for all variables in the model), the calculation of quantiles for each exposures is done on an exposure-by-exposure basis, which can lead to numerical differences when explicitly using a dataset restricted to complete cases versus relying on automatically removing observations with `NA` values during analysis. 
+
+Here is an artificial example that demonstrates the differences. Three analyses are run: one with the full data, one with complete case data (complete case analysis #1), and one with data in which `arsenic` has been randomly set to `NA` (complete case analysis #2).
+
+There are numeric differnces between the two complete case analyses, which can be traced to differences in the "quantized" exposures (other than arsenic) in the two approaches, which can be found by the `qx` data frame that is part of a `qgcompfit` object.
+
+```{r md1}
+Xnm <- c(
+    'arsenic','barium','cadmium','calcium','chromium','copper',
+    'iron','lead','magnesium','manganese','mercury','selenium','silver',
+    'sodium','zinc'
+)
+covars = c('nitrate','nitrite','sulfate','ph', 'total_alkalinity','total_hardness')
+asmiss = metals
+set.seed(1232)
+asmiss$arsenic = ifelse(runif(nrow(metals))>0.7, NA, asmiss$arsenic)
+cc = asmiss[complete.cases(asmiss[,c(Xnm, covars, "y")]),] # complete.cases gives a logical index to subset rows
+dim(metals) # [1] 452  26
+dim(cc) # [1] 320  26
+
+# complete case analysis
+qc.base <- qgcomp.noboot(y~.,expnms=Xnm, dat=metals[,c(Xnm, covars, 'y')], family=gaussian())
+
+qc.cc  <- qgcomp.noboot(y~.,expnms=Xnm, dat=cc[,c(Xnm, covars, 'y')], family=gaussian())
+
+qc.cc2 <- qgcomp.noboot(y~.,expnms=Xnm, dat=asmiss[,c(Xnm, covars, 'y')], family=gaussian())
+
+
+cat("Full data\n")
+qc.base
+
+cat("Complete case analyses\n")
+cat("  #1 explicitly remove observations with missing values\n")
+qc.cc
+cat("  #1 rely on R handling of NA values\n")
+qc.cc2
+
+# calculation of arsenic quantiles is identical
+all.equal(qc.cc$qx$arsenic_q, qc.cc2$qx$arsenic_q[complete.cases(qc.cc2$qx$arsenic_q)])
+# all are equal
+
+all.equal(qc.cc$qx$cadmium_q, qc.cc2$qx$cadmium_q[complete.cases(qc.cc2$qx$arsenic_q)])
+# not equal
+
+```
+
+### Limits of detection
+A common form of missing data that occurs in mixtures are exposure values that are missing due to being below the limit of detection. A common approach to such missing data is imputation, either through filling in small numeric values in place of the missing values, or in a more formal multiple imputation from a parametric model. Notably, with quantile g-computation, if the proportion of values below the limit of detection is below 1/q (the number of quantiles), all appropriate missing data approaches will yield the same answer because such values would be known to be in the lowest category. Thus, if one has 3 exposures each with 10% of the values below the limit of detection, one can impute small values below those limits (a common approach is the limit of detection divided by the square root of 2) and proceed with quantile g-computation on the imputed data. This analysis leverages the fact that, even if a value below the limit of detection cannot be known with certainty, the category score used in quantile g-computatoin is known with certainty. In cases with more than 1/q% measurements below the LOD, the packages `qgcomp` comes with a convenience function `mice.impute.leftcenslognorm` that can be used to impute values below the limit of detection from a left censored log-normal regression model.
+
+### Multiple imputation
+Multiple imputation uses multiple datasets with different imputed values for each missing value across datasets. Separate analyeses are performed on each of these datasets, and the results are combined using standard rules. The function `mice.impute.leftcenslognorm` can be interfaced with the `mice` package for efficient programming of multiple imputation based analysis with quantile g-computation. Examples cannot be included here without explicitly installing the `mice` package, but an example can be seen in the help file for `mice.impute.leftcenslognorm`.
 
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
-Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://doi.org/10.1289/EHP5838> 
+Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https:// doi.org/10.1289/EHP5838> 
 
 ## Acknowledgments
 
