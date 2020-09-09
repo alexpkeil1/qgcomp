@@ -252,8 +252,10 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
   #' set.seed(1231)
   #' spl = split_data(metals, prop.train=.5)
   #' lin = qgcomp.boot(f=y~., q=4, expnms=Xnm, B=5, data=spl$traindata)
-  #' nlin1 = qgcomp.boot(f=y~. + I(manganese^2) + I(calcium^2), expnms=Xnm, deg=2, q=4, B=5, data=spl$traindata)
-  #' nlin2 = qgcomp.boot(f=y~. + I(arsenic^2) + I(cadmium^2), expnms=Xnm, deg=2, q=4, B=5, data=spl$traindata)
+  #' nlin1 = qgcomp.boot(f=y~. + I(manganese^2) + I(calcium^2), expnms=Xnm, deg=2, 
+  #'   q=4, B=5, data=spl$traindata)
+  #' nlin2 = qgcomp.boot(f=y~. + I(arsenic^2) + I(cadmium^2), expnms=Xnm, deg=2, 
+  #'   q=4, B=5, data=spl$traindata)
   #' AIC(lin);AIC(nlin1);AIC(nlin2)
   #' # linear has lowest training AIC, so base final fit off that (and bootstrap not needed)
   #' qgcomp.noboot(f=y~., q=4, expnms=Xnm, data=spl$validdata)
