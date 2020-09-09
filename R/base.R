@@ -1427,7 +1427,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "poisson"){
-    message("Poisson family still experimental: use with caution")
+    #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
@@ -1477,7 +1477,7 @@ summary.qgcompfit <- function(object, ...){
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
   }
   if (fam == "poisson"){
-    message("Poisson family still experimental: use with caution")
+    #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
@@ -1552,6 +1552,7 @@ plot.qgcompfit <- function(x,
   #' @param ... unused
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @import ggplot2 grid gridExtra
+  #' @importFrom grDevices gray
   #' @export
   #' @examples
   #' set.seed(12)

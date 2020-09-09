@@ -553,7 +553,7 @@ qgcomp.zi.boot <- function(f,
   #' res2
   #' }
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
-  message("qgcomp.zi.boot function is still experimental. Please use with caution and be sure results are reasonable.\n")      
+  #message("qgcomp.zi.boot function is still experimental. Please use with caution and be sure results are reasonable.\n")      
   # list containers
   estb <- vcov_mod <- seb <- tstat <- pvalz <- allterms <- containmix  <- ci <- tstat<- list() 
   pos.weights <- neg.weights <- pos.psi <- neg.psi <- pos.size <- neg.size <- NULL

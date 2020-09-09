@@ -1,6 +1,6 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.4.2
+Version: 2.5.0
 Date: 2020-09-09
 Authors@R: 
     person(given = "Alexander",
@@ -31,7 +31,6 @@ Imports:
     grDevices,
     grid,
     gridExtra,
-    markdown,
     pscl,
     stats,
     survival,
@@ -39,6 +38,7 @@ Imports:
 Suggests: 
     broom,
     devtools,
+    knitr,
     markdown,
     MASS,
     mice

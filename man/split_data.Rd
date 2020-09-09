@@ -32,7 +32,8 @@ row numbers (from the original data \code{dat}) that have the training and valid
 samples.
 }
 \description{
-Split the input data into two independent sets, possibly accounting for
+This is a convenience function to split the input data into
+two independent sets, possibly accounting for
 single level clustering. These two sets can be used with
 \code{\link[qgcomp]{qgcomp.partials}} to get "partial" positive/negative effect estimates
 from the original data, where sample splitting is necessary to get valid confidence intervals
