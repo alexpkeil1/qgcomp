@@ -195,7 +195,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
     if(length(expnms)==1){
       data[, expnms] <- qt(1)
     }else{
-      data[, expnms] <- sapply(1:length(expnms), qt)
+      data[, expnms] <- sapply(seq_len(length(expnms)), qt)
     }
     return(list(data=data, breaks=e$retbr))
 }
@@ -1963,9 +1963,11 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
   #' in a new set of data based on the qgcompfit object. Note that when making predictions
-  #' from an object from qgcomp.boot, the predictions are made from the g-computation
+  #' from an object from qgcomp.boot, the predictions are made from the (conditional) g-computation
   #' model rather than the marginal structural model. Predictions from the marginal
-  #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}
+  #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}. Note
+  #' that this function accepts non-quantized exposures in "newdata" and automatically
+  #' quantizes them according to the quantile cutpoints in the original fit.
   #' 
   #' @param object "qgcompfit" object from `qgcomp.noboot`, `qgcomp.boot`, `qgcomp.zi.noboot`, 
   #' or `qgcomp.zi.boot`functions
@@ -1979,7 +1981,6 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #' returns a matrix giving the fitted values of each term in the model formula 
   #' on the linear predictor scale.
   #' @param ... arguments to predict.glm
-  #' @import grDevices
   #' @export
   #' @examples
   #' set.seed(50)
@@ -1994,6 +1995,7 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
    pred <- predict(object$fit, type=type, ...) 
   }
  if(!is.null(newdata)){
+   if(is.null(expnms[1])) expnms = object$expnms # testing
    newqdata <- quantize(newdata, expnms, q=NULL, object$breaks)$data
    pred <- predict(object$fit, newdata=newqdata, type=type, ...) 
  }
