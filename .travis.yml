@@ -1,3 +1,5 @@
 language: R
-rvm:
- - 4.5
+r:
+  - oldrel
+  - release
+  - devel
