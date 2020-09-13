@@ -1,7 +1,11 @@
+`qgcomp` v2.5.1
+
 #### QGcomp (quantile g-computation): estimating the effects of exposure mixtures. Works for continuous, binary, and right-censored survival outcomes.
+
 
 #### Flexible, unconstrained, fast and guided by modern causal inference principles
 
+[![Build Status](https://travis-ci.org/alexpkeil1/qgcomp.svg?branch=master)](https://travis-ci.org/alexpkeil1/qgcomp) [![codecov](https://codecov.io/gh/alexpkeil1/qgcomp/branch/master/graph/badge.svg)](https://codecov.io/gh/alexpkeil1/qgcomp)
 
 
 ### Quick start
