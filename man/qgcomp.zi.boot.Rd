@@ -54,7 +54,7 @@ though it is set lower in examples to improve run-time).}
 
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
-is quadratic.}
+is quadratic.)}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 

@@ -4,9 +4,8 @@ zimsm.fit.control <- function(
 ){
   #' @title Control of fitting parameters for zero inflated MSMs
   #' @description this is an internal function called by 
-  #'  \code{\link[qgcomp]{qgcomp.zi.boot}},
-  #'  but is documented here for clarity. Generally, users will not need to call
-  #'  this function directly.
+  #'  \code{\link[qgcomp]{qgcomp.zi.boot}}, but is documented here for clarity. 
+  #'  Generally, users will not need to call this function directly.
   #' @details Provides fine control over zero inflated MSM fitting
   #' @param predmethod character in c("components", "catprobs"). "components" simulates from the 
   #' model parameters directly while "catprobs" simulates outcomes from the category specific 
@@ -487,7 +486,7 @@ qgcomp.zi.boot <- function(f,
   #'  though it is set lower in examples to improve run-time).
   #' @param degree polynomial basis function for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
-  #'  is quadratic.
+  #'  is quadratic.)
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param bayes not currently implemented.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages

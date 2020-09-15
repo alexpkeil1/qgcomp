@@ -14,9 +14,8 @@ more flexible and stable, but the latter is preferred in zero inflated negative 
 }
 \description{
 this is an internal function called by
-\code{\link[qgcomp]{qgcomp.zi.boot}},
-but is documented here for clarity. Generally, users will not need to call
-this function directly.
+\code{\link[qgcomp]{qgcomp.zi.boot}}, but is documented here for clarity.
+Generally, users will not need to call this function directly.
 }
 \details{
 Provides fine control over zero inflated MSM fitting
