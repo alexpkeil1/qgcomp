@@ -35,3 +35,4 @@ NEWS.md
 .DS_Store
 *.DS_Store
 .Rbuildignore
+CRAN-RELEASE

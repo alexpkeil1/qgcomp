@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp}
 \alias{qgcomp}
-\title{estimation of quantile g-computation fit}
+\title{Quantile g-computation for continuous, binary, count, and censored survival outcomes}
 \usage{
 qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 }
@@ -11,41 +11,41 @@ qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 
 \item{data}{data frame}
 
-\item{family}{`gaussian()`, `binomial()`, `cox()`}
+\item{family}{\code{gaussian()}, \code{binomial()}, \code{cox()}, \code{poisson()} (works as
+argument to 'family' parameter in \code{\link[stats]{glm}}` or 'dist' parameter in
+\code{\link[pscl]{zeroinfl}})}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will 
-estimate risk ratio rather than odds ratio. Note, to get population average 
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+estimate risk ratio rather than odds ratio. Note, to get population average
 effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
 of interest as population average effects, so if rr=FALSE then a conditional
 OR will be estimated, which cannot be interpreted as a population average
 effect}
 
-\item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q)}
+\item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q) or glm}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and possibly information on the 
- marginal structural model (msmfit) used to estimate the final effect
- estimates (qgcomp.boot, qgcomp.cox.boot only). 
- If appropriate, weights are also reported, which represent the proportion
- of a directional (positive/negative) effect that is accounted for by
- each exposure.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and possibly information on the
+marginal structural model (msmfit) used to estimate the final effect
+estimates (qgcomp.boot, qgcomp.cox.boot only).
+If appropriate, weights are also reported, which represent the proportion
+of a directional (positive/negative) effect that is accounted for by
+each exposure.
 }
 \description{
 This function automatically selects between qgcomp.noboot, qgcomp.boot,
- qgcomp.cox.noboot, and qgcomp.cox.boot
- for the most efficient approach to estimate the average expected 
- change in the (log) outcome per quantile increase in the joint 
- exposure to all exposures in `expnms', given the underlying model. For example,
- if the underlying model (specified by the formula `f`) is a linear model with all
- linear terms for exposure, then `qgcomp.noboot`` will be called to fit the model. Non-linear
- terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
- function being called. For a given linear model, boot and noboot versions will give identical
- inference, though when using survival outcomes, the `boot` version uses simulation based 
- inference, which can vary from the `nonboot` version due to simulation error (which can 
- be minimized via setting the MCsize parameter very large - see 
- \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
+qgcomp.cox.noboot, and qgcomp.cox.boot
+for the most efficient approach to estimate the average expected
+change in the (log) outcome per quantile increase in the joint
+exposure to all exposures in \verb{expnms', given the underlying model. For example, if the underlying model (specified by the formula }f\verb{) is a linear model with all linear terms for exposure, then }qgcomp.noboot`` will be called to fit the model. Non-linear
+terms or requesting the risk ratio for binomial outcomes will result in the \code{qgcomp.boot}
+function being called. For a given linear model, boot and noboot versions will give identical
+inference, though when using survival outcomes, the `boot` version uses simulation based
+inference, which can vary from the `noboot` version due to simulation error (which can
+be minimized via setting the MCsize parameter very large - see
+\code{\link[qgcomp]{qgcomp.cox.boot}} for details).
 }
 \examples{
 set.seed(50)
@@ -54,19 +54,21 @@ qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
 # automatically selects appropriate method
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-# note for binary outcome this will 
+# note for binary outcome this will choose the risk ratio (and bootstrap methods) by default
 dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
-\donttest{
+\dontrun{
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125, 
-  family=binomial())
-  
-# automatically selects appropriate method
+set.seed(1231)
+qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+set.seed(1231)
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  
+# automatically selects appropriate method when specifying rr or degree explicitly
+qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=FALSE)
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
 qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4, 
 family=binomial())
-}
+
 #survival objects
 set.seed(50)
 N=200
@@ -75,15 +77,19 @@ dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 qgcomp(f, expnms = expnms, data = dat)
+# note if B or MCsize are set but the model is linear, an error will result
+try(qgcomp(f, expnms = expnms, data = dat, B1=, MCsize))
 # note that in the survival models, MCsize should be set to a large number
 #  such that results are repeatable (within an error tolerance such as 2 significant digits)
 # if you run them under different  seed values
 f = survival::Surv(time, d)~x1 + x2 + x1:x2
 qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
+}
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
- \code{\link[qgcomp]{qgcomp.cox.noboot}} and \code{\link[qgcomp]{qgcomp.cox.boot}}
- (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
+\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}},
+\code{\link[qgcomp]{qgcomp.cox.noboot}}, \code{\link[qgcomp]{qgcomp.cox.boot}}
+\code{\link[qgcomp]{qgcomp.zi.noboot}} and \code{\link[qgcomp]{qgcomp.zi.boot}}
+(\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
 }
 \concept{variance mixtures}

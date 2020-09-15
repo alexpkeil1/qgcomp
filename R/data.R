@@ -1,4 +1,6 @@
-#' Simulated well water measurements in North Carolina: 16 metals, 6 water chemistry 
+#' @title Well water data
+#' 
+#' @description Simulated well water measurements in North Carolina: 16 metals, 6 water chemistry 
 #' measures, and 2 health outcomes (y = continuous; disease_state = binary/time-to-event
 #' in combination with disease_time)
 #'

@@ -2,34 +2,37 @@
 % Please edit documentation in R/base.R
 \name{predict.qgcompfit}
 \alias{predict.qgcompfit}
-\title{predict.qgcompfit: default prediction method for a qgcompfit object (non-survival 
+\title{Default prediction method for a qgcompfit object (non-survival
 outcomes only)}
 \usage{
 \method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)
 }
 \arguments{
-\item{object}{"qgcompfit" object from `qgcomp.noboot` or  `qgcomp.boot` functions}
+\item{object}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot}, \code{qgcomp.zi.noboot},
+or \code{qgcomp.zi.boot}functions}
 
 \item{expnms}{character vector of exposures of interest}
 
 \item{newdata}{(optional) new set of data with all predictors from "qgcompfit" object}
 
-\item{type}{(from predict.glm) the type of prediction required. The default 
-is on the scale of the linear predictors; the alternative "response" is on 
-the scale of the response  variable. Thus for a default binomial model the 
-default predictions are of log-odds (probabilities on logit scale) and 
-type = "response" gives the predicted probabilities. The "terms" option 
-returns a matrix giving the fitted values of each term in the model formula 
+\item{type}{(from predict.glm) the type of prediction required. The default
+is on the scale of the linear predictors; the alternative "response" is on
+the scale of the response  variable. Thus for a default binomial model the
+default predictions are of log-odds (probabilities on logit scale) and
+type = "response" gives the predicted probabilities. The "terms" option
+returns a matrix giving the fitted values of each term in the model formula
 on the linear predictor scale.}
 
 \item{...}{arguments to predict.glm}
 }
 \description{
 get predicted values from a qgcompfit object, or make predictions
-in a new set of data based on the qgcomfit object. Note that when making predictions
-from an object from qgcomp.boot, the predictions are made from the g-computation
+in a new set of data based on the qgcompfit object. Note that when making predictions
+from an object from qgcomp.boot, the predictions are made from the (conditional) g-computation
 model rather than the marginal structural model. Predictions from the marginal
-structural model can be obtained via \code{\link[qgcomp]{msm.predict}}
+structural model can be obtained via \code{\link[qgcomp]{msm.predict}}. Note
+that this function accepts non-quantized exposures in "newdata" and automatically
+quantizes them according to the quantile cutpoints in the original fit.
 }
 \examples{
 set.seed(50)

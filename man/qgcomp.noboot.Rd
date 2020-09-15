@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.noboot}
 \alias{qgcomp.noboot}
-\title{estimating the parameters of a marginal structural model (MSM) based on 
-g-computation with quantized exposures}
+\title{Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
 \usage{
 qgcomp.noboot(
   f,
@@ -12,6 +11,7 @@ qgcomp.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
+  weights,
   alpha = 0.05,
   bayes = FALSE,
   ...
@@ -29,50 +29,77 @@ representing the exposure variables. If NULL, then gcomp proceeds with un-transf
 version of exposures in the input datasets (useful if data are already transformed,
 or for performing standard g-computation)}
 
-\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) NULL, or a list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
-id/cluster)}
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
+id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
+standard errors (this parameter is essentially ignored in qgcomp.noboot).
+Qgcomp.boot can be used for this, which will use bootstrap
+sampling of clusters/individuals to estimate cluster-appropriate standard
+errors via bootstrapping.}
+
+\item{weights}{"case weights" - passed to the "weight" argument of
+\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
-in penalized parameter estimation that can help with very highly correlated 
-exposures. Note: this does not lead to fully Bayesian inference in general, 
-so results should be interpereted as frequentist.}
+\item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results
+in penalized parameter estimation that can help with very highly correlated
+exposures. Note: this does not lead to fully Bayesian inference in general,
+so results should be interpreted as frequentist.}
 
 \item{...}{arguments to glm (e.g. family)}
 }
 \value{
 a qgcompfit object, which contains information about the effect
- measure of interest (psi) and associated variance (var.psi), as well
- as information on the model fit (fit) and information on the 
- weights/standardized coefficients in the positive (pos.weights) and 
- negative (nweight) directions.
+measure of interest (psi) and associated variance (var.psi), as well
+as information on the model fit (fit) and information on the
+weights/standardized coefficients in the positive (pos.weights) and
+negative (neg.weights) directions.
 }
 \description{
-This function mimics the output of a weighted quantile sums regression in 
-large samples.
+This function estimates a linear dose-response parameter representing a one quantile
+increase in a set of exposures of interest. This function is limited to linear and additive
+effects of individual components of the exposure. This model estimates the parameters of a marginal
+structural model (MSM) based on g-computation with quantized exposures. Note: this function is
+valid only under linear and additive effects of individual components of the exposure, but when
+these hold the model can be fit with very little computational burden.
 }
 \details{
-For continuous outcomes, under a linear model with no 
+For continuous outcomes, under a linear model with no
 interaction terms, this is equivalent to g-computation of the effect of
-increasing every exposure by 1 quantile. For binary outcomes
-outcomes, this yields a conditional log odds ratio representing the 
-change in the expected conditional odds (conditional on covariates)
-from increasing every exposure by 1 quantile. In general, the latter 
+increasing every exposure by 1 quantile. For binary/count outcomes
+outcomes, this yields a conditional log odds/rate ratio(s) representing the
+change in the expected conditional odds/rate (conditional on covariates)
+from increasing every exposure by 1 quantile. In general, the latter
 quantity is not equivalent to g-computation estimates. Hypothesis test
-statistics and 95% confidence intervals are based on using the delta
+statistics and confidence intervals are based on using the delta
 estimate variance of a linear combination of random variables.
 }
 \examples{
 set.seed(50)
+# linear model
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+# logistic model
+dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
+# poisson model
+dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
+qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
+# weighted model
+N=5000
+dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
+dat4$w=runif(N)*2
+qdata = quantize(dat4, expnms = c("x1", "x2"))$data
+(qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+                         family=gaussian(), weights=w))
+qgcfit$fit
+glm(y ~ z + x1 + x2, data = qdata, weights=w)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}

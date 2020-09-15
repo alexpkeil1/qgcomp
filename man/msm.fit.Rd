@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{msm.fit}
 \alias{msm.fit}
-\title{fitting marginal structural model (MSM) based on g-computation with
-quantized exposures}
+\title{Fitting marginal structural model (MSM) within quantile g-computation}
 \usage{
 msm.fit(
   f,
@@ -14,7 +13,9 @@ msm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
-  bayes,
+  weights,
+  bayes = FALSE,
+  MCsize = nrow(qdata),
   ...
 )
 }
@@ -25,8 +26,8 @@ should be represented via the \code{\link[base]{AsIs}} function}
 
 \item{qdata}{a data frame with quantized exposures}
 
-\item{intvals}{sequence, the sequence of integer values that the joint exposure 
-is 'set' to for estimating the msm. For quantile g-computation, this is just 
+\item{intvals}{sequence, the sequence of integer values that the joint exposure
+is 'set' to for estimating the msm. For quantile g-computation, this is just
 0:(q-1), where q is the number of quantiles of exposure.}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
@@ -37,26 +38,35 @@ the exposures of interest (main terms only!)}
 \item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
-\item{degree}{polynomial basis function for marginal model (e.g. degree = 2
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
 
-\item{id}{(optional) NULL, or variable name indexing individual units of 
-observation (only needed if analyzing data with multiple observations per 
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
-\item{bayes}{use underlying Bayesian model (`arm` package defaults). Results
-in penalized parameter estimation that can help with very highly correlated 
-exposures. Note: this does not lead to fully Bayesian inference in general, 
-so results should be interpereted as frequentist.}
+\item{weights}{"case weights" - passed to the "weight" argument of
+\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
+
+\item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results
+in penalized parameter estimation that can help with very highly correlated
+exposures. Note: this does not lead to fully Bayesian inference in general,
+so results should be interpreted as frequentist.}
+
+\item{MCsize}{integer: sample size for simulation to approximate marginal
+zero inflated model parameters. This can be left small for testing, but should be as large
+as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
+linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
+error at a given value of MCsize)}
 
 \item{...}{arguments to glm (e.g. family)}
 }
 \description{
 This is an internal function called by \code{\link[qgcomp]{qgcomp}},
- \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
- but is documented here for clarity. Generally, users will not need to call
- this function directly.
+\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
 }
 \details{
 This function first computes expected outcomes under hypothetical

@@ -2,8 +2,7 @@
 % Please edit documentation in R/base.R
 \name{quantize}
 \alias{quantize}
-\title{create variables representing indicator functions with cutpoints defined
-by quantiles}
+\title{Quantizing exposure data}
 \usage{
 quantize(data, expnms, q = 4, breaks = NULL)
 }
@@ -15,21 +14,33 @@ quantized}
 
 \item{q}{integer, number of quantiles used in creating quantized variables}
 
-\item{breaks}{(optional) list of (equal length) numeric vectors that 
-characterize the minimum value of each category for which to 
+\item{breaks}{(optional) list of (equal length) numeric vectors that
+characterize the minimum value of each category for which to
 break up the variables named in expnms. This is an alternative to using 'q'
 to define cutpoints.}
 }
+\value{
+A list containing the following fields
+\describe{
+\item{data}{a quantized version of the original dataframe}
+\item{breaks}{a list of the quantile cutpoints used to create the quantized variables which
+includes a very small number for the minimum and a very large number for the maximum to avoid
+causing issues when using these breaks to quantize new data.}
+}
+}
 \description{
+Create variables representing indicator functions with cutpoints defined
+by quantiles. Output a list that includes: 1) a dataset that is a copy of data,
+except that the variables whose names are included in the \code{expnms} variable are
+transformed to their quantized version and 2) an unnamed list of the quantile cutpoints
+that are used for each of the variables that were quantized
+}
+\details{
 This function creates categorical variables in place of the
 exposure variables named in 'expnms.' For example, a continuous exposure
 'x1' will be replaced in the output data by another 'x1' that takes on values
 0:(q-1), where, for example, the value 1 indicates that the original x1 value
 falls between the first and the second quantile.
-}
-\details{
-This function is a vectorized version of `quantile_f` from the `gWQS` 
-package that also allows the use of externally defined breaks
 }
 \examples{
 set.seed(1232)

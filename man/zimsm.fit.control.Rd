@@ -2,21 +2,37 @@
 % Please edit documentation in R/base_zi.R
 \name{zimsm.fit.control}
 \alias{zimsm.fit.control}
+<<<<<<< HEAD
 \title{control of fitting parameters for zero inflated MSMs}
+=======
+\title{Control of fitting parameters for zero inflated MSMs}
+>>>>>>> master
 \usage{
 zimsm.fit.control(predmethod = c("components", "catprobs"))
 }
 \arguments{
+<<<<<<< HEAD
 \item{predmethod}{character in c("components", "catprobs"). "components" simulates from the 
 model parameters directly while "catprobs" simulates outcomes from the category specific 
+=======
+\item{predmethod}{character in c("components", "catprobs"). "components" simulates from the
+model parameters directly while "catprobs" simulates outcomes from the category specific
+>>>>>>> master
 probabilities, which is output from predict.zeroinfl. The former is slightly
 more flexible and stable, but the latter is preferred in zero inflated negative bionomial models.}
 }
 \description{
+<<<<<<< HEAD
 this is an internal function called by 
  \code{\link[qgcomp]{qgcomp.zi.boot}},
  but is documented here for clarity. Generally, users will not need to call
  this function directly.
+=======
+this is an internal function called by
+\code{\link[qgcomp]{qgcomp.zi.boot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
+>>>>>>> master
 }
 \details{
 Provides fine control over zero inflated MSM fitting

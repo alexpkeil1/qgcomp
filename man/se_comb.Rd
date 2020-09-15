@@ -11,33 +11,33 @@ se_comb(expnms, covmat, grad = NULL)
 of interest in the covariance matrix for a which a standard error will be
 calculated (e.g. same as expnms in qgcomp fit)}
 
-\item{covmat}{covariance matrix for parameters, e.g. from a model or 
+\item{covmat}{covariance matrix for parameters, e.g. from a model or
 bootstrap procedure}
 
 \item{grad}{the "weight" vector for calculating the contribution of each variable
-in expnms to the final standard error. For a linear combination, this is equal 
-to a vector of ones (and is set automatically). Or can be calculated via the 
+in expnms to the final standard error. For a linear combination, this is equal
+to a vector of ones (and is set automatically). Or can be calculated via the
 grad.poly procedure, in the case of coming up with proper weights when the combination
 of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).}
 }
 \description{
 This function uses the Delta method to calculate standard errors of linear
-functions of variables (similar to `lincom` in Stata). Generally, users will not need to 
+functions of variables (similar to \code{lincom} in Stata). Generally, users will not need to
 call this function directly.
 }
 \details{
 This function takes inputs of a set of exposure names (character vector)
 and a covariance matrix (with colnames/rownames that contain the full set
-of exposure names), as well as a possible `grad` parameter to calculate
-the variance of a weighted combination of the exposures in `expnms`, where the
-weights are based off of `grad` (which defaults to 1, so that this function
-yields the variance of a sum of all variables in `expnms`)
+of exposure names), as well as a possible \code{grad} parameter to calculate
+the variance of a weighted combination of the exposures in \code{expnms}, where the
+weights are based off of \code{grad} (which defaults to 1, so that this function
+yields the variance of a sum of all variables in \code{expnms})
 
-Here is simple version of the delta method for a linear combination of 
+Here is simple version of the delta method for a linear combination of
 three model coefficients:
 
- \eqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
-given gradient vector 
+\eqn{f(\beta) = \beta_1 + \beta_2 + \beta_3}
+given gradient vector
 \deqn{G = [d(f(\beta))/d\beta_1 = 1,
   d(f(\beta))/d\beta_2 = 1,
   d(f(\beta))/d\beta_3 = 1]}

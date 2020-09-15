@@ -2,7 +2,7 @@
 % Please edit documentation in R/base.R
 \name{checknames}
 \alias{checknames}
-\title{check for valid model terms if 'expnms' parameter not given}
+\title{Check for valid model terms in a qgcomp fit}
 \usage{
 checknames(terms)
 }
@@ -11,10 +11,10 @@ checknames(terms)
 }
 \description{
 This is an internal function called by \code{\link[qgcomp]{qgcomp}},
- \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
- but is documented here for clarity. Generally, users will not need to call
- this function directly. This function tries to determine whether there are 
- non-linear terms in the underlying model, which helps infer whether the 
- appropriate function is called, and whether more explicit function calls
- are needed.
+\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly. This function tries to determine whether there are
+non-linear terms in the underlying model, which helps infer whether the
+appropriate function is called, and whether more explicit function calls
+are needed.
 }

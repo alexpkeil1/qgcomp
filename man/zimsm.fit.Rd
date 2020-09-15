@@ -2,8 +2,12 @@
 % Please edit documentation in R/base_zi.R
 \name{zimsm.fit}
 \alias{zimsm.fit}
+<<<<<<< HEAD
 \title{estimating the parameters of a marginal structural model (MSM) based on 
 g-computation with quantized exposures}
+=======
+\title{Secondary prediction method for the (zero-inflated) qgcomp MSM.}
+>>>>>>> master
 \usage{
 zimsm.fit(
   f,
@@ -13,6 +17,10 @@ zimsm.fit(
   main = TRUE,
   degree = 1,
   id = NULL,
+<<<<<<< HEAD
+=======
+  weights,
+>>>>>>> master
   MCsize = 10000,
   containmix = list(count = TRUE, zero = TRUE),
   bayes = FALSE,
@@ -28,8 +36,13 @@ should be represented via the \code{\link[base]{AsIs}} function}
 
 \item{qdata}{a data frame with quantized exposures (as well as outcome and other covariates)}
 
+<<<<<<< HEAD
 \item{intvals}{sequence, the sequence of integer values that the joint exposure 
 is 'set' to for estimating the msm. For quantile g-computation, this is just 
+=======
+\item{intvals}{sequence, the sequence of integer values that the joint exposure
+is 'set' to for estimating the msm. For quantile g-computation, this is just
+>>>>>>> master
 0:(q-1), where q is the number of quantiles of exposure.}
 
 \item{expnms}{a character vector with the names of the columns in qdata that represent
@@ -38,6 +51,7 @@ the exposures of interest (main terms only!)}
 \item{main}{logical, internal use: produce estimates of exposure effect (psi)
 and expected outcomes under g-computation and the MSM}
 
+<<<<<<< HEAD
 \item{degree}{polynomial basis function for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
 is quadratic. Default=1)}
@@ -47,6 +61,19 @@ observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
 \item{MCsize}{integer: sample size for simulation to approximate marginal 
+=======
+\item{degree}{polynomial bases for marginal model (e.g. degree = 2
+allows that the relationship between the whole exposure mixture and the outcome
+is quadratic. Default=1)}
+
+\item{id}{(optional) NULL, or variable name indexing individual units of
+observation (only needed if analyzing data with multiple observations per
+id/cluster)}
+
+\item{weights}{not yet implemented}
+
+\item{MCsize}{integer: sample size for simulation to approximate marginal
+>>>>>>> master
 hazards ratios}
 
 \item{containmix}{named list of logical scalars with names "count" and "zero"}
@@ -60,10 +87,17 @@ hazards ratios}
 \item{...}{arguments to zeroinfl (e.g. dist)}
 }
 \description{
+<<<<<<< HEAD
 this is an internal function called by 
  \code{\link[qgcomp]{qgcomp.zi.boot}},
  but is documented here for clarity. Generally, users will not need to call
  this function directly.
+=======
+this is an internal function called by
+\code{\link[qgcomp]{qgcomp.zi.boot}},
+but is documented here for clarity. Generally, users will not need to call
+this function directly.
+>>>>>>> master
 }
 \details{
 This function first computes expected outcomes under hypothetical
@@ -79,7 +113,23 @@ the MSM yields a causal exposure-response representing the incremental
 change in the expected outcome given a joint intervention on all exposures.
 }
 \examples{
+<<<<<<< HEAD
 runif(1)
+=======
+set.seed(50)
+n=100
+\dontrun{
+dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
+expnms = c("x1", "x2")
+q = 4
+qdata = quantize(dat, q=q, expnms=expnms)$data
+f = y ~ x1 + x2 + z | 1
+msmfit <- qgcomp:::zimsm.fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
+  degree=1, id=NULL, MCsize=10000, containmix=list(count=TRUE, zero=FALSE),  
+  x=FALSE)
+msmfit$msmfit
+}
+>>>>>>> master
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
