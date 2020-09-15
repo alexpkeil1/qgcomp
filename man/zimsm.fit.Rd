@@ -40,7 +40,7 @@ and expected outcomes under g-computation and the MSM}
 
 \item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
-is quadratic. Default=1)}
+is quadratic. Default=1 )}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
