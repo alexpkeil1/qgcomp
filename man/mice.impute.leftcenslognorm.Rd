@@ -81,5 +81,21 @@ true
 cc
 # MI based analysis
 summary(obj)
+
+# now with survival data (very similar)
+impdat = mice(data = mdat, 
+  method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+  lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
+qc.fit.imp <- list(
+  call = call("qgcomp.cox.noboot(Surv(y)~., expnms = c('x1', 'x2'))"),
+  call1 = impdat$call,
+  nmis = impdat$nmis,
+  analyses = lapply(1:5, function(x) qgcomp.cox.noboot(Surv(y)~., expnms = c("x1", "x2"),
+    data=complete(impdat, x)))
+)
+obj = pool(as.mira(qc.fit.imp))
+# MI based analysis
+summary(obj)
+
 }
 }

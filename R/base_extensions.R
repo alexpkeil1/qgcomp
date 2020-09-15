@@ -8,9 +8,9 @@ glance.qgcompfit <- function(x, ...){
   #' typically goodness of fit measures, p-values for hypothesis tests on residuals, 
   #' or model convergence information.
   #' 
-  #' Glance never returns information from the original call to the modelling function. 
-  #' This includes the name of the modelling function or any arguments passed to the 
-  #' modelling function.
+  #' Glance never returns information from the original call to the modeling function. 
+  #' This includes the name of the modeling function or any arguments passed to the 
+  #' modeling function.
   #' 
   #' Glance does not calculate summary measures. Rather, it farms out these computations 
   #' to appropriate methods and gathers the results together. Sometimes a goodness of 
@@ -67,7 +67,13 @@ tidy.qgcompfit <- function (x,
   #' @importFrom generics tidy
   #' @importFrom tibble as_tibble
   co <- coef(x)
-  nms = c("(Intercept)", paste0("psi", 1:(length(names(co))-1)))
+  fam = family(x)$family
+  if(fam =="cox"){
+    nms = c(paste0("psi", 1:(length(names(co)))))
+  }
+  if(fam != "cox"){
+    nms = c("(Intercept)", paste0("psi", 1:(length(names(co))-1)))
+  }
   ret <- data.frame(term = nms, estimate = unname(co), 
                     stringsAsFactors = FALSE)
   if(quick & !exponentiate) return(ret)
@@ -156,6 +162,22 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' cc
   #' # MI based analysis
   #' summary(obj)
+  #' 
+  #' # now with survival data (very similar)
+  #' impdat = mice(data = mdat, 
+  #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+  #'   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
+  #' qc.fit.imp <- list(
+  #'   call = call("qgcomp.cox.noboot(Surv(y)~., expnms = c('x1', 'x2'))"),
+  #'   call1 = impdat$call,
+  #'   nmis = impdat$nmis,
+  #'   analyses = lapply(1:5, function(x) qgcomp.cox.noboot(Surv(y)~., expnms = c("x1", "x2"),
+  #'     data=complete(impdat, x)))
+  #' )
+  #' obj = pool(as.mira(qc.fit.imp))
+  #' # MI based analysis
+  #' summary(obj)
+  #' 
   #' }
   whichvar = eval(as.name("j"), parent.frame(n = 2))
   nms = names(eval(as.name("data"), parent.frame(n = 3)))
