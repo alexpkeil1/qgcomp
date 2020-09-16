@@ -23,6 +23,10 @@ glance.qgcompfit <- function(x, ...){
   #' @importFrom generics glance
   #' @importFrom tibble as_tibble
   .qgc.require("broom")
+  # first try standard glances
+  ret <- tryCatch(broom::glance(x$fit), error = function(e) NULL)
+  if(!is.null(ret)) return(ret)
+  # if not default to basic glm glance
   s <- summary(x$fit)
   # taken from broom package
   unrowname <- function (x) {
