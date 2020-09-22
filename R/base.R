@@ -1368,6 +1368,7 @@ anova.qgcompfit <- function(object, ...){
 confint.qgcompfit <- function(object, ...){
   #' @importFrom stats anova
   #' @export
+  message("not yet implemented")
   anova(object$fit)
 }
 
