@@ -1,4 +1,4 @@
-`qgcomp` v2.5.4
+`qgcomp` v2.5.6
 
 #### QGcomp (quantile g-computation): estimating the effects of exposure mixtures. Works for continuous, binary, and right-censored survival outcomes.
 

@@ -558,7 +558,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   }else{
     seb <- apply(bootsamps, 1, sd)
     covmat <- cov(t(bootsamps))
-    colnames(covmat) <- rownames(covmat) <- names(estb) <- paste0("psi", 1:nrow(bootsamps))
+    colnames(covmat) <- rownames(covmat) <- names(estb) <- paste0("psi", seq_len(nrow(bootsamps)))
   }
   tstat <- estb / seb
   pvalz <- 2 - 2 * pnorm(abs(tstat))

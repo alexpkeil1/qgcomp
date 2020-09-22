@@ -73,10 +73,12 @@ tidy.qgcompfit <- function (x,
   co <- coef(x)
   fam = family(x)$family
   if(fam =="cox"){
-    nms = c(paste0("psi", 1:(length(names(co)))))
+    #nms = c(paste0("psi", 1:(length(names(co)))))
+    nms = c(paste0("psi", seq_len(length(co))))    
   }
   if(fam != "cox"){
-    nms = c("(Intercept)", paste0("psi", 1:(length(names(co))-1)))
+    #nms = c("(Intercept)", paste0("psi", 1:(length(names(co))-1)))
+    nms = c("(Intercept)", paste0("psi", seq_len(length(co)-1)))
   }
   ret <- data.frame(term = nms, estimate = unname(co), 
                     stringsAsFactors = FALSE)
