@@ -51,12 +51,12 @@ below the LOD.
 N = 100
 set.seed(123)
 dat <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
-true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
         data=dat, q=2, family=gaussian())
 mdat <- dat
 mdat$x1 = ifelse(mdat$x1>0.5, mdat$x1, NA)
 mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
-cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
        data=mdat[complete.cases(mdat),], q=2, family=gaussian())
 
 \dontrun{
@@ -64,7 +64,7 @@ cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
 # as a result (but it demonstrates how to use qgcomp and mice together)
 library("mice")
 library("survival")
-impdat = mice(data = mdat, 
+impdat = mice(data = mdat,
   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
 qc.fit.imp <- list(
@@ -82,8 +82,19 @@ cc
 # MI based analysis
 summary(obj)
 
+# summarizing weights (note that the weights should *not* be pooled because they mean different things depending on their direction)
+expnms = c("x1", "x2")
+wts = as.data.frame(t(sapply(qc.fit.imp$analyses, function(x) c(-x$neg.weights, x$pos.weights)[expnms])))
+eachwt = do.call(c, wts)
+expwts = data.frame(Exposure = rep(expnms, each=nrow(wts)), Weight=eachwt)
+library(ggplot2)
+ggplot(data=expwts)+ theme_classic() +
+  geom_point(aes(x=Exposure, y=Weight)) +
+  geom_hline(aes(yintercept=0))
+
+
 # now with survival data (very similar)
-impdat = mice(data = mdat, 
+impdat = mice(data = mdat,
   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
 qc.fit.imp <- list(

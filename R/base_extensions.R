@@ -3,20 +3,20 @@
 
 glance.qgcompfit <- function(x, ...){
   #' @title Glance at a qgcompfit object
-  #' @description Glance accepts a model object and returns a 
-  #' tibble::tibble() with exactly one row of model summaries. The summaries are 
-  #' typically goodness of fit measures, p-values for hypothesis tests on residuals, 
+  #' @description Glance accepts a model object and returns a
+  #' tibble::tibble() with exactly one row of model summaries. The summaries are
+  #' typically goodness of fit measures, p-values for hypothesis tests on residuals,
   #' or model convergence information.
-  #' 
-  #' Glance never returns information from the original call to the modeling function. 
-  #' This includes the name of the modeling function or any arguments passed to the 
+  #'
+  #' Glance never returns information from the original call to the modeling function.
+  #' This includes the name of the modeling function or any arguments passed to the
   #' modeling function.
-  #' 
-  #' Glance does not calculate summary measures. Rather, it farms out these computations 
-  #' to appropriate methods and gathers the results together. Sometimes a goodness of 
+  #'
+  #' Glance does not calculate summary measures. Rather, it farms out these computations
+  #' to appropriate methods and gathers the results together. Sometimes a goodness of
   #' fit measure will be undefined. In these cases the measure will be reported as NA.
   #' (Description taken from \code{broom::glance} help file.)
-  #' 
+  #'
   #' @param x a qgcompfit object
   #' @param ... Not used
   #' @export
@@ -41,31 +41,31 @@ glance.qgcompfit <- function(x, ...){
 }
 
 
-tidy.qgcompfit <- function (x, 
-                            conf.level = 1-x$alpha, 
-                            exponentiate = FALSE, 
-                            quick = FALSE, 
+tidy.qgcompfit <- function (x,
+                            conf.level = 1-x$alpha,
+                            exponentiate = FALSE,
+                            quick = FALSE,
                             ...) {
   #' @title Tidy method for qgcompfit object
-  #' @description Tidy summarizes information about the components of a model. A model component 
-  #' might be a single term in a regression, a single hypothesis, a cluster, or a class. 
-  #' Exactly what tidy considers to be a model component varies cross models but is usually 
-  #' self-evident. If a model has several distinct types of components, you will need to 
+  #' @description Tidy summarizes information about the components of a model. A model component
+  #' might be a single term in a regression, a single hypothesis, a cluster, or a class.
+  #' Exactly what tidy considers to be a model component varies cross models but is usually
+  #' self-evident. If a model has several distinct types of components, you will need to
   #' specify which components to return. (Description taken from \code{tidyr::tidy} help file.)
-  #' 
+  #'
   #' @param x a agcompfit object created by qgcomp().
   #' @param conf.level Real number between 0 and 1 corresponding to nominal percentage/100 of confidence limit
   #'  (e.g. conf.level=0.95 means 95 per cent confidence intervals). Defaults to 1-alpha level of qgcompfit.
-  #' @param exponentiate Logical indicating whether or not to exponentiate the the coefficient 
-  #' estimates. This is typical for logistic and multinomial regressions, but a bad idea if there 
+  #' @param exponentiate Logical indicating whether or not to exponentiate the the coefficient
+  #' estimates. This is typical for logistic and multinomial regressions, but a bad idea if there
   #' is no log or logit link. Defaults to FALSE.
-  #' @param quick Logical indiciating if the only the term and estimate columns should be returned. 
+  #' @param quick Logical indiciating if the only the term and estimate columns should be returned.
   #' Often useful to avoid time consuming covariance and standard error calculations. Defaults to FALSE.
-  #' @param ... Additional arguments. Not used. Needed to match generic signature only. 
-  #' Cautionary note: Misspelled arguments will be absorbed in ..., where they will be ignored. 
-  #' If the misspelled argument has a default value, the default value will be used. For example, 
-  #' if you pass conf.lvel = 0.9, all computation will proceed using conf.level = 0.95. 
-  #' Additionally, if you pass newdata = my_tibble to an augment() method that does not 
+  #' @param ... Additional arguments. Not used. Needed to match generic signature only.
+  #' Cautionary note: Misspelled arguments will be absorbed in ..., where they will be ignored.
+  #' If the misspelled argument has a default value, the default value will be used. For example,
+  #' if you pass conf.lvel = 0.9, all computation will proceed using conf.level = 0.95.
+  #' Additionally, if you pass newdata = my_tibble to an augment() method that does not
   #' accept a newdata argument, it will use the default value for the data argument.
   #' @export
   #' @importFrom generics tidy
@@ -74,13 +74,13 @@ tidy.qgcompfit <- function (x,
   fam = family(x)$family
   if(fam =="cox"){
     #nms = c(paste0("psi", 1:(length(names(co)))))
-    nms = c(paste0("psi", seq_len(length(co))))    
+    nms = c(paste0("psi", seq_len(length(co))))
   }
   if(fam != "cox"){
     #nms = c("(Intercept)", paste0("psi", 1:(length(names(co))-1)))
     nms = c("(Intercept)", paste0("psi", seq_len(length(co)-1)))
   }
-  ret <- data.frame(term = nms, estimate = unname(co), 
+  ret <- data.frame(term = nms, estimate = unname(co),
                     stringsAsFactors = FALSE)
   if(quick & !exponentiate) return(ret)
   if(quick & exponentiate) {
@@ -101,7 +101,7 @@ tidy.qgcompfit <- function (x,
     "Upper CI"=ul
     "test"= z
     "Pr(>|z|)"= x$pval
-  }) 
+  })
   tibble::as_tibble(ret)
   ret
 }
@@ -109,20 +109,20 @@ tidy.qgcompfit <- function (x,
 
 mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=FALSE, ...){
   #' @title Imputation for limits of detection problems
-  #' 
+  #'
   #' @description This function integrates with \code{\link[mice]{mice}} to impute values below the LOD using a left
-  #' censored log-normal distribution. 
-  #' 
+  #' censored log-normal distribution.
+  #'
   #' @details While this function has utility far beyond qgcomp,
   #' it is included in the qgcomp package because it will be useful for a variety of
   #' settings in which qgcomp is useful. Note that LOD problems where the LOD is small,
-  #' and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.noboot}} or 
+  #' and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.noboot}} or
   #' \code{\link[qgcomp]{qgcomp.boot}} is not large, the LOD may be below the lowest
   #' quantile cutpoint which will yield identical datasets from the MICE procedure in terms
   #' of quantized exposure data. If only exposures are missing, and they have low LODs, then
-  #' there will be no benefit in qgcomp from using MICE rather than imputing some small value 
+  #' there will be no benefit in qgcomp from using MICE rather than imputing some small value
   #' below the LOD.
-  #' 
+  #'
   #' @param y Vector to be imputed
   #' @param ry Logical vector of length length(y) indicating the the subset of elements in y to which the imputation model is fitted. The ry generally distinguishes the observed (TRUE) and missing values (FALSE) in y.
   #' @param x Numeric design matrix with length(y) rows with predictors for y. Matrix x may have no missing values.
@@ -133,25 +133,25 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' @return Vector with imputed data, same type as y, and of length sum(wy)
   #' @import survival
   #' @export
-  #' 
+  #'
   #' @examples
   #' N = 100
   #' set.seed(123)
   #' dat <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
-  #' true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+  #' true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
   #'         data=dat, q=2, family=gaussian())
   #' mdat <- dat
   #' mdat$x1 = ifelse(mdat$x1>0.5, mdat$x1, NA)
   #' mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
-  #' cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+  #' cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
   #'        data=mdat[complete.cases(mdat),], q=2, family=gaussian())
-  #' 
+  #'
   #' \dontrun{
   #' # note the following example imputes from the wrong parametric model and is expected to be biased
   #' # as a result (but it demonstrates how to use qgcomp and mice together)
   #' library("mice")
   #' library("survival")
-  #' impdat = mice(data = mdat, 
+  #' impdat = mice(data = mdat,
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
   #' qc.fit.imp <- list(
@@ -168,9 +168,20 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' cc
   #' # MI based analysis
   #' summary(obj)
-  #' 
+  #'
+  #' # summarizing weights (note that the weights should *not* be pooled because they mean different things depending on their direction)
+  #' expnms = c("x1", "x2")
+  #' wts = as.data.frame(t(sapply(qc.fit.imp$analyses, function(x) c(-x$neg.weights, x$pos.weights)[expnms])))
+  #' eachwt = do.call(c, wts)
+  #' expwts = data.frame(Exposure = rep(expnms, each=nrow(wts)), Weight=eachwt)
+  #' library(ggplot2)
+  #' ggplot(data=expwts)+ theme_classic() +
+  #'   geom_point(aes(x=Exposure, y=Weight)) +
+  #'   geom_hline(aes(yintercept=0))
+  #'
+  #'
   #' # now with survival data (very similar)
-  #' impdat = mice(data = mdat, 
+  #' impdat = mice(data = mdat,
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
   #' qc.fit.imp <- list(
@@ -183,7 +194,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' obj = pool(as.mira(qc.fit.imp))
   #' # MI based analysis
   #' summary(obj)
-  #' 
+  #'
   #' }
   whichvar = eval(as.name("j"), parent.frame(n = 2))
   nms = names(eval(as.name("data"), parent.frame(n = 3)))
@@ -195,8 +206,8 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   } else{
     jlod = lod[j]
   }
-  
-  if (is.null(wy)) 
+
+  if (is.null(wy))
     wy <- !ry
   nmiss = sum(wy)
   x <- cbind(1, as.matrix(x))
@@ -205,7 +216,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   ylod[wy] = LOD[wy]
   fit <-  survreg(
     Surv(time=ylod, event=ry, type='left') ~ x[,-1, drop=FALSE],
-    dist='lognormal', 
+    dist='lognormal',
     control=survreg.control(), #introduced for mice v3.7.0
     ...
   )
@@ -235,7 +246,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
     print(dlist)
   }
   if(any(is.na(returny))){
-    warning("Something happened with mice.impute.leftcenslognorm, missing values present 
+    warning("Something happened with mice.impute.leftcenslognorm, missing values present
             (set debug=TRUE to see intermediate values)")
     if(debug) {
       print(c("j"=j))
@@ -243,9 +254,9 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
       print(c("fub"=fub))
       print(c("lod"=lod))
       print(c("jlod"=jlod))
-      ck = data.frame(returny=returny, 
-                      u=u,  
-                      linear.predictors=fit2$linear.predictors[wy], 
+      ck = data.frame(returny=returny,
+                      u=u,
+                      linear.predictors=fit2$linear.predictors[wy],
                       scale = rep(fit2$scale, length(u)))
       print(ck[which(is.na(returny)),])
     }
