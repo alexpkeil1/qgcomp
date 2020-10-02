@@ -404,8 +404,8 @@ qgcomp.zi.noboot <- function(f,
     res$zstat <- tstat
     res$pval <- pvalz
   #}
-  attr(res, "class") <- "qgcompfit"
-  res
+    attr(res, "class") <- c("ziqgcompfit", "qgcompfit")
+    res
 }
 
 qgcomp.zi.boot <- function(f, 
@@ -707,6 +707,8 @@ qgcomp.zi.boot <- function(f,
   
   pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))
   hats = t(bootsamps[-c(1:(maxcidx)),])
+  hats.ll <- apply(hats, 2, function(x) quantile(x, 0.025))
+  hats.ul <- apply(hats, 2, function(x) quantile(x, 0.975))
   cov.yhat = cov(hats)
   
   qx <- qdata[, expnms]
@@ -731,12 +733,13 @@ qgcomp.zi.boot <- function(f,
     bootstrap=TRUE,
     cov.yhat=cov.yhat,
     y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
+    y.ll = hats.ll, y.ul = hats.ul,
     bootsamps = bootsamps,
     alpha=alpha
   )
   res$zstat <- tstat
   res$pval <- pvalz
-  attr(res, "class") <- "qgcompfit"
+  attr(res, "class") <- c("ziqgcompfit", "qgcompfit")
   res
 }
 

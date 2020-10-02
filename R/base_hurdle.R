@@ -405,8 +405,8 @@ qgcomp.hurdle.noboot <- function(f,
     res$zstat <- tstat
     res$pval <- pvalz
   #}
-  attr(res, "class") <- "qgcompfit"
-  res
+    attr(res, "class") <- c("ziqgcompfit", "qgcompfit")
+    res
 }
 
 qgcomp.hurdle.boot <- function(f, 
@@ -736,7 +736,7 @@ qgcomp.hurdle.boot <- function(f,
   )
   res$zstat <- tstat
   res$pval <- pvalz
-  attr(res, "class") <- "qgcompfit"
+  attr(res, "class") <- c("ziqgcompfit", "qgcompfit")
   res
 }
 

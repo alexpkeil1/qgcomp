@@ -328,7 +328,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
               neg.weights = sort(neg.weights, decreasing = TRUE), 
               pos.size = sum(abs(wcoef[poscoef])), neg.size = sum(abs(wcoef[negcoef])), 
               bootstrap = FALSE, zstat = tstat, pval = pvalz, alpha=alpha, call=origcall)
-  attr(res, "class") <- "qgcompfit"
+  attr(res, "class") <- c("survqgcompfit", "qgcompfit")
   res
 }
 
@@ -584,6 +584,6 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     stop("MSM fit is not a cox model, which is an unexpected bug. 
          Send any relevant info to akeil@unc.edu")
   }
-  attr(res, "class") <- "qgcompfit"
+  attr(res, "class") <- c("survqgcompfit", "qgcompfit")
   res
 }
