@@ -13,7 +13,8 @@ qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B =
                dist="poisson")
 
 # qgcomp.hurdle.boot is iffy when mixture is not in zero model
-qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, B = 10, MCsize = 1000)
+rr = qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, B = 10, MCsize = 1000)
+summary(rr)
 #'\dontrun{
 #' qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 1000, 
 #'                dist="negbin", msmcontrol = zimsm.fit.control(predmethod="catprobs"))

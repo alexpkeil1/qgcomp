@@ -21,7 +21,7 @@ set.seed(50)
 # linear model
 dat = qgcomp:::.dgm_quantized()
 ft = qgcomp::qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian(), bayes=TRUE)
-
+summary(ft)
 df.residual(ft)
 vcov(ft)
 AIC(ft)
