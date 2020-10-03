@@ -12,7 +12,7 @@ Xnm <- c(
 # continuous outcome, example with perfect collinearity
 metals$cadmium2 = metals$cadmium
 Xnm2 = c(Xnm, "cadmium2")
-res = try(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm2, 'y')], family=gaussian()))
+res = try(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm2, 'y')], family=gaussian()), silent=TRUE)
 stopifnot(class(res)=="try-error")
 # error
 

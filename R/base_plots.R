@@ -89,7 +89,7 @@
 .plot.zi.pw.boot <- function(x, alpha, pointwiseref){
   # plot actual risk or odds bounds
   pwbdat = pointwisebound.boot(x, alpha=alpha, pointwiseref=pointwiseref)
-  py = (pwbdat$linpred) # e(Y)
+  py = (pwbdat$ey) # e(Y) 
   ll = py*(pwbdat$ll.rr)
   ul = py*(pwbdat$ul.rr)
   list(
@@ -103,16 +103,6 @@
 }
 
 
-
-.plot.boot.zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  # zero inflated
-  p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-  if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function
-  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
-  if(modelfitline)  p <- p + .plot.linear.line(x)
-  if(pointwisebars) p <- p + .plot.zi.pw.boot(x, alpha=alpha, pointwiseref)
-  p
-}
 
 
 .plfun <- function(plt){ 
@@ -160,7 +150,10 @@
 .plot.noboot.zi <- function(x, theme_butterfly_r, theme_butterfly_l){
   # zero inflated
   p1 = list()
+  maxcidx=1
   for(modtype in names(x$psi)){
+    cidx = grep(paste0("^",modtype), names(unlist(x$msmfit$coefficients)))
+    maxcidx = max(cidx, maxcidx)
     nms = unique(names(sort(c(x$pos.weights[[modtype]], x$neg.weights[[modtype]]), decreasing = FALSE)))
     poscolwt = 1-x$pos.psi[[modtype]]/(x$pos.psi[[modtype]] - x$neg.psi[[modtype]])
     if(length(x$pos.weights[[modtype]])==0) x$pos.weights[[modtype]] = x$neg.weights[[modtype]]*0
@@ -286,6 +279,16 @@
   return(p)
 }
 
+
+.plot.boot.zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+  # zero inflated
+  p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
+  if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function
+  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
+  if(modelfitline)  p <- p + .plot.linear.line(x)
+  if(pointwisebars) p <- p + .plot.zi.pw.boot(x, alpha=alpha, pointwiseref)
+  p
+}
 
 
 

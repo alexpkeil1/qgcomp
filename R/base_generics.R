@@ -81,7 +81,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' print(obj1)
   #' print(obj2)
   fam <- x$fit$family$family
-  if(is.null(fam)){
+  if(inherits(x, "ziqgcompfit")){
     printZI(x, showweights=showweights, ...)
     return(invisible(x))
   }
@@ -145,7 +145,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
 summary.qgcompfit <- function(object, ...){
   #' @export
   fam <- object$fit$family$family
-  if(is.null(fam)){
+  if(inherits(object, "ziqgcompfit")){
     res = summaryZI(object)
     return(res)
   }

@@ -58,7 +58,7 @@
   se.lnrr = apply(lrrdist,1, sd)
   data.frame(quantile= (1:q) - 1, 
              quantile.midpoint=((1:q) - 1 + 0.5)/(q),
-             hx = py, # expected (marginal) rate
+             ey = py, # expected (marginal) rate
              rr = rr,
              se.lnrr = se.lnrr, # standard error on link scale
              ul.rr = exp(.safelog(rr) + qnorm(1-alpha/2)*se.lnrr),
@@ -186,9 +186,13 @@
 #' @param alpha alpha level for confidence intervals
 #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
 #' the referent category for calculating all mean differences/standard deviations)
-#' @return A data frame containing expected values of the outcome at each quantized value
-#' of all exposures as well as a mean difference contrasting the expected outcome at each
-#' quantized value of all exposures, and associated standard error and confidence intervals.
+#' @return A data frame containing 
+#'  \itemize{
+#'  \item{'linpred': }{The linear predictor from the marginal structural model}
+#'  \item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+#'  \item{'se.*': }{the stndard error of the effect measure}
+#'  \item{'ul.*/ll.*': }{Confidence bounds for the effect measure, and bounds centered at the linear predictor (for plotting purposes)}
+#' }
 #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
 #' @export
 #' @examples
@@ -209,7 +213,12 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   if(inherits(x, "ziqgcompfit")){
     link = "zi"
     npsi = 2*length(coef(x)[[1]])
-    bootY = x$bootsamps[-seq_len(npsi),] # rowwise
+    maxcidx=1
+    for(modtype in names(x$psi)){
+      cidx = grep(paste0("^",modtype), names(unlist(x$msmfit$coefficients)))
+      maxcidx = max(cidx, maxcidx)
+    }
+    bootY = x$bootsamps[-seq_len(maxcidx),] # rowwise
   }
   pwr = pointwiseref+0 # may break this in the future
   py = tapply(x$y.expectedmsm, x$index, mean)
@@ -253,6 +262,9 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped
 #' version of quantile g-computation (under a linear model)
 #' 
+#' Note that function only works with standard "qgcompfit" objects from `qgcomp.noboot` (so it doesn't work
+#' with zero inflated, hurdle, or Cox models)
+#' 
 #'  \eqn{f(\beta) = \sum_i^p \beta_i}
 #' given gradient vector 
 #' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
@@ -271,9 +283,15 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' @param alpha alpha level for confidence intervals
 #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
 #' the referent category for calculating all mean differences/standard deviations)
-#' @return A data frame containing expected values of the outcome at each quantized value
-#' of all exposures as well as a mean difference contrasting the expected outcome at each
-#' quantized value of all exposures, and associated standard error and confidence intervals.
+#' @return A data frame containing 
+#'  \itemize{
+#'  \item{"hx": }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
+#'  conditioning out any confounders. This is similar to the h(x) function in bkmr. This is not a full prediction of the outcome, but
+#'  only the partial outcome due to the intercept and the confounders}
+#'  \item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+#'  \item{'se.*': }{the stndard error of the effect measure}
+#'  \item{'ul.*/ll.*': }{Confidence bounds for the effect measure}
+#' }
 #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{pointwisebound.boot}}
 #' @export
 #' @examples
@@ -357,8 +375,14 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 #' @param x "qgcompfit" object from `qgcomp.boot`, 
 #' @param alpha alpha level for confidence intervals
 #' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
-#' @return A data frame containing expected values of the outcome at each quantized value
-#' of all exposures as well as "pointwise" (pw) and "simultaneous" (simul) confidence
+#' @return A data frame containing 
+#' #'  \itemize{
+#'  \item{'linpred': }{The linear predictor from the marginal structural model}
+#'  \item{'r/o/m': }{The canonical measure (risk/odds/mean) for the marginal structural model link}
+#'  \item{'se.*': }{the stndard error of linpred}
+#'  \item{'ul.*ll.*': }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
+#' }
+#' The confidence bounds are either  "pointwise" (pw) and "simultaneous" (simul) confidence
 #' intervals at each each quantized value of all exposures.
 #' @seealso \code{\link[qgcomp]{qgcomp.boot}}
 #' @export
@@ -379,8 +403,12 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   if( inherits(x, "ziqgcompfit")){
     pwonly=TRUE
     link = "zi"
-    npsi = 2*length(coef(x)[[1]])
-    bootY = x$bootsamps[-seq_len(npsi),] # rowwise
+    maxcidx=1
+    for(modtype in names(x$psi)){
+      cidx = grep(paste0("^",modtype), names(unlist(x$msmfit$coefficients)))
+      maxcidx = max(cidx, maxcidx)
+    }
+    bootY = x$bootsamps[-seq_len(maxcidx),] # rowwise
   }
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
@@ -419,6 +447,8 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
                logit = .modelwise.logit(x$q, .logit(py), sqrt(pw.vars), alpha, ll, ul),
                zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
   )
+  fix = which(names(res)=="hx")
+  names(res)[fix] = "linpred"
   attr(res, "link") = link
   res
 }

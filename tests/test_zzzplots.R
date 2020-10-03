@@ -11,6 +11,7 @@ n=100
    plot(ee)
    ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=binomial())
    plot(ff)
+   pointwisebound.boot(ff)
    modelbound.boot(ff)
    
 # gaussian
