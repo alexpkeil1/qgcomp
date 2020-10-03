@@ -58,7 +58,7 @@
   se.lnrr = apply(lrrdist,1, sd)
   data.frame(quantile= (1:q) - 1, 
              quantile.midpoint=((1:q) - 1 + 0.5)/(q),
-             hx = py, # expected (marginal) rate
+             ey = py, # expected (marginal) rate
              rr = rr,
              se.lnrr = se.lnrr, # standard error on link scale
              ul.rr = exp(.safelog(rr) + qnorm(1-alpha/2)*se.lnrr),
@@ -209,7 +209,12 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   if(inherits(x, "ziqgcompfit")){
     link = "zi"
     npsi = 2*length(coef(x)[[1]])
-    bootY = x$bootsamps[-seq_len(npsi),] # rowwise
+    maxcidx=1
+    for(modtype in names(x$psi)){
+      cidx = grep(paste0("^",modtype), names(unlist(x$msmfit$coefficients)))
+      maxcidx = max(cidx, maxcidx)
+    }
+    bootY = x$bootsamps[-seq_len(maxcidx),] # rowwise
   }
   pwr = pointwiseref+0 # may break this in the future
   py = tapply(x$y.expectedmsm, x$index, mean)
@@ -379,8 +384,12 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   if( inherits(x, "ziqgcompfit")){
     pwonly=TRUE
     link = "zi"
-    npsi = 2*length(coef(x)[[1]])
-    bootY = x$bootsamps[-seq_len(npsi),] # rowwise
+    maxcidx=1
+    for(modtype in names(x$psi)){
+      cidx = grep(paste0("^",modtype), names(unlist(x$msmfit$coefficients)))
+      maxcidx = max(cidx, maxcidx)
+    }
+    bootY = x$bootsamps[-seq_len(maxcidx),] # rowwise
   }
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM

@@ -29,9 +29,8 @@ stopifnot(class(res)=="try-error")
 
 ##### zi
 f2 = d ~ x1 + x2 + z2 | x1 + x2 + z2
-pscl::zeroinfl(formula = f2, data = dat)
+pp = pscl::zeroinfl(formula = f2, data = dat)
 obj0c <- qgcomp.zi.noboot(f2, expnms = expnms, data = dat)
-print(obj0c)
 res = try(pointwisebound.noboot(obj0c), silent=TRUE)
 stopifnot(class(res)=="try-error")
 
