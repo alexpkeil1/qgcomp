@@ -77,6 +77,15 @@ plot(ft3) # the MSM estimates look much closer to the smoothed estimates
 # suggesting the non-linear MSM fits the data better and should be used
 # for inference about the effect of the exposure
 
+# binary outcomes, logistic model with or without a log-binomial marginal 
+structural model
+dat <- data.frame(y=rbinom(100,1,0.5), x1=runif(100), x2=runif(100), z=runif(100))
+fit1 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+         data=dat, q=9, B=100, rr=FALSE)
+fit2 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+         data=dat, q=9, B=100, rr=TRUE)
+plot(fit1)
+plot(fit2)
 # Using survival data ()
 set.seed(50)
 N=200

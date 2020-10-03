@@ -82,7 +82,8 @@ cc
 # MI based analysis
 summary(obj)
 
-# summarizing weights (note that the weights should *not* be pooled because they mean different things depending on their direction)
+# summarizing weights (note that the weights should *not* be pooled 
+#    because they mean different things depending on their direction)
 expnms = c("x1", "x2")
 wts = as.data.frame(t(sapply(qc.fit.imp$analyses, function(x) c(-x$neg.weights, x$pos.weights)[expnms])))
 eachwt = do.call(c, wts)

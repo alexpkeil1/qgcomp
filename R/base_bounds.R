@@ -396,7 +396,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 #' }
 modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   if(!x$bootstrap || inherits(x, "survqgcompfit")){
-    stop("This function is only for qgcomp.boot objects")
+    stop("This function does not work with this type of qgcomp fit")
   }
   #link = x$fit$family$link
   link = x$msmfit$family$link

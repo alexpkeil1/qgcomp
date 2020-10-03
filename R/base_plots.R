@@ -4,6 +4,7 @@
 
 
 .plot.md.mod.bounds <- function(x,alpha){
+  ymin <- ymax <- v <- w <- y <- NULL
   modbounds = modelbound.boot(x, pwonly = TRUE, alpha = alpha)
   geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                            fill="Model confidence band"),
@@ -16,18 +17,21 @@
 .plot.or.mod.bounds <- .plot.md.mod.bounds
 
 .plot.linear.smooth.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
                   method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
                   data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
 }
 
 .plot.rr.smooth.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
               data=data.frame(y=(x$y.expected), x=(x$index+0.5)/max(x$index+1)))
 }
 
 .plot.or.smooth.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
               method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
               data=data.frame(y=(x$y.expected)/(1-x$y.expected), x=(x$index+0.5)/max(x$index+1)))
@@ -36,16 +40,19 @@
 
 
 .plot.linear.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_line(aes(x=x,y=y, color="MSM fit"),
             data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
 }
 
 .plot.loglin.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_line(aes(x=x,y=y, color="MSM fit"),
             data=data.frame(y=(x$y.expectedmsm), x=(x$index+0.5)/max(x$index+1)))
 }
 
 .plot.logitlin.line <- function(x){
+  ymin <- ymax <- v <- w <- y <- NULL
   geom_line(aes(x=x,y=y, color="MSM fit"),
             data=data.frame(y=(x$y.expectedmsm/(1-x$y.expectedmsm)), x=(x$index+0.5)/max(x$index+1)))
 }
@@ -53,6 +60,7 @@
 
 
 .plot.md.pw.boot <- function(x, alpha, pointwiseref){
+  ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
   pwbdat = pointwisebound.boot(x, alpha=alpha, pointwiseref=pointwiseref)
   py = pwbdat$linpred
@@ -69,6 +77,7 @@
 }
 
 .plot.rr.pw.boot <- function(x, alpha, pointwiseref){
+  ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
   pwbdat = pointwisebound.boot(x, alpha=alpha, pointwiseref=pointwiseref)
   py = exp(pwbdat$linpred)
@@ -87,6 +96,7 @@
 .plot.or.pw.boot <- .plot.rr.pw.boot
 
 .plot.zi.pw.boot <- function(x, alpha, pointwiseref){
+  ymin <- ymax <- v <- w <- y <- NULL
   # plot actual risk or odds bounds
   pwbdat = pointwisebound.boot(x, alpha=alpha, pointwiseref=pointwiseref)
   py = (pwbdat$ey) # e(Y) 
@@ -232,46 +242,18 @@
 }
 
 .plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  requireNamespace("survival")
-  surv <- NULL # appease R CMD check
-  #construction("warning", "Plot type may change in future releases.")
-  rootdat <- as.data.frame(x$fit$x)
-  psidat <- data.frame(psi=0)
-  rootfun <- function(idx, df){
-    df[,x$expnms] <- idx
-    df
-  }
-  rootfun2 <- function(idx, df){
-    df[,"psi"] <- idx
-    df[,"psi1"] <- idx
-    df[,"psi2"] <- idx^2
-    df[,"psi3"] <- idx^3
-    df[,"psi4"] <- idx^4
-    df
-  }
-  newmarg = lapply(0:(x$q-1), rootfun2, df=psidat)
-  margdf = data.frame(do.call("rbind", newmarg))
-  newcond = lapply(0:(x$q-1), rootfun, df=rootdat)
-  conddf = data.frame(do.call("rbind", newcond))
-  msmobj = survfit(x$msmfit, newdata=margdf)
-  gcompobj = survfit(x$fit, newdata=conddf)
-  mdf = with(msmobj, data.frame(time=time, surv=apply(surv, 1, mean)))
-  gdf = with(gcompobj, data.frame(time=time, surv=apply(surv, 1, mean)))
-  mdf0 = with(survfit(x$msmfit, newdata=newmarg[[1]]), 
-              data.frame(time=time, surv=surv))
-  gdf0 = with(survfit(x$fit, newdata=newcond[[1]]), 
-              data.frame(time=time, surv=apply(surv, 1, mean)))
-  mdfx = with(survfit(x$msmfit, newdata=newmarg[[x$q]]), 
-              data.frame(time=time, surv=surv))
-  gdfx = with(survfit(x$fit, newdata=newcond[[x$q]]), 
-              data.frame(time=time, surv=apply(surv, 1, mean)))
+  scl = qgcomp.survcurve.boot(x)
+  cdf0 = scl$cdfq[scl$cdfq$q==1,]
+  cdfmax = scl$cdfq[scl$cdfq$q==x$q,]
+  mdf0 = scl$mdfq[scl$mdfq$q==1,]
+  mdfmax = scl$mdfq[scl$mdfq$q==x$q,]
   p <- p +
-    geom_step(aes(x=time, y=surv, color="MSM", linetype="Average (all quantiles)"), data=mdf)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Average (all quantiles)"), data=gdf) + 
+    geom_step(aes(x=time, y=surv, color="MSM", linetype="Average (all quantiles)"), data=scl$mdfpop)+
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Average (all quantiles)"), data=scl$cdfpop) + 
     geom_step(aes(x=time, y=surv, color="MSM", linetype="Lowest quantile"), data=mdf0)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Lowest quantile"), data=gdf0) + 
-    geom_step(aes(x=time, y=surv, color="MSM", linetype="Highest quantile"), data=mdfx)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Highest quantile"), data=gdfx) + 
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Lowest quantile"), data=cdf0) + 
+    geom_step(aes(x=time, y=surv, color="MSM", linetype="Highest quantile"), data=mdfmax)+
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Highest quantile"), data=cdfmax) + 
     scale_y_continuous(name="Survival", limits=c(0,1)) + 
     scale_x_continuous(name="Time") +
     scale_linetype_discrete(name="")+
@@ -351,6 +333,15 @@
 #' # suggesting the non-linear MSM fits the data better and should be used
 #' # for inference about the effect of the exposure
 #' 
+#' # binary outcomes, logistic model with or without a log-binomial marginal 
+#' structural model
+#' dat <- data.frame(y=rbinom(100,1,0.5), x1=runif(100), x2=runif(100), z=runif(100))
+#' fit1 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+#'          data=dat, q=9, B=100, rr=FALSE)
+#' fit2 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+#'          data=dat, q=9, B=100, rr=TRUE)
+#' plot(fit1)
+#' plot(fit2)
 #' # Using survival data ()
 #' set.seed(50)
 #' N=200

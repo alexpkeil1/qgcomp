@@ -1,5 +1,85 @@
 #qgcomp_surv.R: quantile g-computation methods for survival analysis
 
+####### Cox survival curves
+#' Survival curve data from a qgcomp survival fit
+#' 
+#' It is often of interest to examine survival curves from qgcomp.cox.boot 
+#' models. They can be useful for checking assumptions about how well
+#' the marginal structural model conforms to the underlying conditional
+#' model, such that the overall fit approximates the non-linearity 
+#' in the underlying model. This function will yield survival curves,
+#' but no measures of uncertainty.
+#'
+#' @param x a `qgcompfit` object from \code{\link[qgcomp]{qgcomp.cox.boot}} 
+#' @param ... not used
+#'
+#' @return a list of data.frames:
+#' #'  \itemize{
+#'  \item{'mdfpop': }{Average Survival curve (survival, time) based on 
+#'  marginal structural model, averaged over the population at every quantile
+#'  of exposure}
+#'  \item{'cdfpop': }{Population average survival curve (survival, time) based on 
+#'  the underlying conditional model}
+#'  \item{'mdfq': }{Survival curves (survival, time) for each quantile 
+#'  based on marginal structural model}
+#'  \item{'cdfq': }{Survival curves (survival, time) for each quantile 
+#'  based on underlying conditional model}
+#' }
+#' @import survival
+#' @export
+#' @examples
+#' set.seed(50)
+#' N=200
+#' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+#'                   d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
+#' expnms=paste0("x", 1:2)
+#' f = survival::Surv(time, d)~x1 + x2
+#' (fit1 <- survival::coxph(f, data = dat))
+#' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+#' ## Not run: 
+#' \dontrun{
+#' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
+#' curves = cox.survcurve.boot(obj2)
+#' rbind(head(curves$mdfq),tail(curves$mdfq))
+#' }
+#' 
+#'
+qgcomp.survcurve.boot <- function(x, ...){
+  namespaceImport("survival")
+  rootdat <- as.data.frame(x$fit$x)
+  psidat <- data.frame(psi=0)
+  rootfun <- function(idx, df){
+    df[,x$expnms] <- idx
+    df
+  }
+  rootfun2 <- function(idx, df){
+    df[,"psi"] <- idx
+    df[,"psi1"] <- idx
+    df[,"psi2"] <- idx^2
+    df[,"psi3"] <- idx^3
+    df[,"psi4"] <- idx^4
+    df
+  }
+  newmarg = lapply(0:(x$q-1), rootfun2, df=psidat)
+  margdf = data.frame(do.call("rbind", newmarg))
+  newcond = lapply(0:(x$q-1), rootfun, df=rootdat)
+  conddf = data.frame(do.call("rbind", newcond))
+  msmobj = survival::survfit(x$msmfit, newdata=margdf)
+  gcompobj = survival::survfit(x$fit, newdata=conddf)
+  #
+  mdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$msmfit, newdata=newmarg[[zz]]), data.frame(time=time, surv=surv, q=zz)))
+  cdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$fit, newdata=newcond[[zz]][1,]), data.frame(time=time, surv=surv, q=zz)))
+  mdfq = do.call(rbind, mdfl)
+  cdfq = do.call(rbind, cdfl)
+  mdf = with(msmobj, data.frame(time=time, surv=apply(surv, 1, mean)))
+  cdf = with(gcompobj, data.frame(time=time, surv=apply(surv, 1, mean)))
+  list(
+    mdfpop = mdf, # 
+    cdfpop = cdf,
+    mdfq = mdfq,
+    cdfq = cdfq
+  )
+}
 
 
 coxmsm.fit <- function(
