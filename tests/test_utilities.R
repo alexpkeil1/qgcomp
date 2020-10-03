@@ -1,5 +1,6 @@
 cat('testing utility functions')
 
+
 qgcomp:::construction("msg", "test")
 
 qgcomp:::cox()
@@ -20,5 +21,21 @@ qgcomp::qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
    data=dat, q=2, dist="negbin") # equivalent
 
 
-qgcomp::qgcomp.zi.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
-                 data=dat, q=2, dist="negbin", B=2, parallel=TRUE) # equivalent
+ftz = qgcomp::qgcomp.zi.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+                            data=dat, q=2, dist="negbin", B=2, parallel=TRUE) # equivalent
+fth = qgcomp::qgcomp.hurdle.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+                            data=dat, q=2, dist="poisson", B=2, parallel=TRUE) # equivalent
+
+
+res = try(qgcomp:::glance.qgcompfit(ftz), silent=TRUE)
+stopifnot(inherits(res,"try-error"))
+res = try(qgcomp:::glance.qgcompfit(fth), silent=TRUE)
+stopifnot(inherits(res,"try-error"))
+
+ft = qgcomp::qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+                           data=dat, q=2, family="gaussian") # equivalent
+qgcomp:::glance.qgcompfit(ft)
+ft = qgcomp::qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
+                           data=dat, q=2, family="poisson") # equivalent
+
+qgcomp:::tidy.qgcompfit(ft)

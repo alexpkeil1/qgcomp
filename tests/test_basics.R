@@ -1,5 +1,4 @@
 cat("# basics test\n")
-
 # se_comb
 COV = matrix(c(.1, .2, .2, .1), nrow=2)
 colnames(COV) <- c("x1", "x2")
@@ -20,8 +19,8 @@ for(deg in 1:3){
 # stats
 set.seed(50)
 # linear model
-dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-ft = qgcomp::qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian(), bayes=TRUE)
+dat = qgcomp:::.dgm_quantized()
+ft = qgcomp::qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian(), bayes=TRUE)
 
 df.residual(ft)
 vcov(ft)

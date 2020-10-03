@@ -22,6 +22,10 @@ glance.qgcompfit <- function(x, ...){
   #' @export
   #' @importFrom generics glance
   #' @importFrom tibble as_tibble
+  if(inherits(x, "ziqgcompfit")){
+    stop("Broom::glance (which `mice` depends on) methods are not supported for this zero inflated models")
+  }
+  
   .qgc.require("broom")
   # first try standard glances
   ret <- tryCatch(broom::glance(x$fit), error = function(e) NULL)
