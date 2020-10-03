@@ -14,6 +14,12 @@ n=100
    pointwisebound.boot(ff)
    modelbound.boot(ff)
    
+   gg = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=binomial(), rr=TRUE)
+   plot(gg)
+   pointwisebound.boot(gg)
+   modelbound.boot(gg)
+   
+   
 # gaussian
    dat <- data.frame(y=rnorm(n), x1=runif(n), x2=runif(n), z=runif(n))
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=gaussian())
