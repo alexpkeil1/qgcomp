@@ -124,6 +124,7 @@
 
 ######## Main plot functions ##########
 .plot.noboot.base <- function(x, nms, theme_butterfly_r, theme_butterfly_l){
+  v <- w <- NULL
   # glm
   poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
   if(length(x$pos.weights)==0) x$pos.weights = x$neg.weights*0
@@ -158,6 +159,7 @@
 
 
 .plot.noboot.zi <- function(x, theme_butterfly_r, theme_butterfly_l){
+  v <- w <- NULL
   # zero inflated
   p1 = list()
   maxcidx=1
@@ -242,6 +244,7 @@
 }
 
 .plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+  surv <- NULL
   scl = qgcomp.survcurve.boot(x)
   cdf0 = scl$cdfq[scl$cdfq$q==1,]
   cdfmax = scl$cdfq[scl$cdfq$q==x$q,]

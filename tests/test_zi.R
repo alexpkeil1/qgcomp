@@ -1,7 +1,7 @@
 cat("# zi test\n")
 library(qgcomp)
 set.seed(1231)
-n=100
+n=300
 dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
 
 # should not cause error
@@ -10,9 +10,10 @@ qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=d
 qgcomp.hurdle.noboot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
 
 qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 100, 
-               dist="negbin")
-qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 100, 
-               dist="negbin")
+               dist="poisson")
+
+# qgcomp.hurdle.boot is iffy when mixture is not in zero model
+qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, B = 10, MCsize = 1000)
 #'\dontrun{
 #' qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 1000, 
 #'                dist="negbin", msmcontrol = zimsm.fit.control(predmethod="catprobs"))

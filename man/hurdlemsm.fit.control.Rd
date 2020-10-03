@@ -4,7 +4,7 @@
 \alias{hurdlemsm.fit.control}
 \title{Control of fitting parameters for zero inflated MSMs}
 \usage{
-hurdlemsm.fit.control(predmethod = c("components", "catprobs"))
+hurdlemsm.fit.control(predmethod = rev(c("components", "catprobs")))
 }
 \arguments{
 \item{predmethod}{character in c("components", "catprobs"). "components" simulates from the

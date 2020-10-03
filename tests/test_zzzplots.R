@@ -25,7 +25,7 @@ n=100
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=gaussian())
    plot(ee)
    pointwisebound.noboot(ee) 
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=4, family=gaussian())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=8, family=gaussian())
    plot(ff)
    modelbound.boot(ff)
    
@@ -59,6 +59,7 @@ n=100
   plot(ee)
   #pointwisebound.noboot(ee) # not working
   ffz = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=2, MCsize=1000, dist="negbin")
+  pointwisebound.boot(ffz)
   modelbound.boot(ffz, pwonly=TRUE)
   plot(ffz)
 

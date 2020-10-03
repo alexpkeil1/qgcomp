@@ -1,6 +1,6 @@
 # zero inflation
 hurdlemsm.fit.control <- function(
-  predmethod=c("components", "catprobs")
+  predmethod=rev(c("components", "catprobs"))
 ){
   #' @title Control of fitting parameters for zero inflated MSMs
   #' @description this is an internal function called by 
