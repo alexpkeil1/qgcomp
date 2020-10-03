@@ -9,10 +9,13 @@ n=100
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=binomial())
    plot(ee)
    plot(ee)
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=binomial())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=binomial(), rr=FALSE)
    plot(ff)
+   ff$msmfit$family$link
    pointwisebound.boot(ff)
+   qgcomp:::pointwisebound.boot_old(ff)
    modelbound.boot(ff)
+   qgcomp:::modelbound.boot_old(ff)
    
    gg = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=binomial(), rr=TRUE)
    plot(gg)
@@ -25,17 +28,21 @@ n=100
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=gaussian())
    plot(ee)
    pointwisebound.noboot(ee) 
+   qgcomp:::pointwisebound.noboot_old(ee) 
    ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=8, family=gaussian())
    plot(ff)
    modelbound.boot(ff)
+   qgcomp:::modelbound.boot_old(ff)
    
 # poisson
    dat <- data.frame(y=rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
    ee = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, family=poisson())
    plot(ee)
    pointwisebound.noboot(ee) 
+   qgcomp:::pointwisebound.noboot_old(ee) 
    ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=5, family=poisson())
    modelbound.boot(ff)
+   qgcomp:::modelbound.boot_old(ff)
    plot(ff)
       
 #cox
@@ -45,19 +52,22 @@ n=100
    expnms=paste0("x", 1:2)
    f = survival::Surv(start,stop, d)~x1 + x2
    suppressWarnings(ee <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-   #pointwisebound.noboot(ee) # not working
-   
+   res = try(pointwisebound.noboot(ee), silent = TRUE) # not working
+   stopifnot(class(res)=="try-error")   
    plot(ee)
    suppressWarnings(ff <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=1000))
    plot(ff)
-   #modelbound.boot(ff, pwonly=TRUE) # not working
-   
+   res = try(modelbound.boot(ff, pwonly=TRUE), silent = TRUE) # not working
+   stopifnot(class(res)=="try-error")   
+   curvelist = qgcomp.survcurve.boot(ff)
+   stopifnot(inherits(curvelist, "list"))
    
 # zi
   dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z=runif(n))
   ee = qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, dist="negbin")
   plot(ee)
-  #pointwisebound.noboot(ee) # not working
+  res = try(pointwisebound.noboot(ee), silent = TRUE) # not working
+  stopifnot(class(res)=="try-error")   
   ffz = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=2, MCsize=1000, dist="negbin")
   pointwisebound.boot(ffz)
   modelbound.boot(ffz, pwonly=TRUE)
