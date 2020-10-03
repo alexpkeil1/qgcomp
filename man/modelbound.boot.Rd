@@ -15,11 +15,11 @@ modelbound.boot(x, alpha = 0.05, pwonly = FALSE)
 }
 \value{
 A data frame containing
-#'  \itemize{
-\item{'linpred': }{The linear predictor from the marginal structural model}
-\item{'r/o/m': }{The canonical measure (risk/odds/mean) for the marginal structural model link}
-\item{'se.*': }{the stndard error of linpred}
-\item{'ul.\emph{ll.}': }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
+\describe{
+\item{linpred: }{The linear predictor from the marginal structural model}
+\item{r/o/m: }{The canonical measure (risk/odds/mean) for the marginal structural model link}
+\item{se....: }{the stndard error of linpred}
+\item{ul..../ll....: }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
 }
 The confidence bounds are either  "pointwise" (pw) and "simultaneous" (simul) confidence
 intervals at each each quantized value of all exposures.

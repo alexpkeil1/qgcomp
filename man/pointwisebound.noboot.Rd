@@ -16,13 +16,13 @@ the referent category for calculating all mean differences/standard deviations)}
 }
 \value{
 A data frame containing
-\itemize{
-\item{"hx": }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
+\describe{
+\item{hx: }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
 conditioning out any confounders. This is similar to the h(x) function in bkmr. This is not a full prediction of the outcome, but
 only the partial outcome due to the intercept and the confounders}
-\item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
-\item{'se.\emph{': }{the stndard error of the effect measure}
-\item{'ul.}/ll.*': }{Confidence bounds for the effect measure}
+\item{rr/or/mean.diff: }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+\item{se....: }{the stndard error of the effect measure}
+\item{ul..../ll....: }{Confidence bounds for the effect measure}
 }
 }
 \description{

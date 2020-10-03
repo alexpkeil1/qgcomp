@@ -16,11 +16,11 @@ the referent category for calculating all mean differences/standard deviations)}
 }
 \value{
 A data frame containing
-\itemize{
-\item{'linpred': }{The linear predictor from the marginal structural model}
-\item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
-\item{'se.\emph{': }{the stndard error of the effect measure}
-\item{'ul.}/ll.*': }{Confidence bounds for the effect measure, and bounds centered at the linear predictor (for plotting purposes)}
+\describe{
+\item{linpred: }{The linear predictor from the marginal structural model}
+\item{rr/or/mean.diff: }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+\item{se....: }{the stndard error of the effect measure}
+\item{ul..../ll....: }{Confidence bounds for the effect measure, and bounds centered at the linear predictor (for plotting purposes)}
 }
 }
 \description{

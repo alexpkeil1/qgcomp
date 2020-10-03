@@ -187,11 +187,11 @@
 #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
 #' the referent category for calculating all mean differences/standard deviations)
 #' @return A data frame containing 
-#'  \itemize{
-#'  \item{'linpred': }{The linear predictor from the marginal structural model}
-#'  \item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
-#'  \item{'se.*': }{the stndard error of the effect measure}
-#'  \item{'ul.*/ll.*': }{Confidence bounds for the effect measure, and bounds centered at the linear predictor (for plotting purposes)}
+#'  \describe{
+#'  \item{linpred: }{The linear predictor from the marginal structural model}
+#'  \item{rr/or/mean.diff: }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+#'  \item{se....: }{the stndard error of the effect measure}
+#'  \item{ul..../ll....: }{Confidence bounds for the effect measure, and bounds centered at the linear predictor (for plotting purposes)}
 #' }
 #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
 #' @export
@@ -284,13 +284,13 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
 #' the referent category for calculating all mean differences/standard deviations)
 #' @return A data frame containing 
-#'  \itemize{
-#'  \item{"hx": }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
+#'  \describe{
+#'  \item{hx: }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
 #'  conditioning out any confounders. This is similar to the h(x) function in bkmr. This is not a full prediction of the outcome, but
 #'  only the partial outcome due to the intercept and the confounders}
-#'  \item{'rr/or/mean.diff': }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
-#'  \item{'se.*': }{the stndard error of the effect measure}
-#'  \item{'ul.*/ll.*': }{Confidence bounds for the effect measure}
+#'  \item{rr/or/mean.diff: }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
+#'  \item{se....: }{the stndard error of the effect measure}
+#'  \item{ul..../ll....: }{Confidence bounds for the effect measure}
 #' }
 #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{pointwisebound.boot}}
 #' @export
@@ -376,11 +376,11 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 #' @param alpha alpha level for confidence intervals
 #' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
 #' @return A data frame containing 
-#' #'  \itemize{
-#'  \item{'linpred': }{The linear predictor from the marginal structural model}
-#'  \item{'r/o/m': }{The canonical measure (risk/odds/mean) for the marginal structural model link}
-#'  \item{'se.*': }{the stndard error of linpred}
-#'  \item{'ul.*ll.*': }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
+#'  \describe{
+#'  \item{linpred: }{The linear predictor from the marginal structural model}
+#'  \item{r/o/m: }{The canonical measure (risk/odds/mean) for the marginal structural model link}
+#'  \item{se....: }{the stndard error of linpred}
+#'  \item{ul..../ll....: }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
 #' }
 #' The confidence bounds are either  "pointwise" (pw) and "simultaneous" (simul) confidence
 #' intervals at each each quantized value of all exposures.
