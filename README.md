@@ -4,8 +4,8 @@
 
 
 #### Flexible, unconstrained, fast and guided by modern causal inference principles
-[![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) [![](http://www.r-pkg.org/badges/version/qgcomp)](http://www.r-pkg.org/pkg/qgcomp)
-[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/qgcomp)](http://www.r-pkg.org/pkg/qgcomp) [![Build Status](https://travis-ci.com/alexpkeil1/qgcomp.svg?branch=master)](https://travis-ci.com/alexpkeil1/qgcomp) [![codecov](https://codecov.io/gh/alexpkeil1/qgcomp/branch/master/graph/badge.svg)](https://codecov.io/gh/alexpkeil1/qgcomp)
+[![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org) [![](https://www.r-pkg.org:443/badges/version/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp) [![Build Status](https://travis-ci.com/alexpkeil1/qgcomp.svg?branch=master)](https://travis-ci.com/alexpkeil1/qgcomp) [![codecov](https://codecov.io/gh/alexpkeil1/qgcomp/branch/master/graph/badge.svg)](https://codecov.io/gh/alexpkeil1/qgcomp)
 
 
 ### Quick start
@@ -26,15 +26,13 @@
     )
     
     # continuous outcome
-    results = qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian())
+    results = qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian())
     print(results)
 
     
     > Scaled effect size (positive direction, sum of positive coefficients = 0.39)
-    >  calcium     iron   barium   silver  arsenic  mercury   sodium chromium 
-    >  0.72216  0.06187  0.05947  0.03508  0.03447  0.02451  0.02162  0.02057 
-    >  cadmium     zinc 
-    >  0.01328  0.00696 
+    >  calcium     iron   barium   silver  arsenic  mercury   sodium chromium  cadmium     zinc 
+    >  0.72216  0.06187  0.05947  0.03508  0.03447  0.02451  0.02162  0.02057  0.01328  0.00696 
     > 
     > Scaled effect size (negative direction, sum of negative coefficients = -0.124)
     > magnesium    copper      lead manganese  selenium 
@@ -42,9 +40,9 @@
     > 
     > Mixture slope parameters (Delta method CI):
     > 
-    >              Estimate Std. Error Lower CI Upper CI t value
-    > (Intercept) -0.356670   0.107878 -0.56811 -0.14523   1e-03
-    > psi1         0.266394   0.071025  0.12719  0.40560   2e-04
+    >              Estimate Std. Error Lower CI Upper CI t value  Pr(>|t|)
+    > (Intercept) -0.356670   0.107878 -0.56811 -0.14523 -3.3062 0.0010238
+    > psi1         0.266394   0.071025  0.12719  0.40560  3.7507 0.0002001
     p = plot(results, suppressprint=TRUE)
     ggplot2::ggsave("res1.png", plot=p, dpi=72, width=600/72, height=350/72, units="in")
 ![Results 1](inst/fig/res1.png)
@@ -59,10 +57,8 @@
     >    0.3520    0.2002    0.1603    0.1292    0.0937    0.0645 
     > 
     > Scaled effect size (negative direction, sum of negative coefficients = -0.696)
-    >  selenium    copper   arsenic   calcium manganese   cadmium   mercury      lead 
-    >    0.2969    0.1627    0.1272    0.1233    0.1033    0.0643    0.0485    0.0430 
-    >      iron 
-    >    0.0309 
+    >  selenium    copper   arsenic   calcium manganese   cadmium   mercury      lead      iron 
+    >    0.2969    0.1627    0.1272    0.1233    0.1033    0.0643    0.0485    0.0430    0.0309 
     > 
     > Mixture log(OR) (Delta method CI):
     > 
@@ -84,10 +80,8 @@
     print(results3)
     
     > Scaled effect size (positive direction, sum of positive coefficients = 0.381)
-    >  calcium   barium     iron   silver  arsenic  mercury chromium     zinc 
-    >  0.74466  0.06636  0.04839  0.03765  0.02823  0.02705  0.02344  0.01103 
-    >   sodium  cadmium 
-    >  0.00775  0.00543 
+    >  calcium   barium     iron   silver  arsenic  mercury chromium     zinc   sodium  cadmium 
+    >  0.74466  0.06636  0.04839  0.03765  0.02823  0.02705  0.02344  0.01103  0.00775  0.00543 
     > 
     > Scaled effect size (negative direction, sum of negative coefficients = -0.124)
     > magnesium    copper      lead manganese  selenium 
@@ -95,9 +89,9 @@
     > 
     > Mixture slope parameters (Delta method CI):
     > 
-    >              Estimate Std. Error Lower CI Upper CI t value
-    > (Intercept) -0.348084   0.108037 -0.55983 -0.13634  0.0014
-    > psi1         0.256969   0.071459  0.11691  0.39703  0.0004
+    >              Estimate Std. Error Lower CI Upper CI t value  Pr(>|t|)
+    > (Intercept) -0.348084   0.108037 -0.55983 -0.13634 -3.2219 0.0013688
+    > psi1         0.256969   0.071459  0.11691  0.39703  3.5960 0.0003601
 
     # coefficient for confounder
     results3$fit$coefficients['mage35']
@@ -112,8 +106,11 @@
           seed=125, rr=TRUE)
     print(results4)
     
-    > Mixture log(RR) (bootstrap CI):    >    >    Estimate Std. Error Lower CI  Upper CI Z value Pr(>|z|)    > (Intercept) -0.56237    0.23724 -1.02736 -0.097379 -2.3704  0.01777    > psi1        -0.16373    0.17196 -0.50076  0.173312 -0.9521  0.34104
+    > Mixture log(RR) (bootstrap CI):
     > 
+    >             Estimate Std. Error Lower CI  Upper CI Z value Pr(>|z|)
+    > (Intercept) -0.56237    0.23773 -1.02832 -0.096421 -2.3655   0.0180
+    > psi1        -0.16373    0.17239 -0.50161  0.174158 -0.9497   0.3423
 
     # checking whether model fit seems appropriate (note that this appears slightly non-linear
     # because the model is on the log-odds scale, but the plot is on the additive scale
@@ -132,11 +129,11 @@
     
     > Mixture slope parameters (bootstrap CI):
     > 
-    >             Estimate Std. Error Lower CI Upper CI t value
-    > (Intercept) -0.89239    0.73836 -2.33955  0.55477  0.2277
-    > psi1         0.90649    0.99245 -1.03869  2.85166  0.3617
-    > psi2        -0.19970    0.33848 -0.86311  0.46372  0.5556
-
+    >             Estimate Std. Error Lower CI Upper CI t value Pr(>|t|)
+    > (Intercept) -0.89239    0.70336 -2.27095  0.48617 -1.2688   0.2055
+    > psi1         0.90649    0.93820 -0.93235  2.74533  0.9662   0.3347
+    > psi2        -0.19970    0.32507 -0.83682  0.43743 -0.6143   0.5395
+     
     # some apparent non-linearity, but would require more bootstrap iterations for
     # proper test of non-linear mixture effect
     p5 = plot(results5, suppressprint=TRUE)
@@ -156,15 +153,13 @@
     >    0.3432    0.1946    0.1917    0.1119    0.0924    0.0511    0.0151 
     > 
     > Scaled effect size (negative direction, sum of negative coefficients = -0.554)
-    >  selenium    copper   calcium   arsenic manganese   cadmium      lead 
-    >    0.2705    0.1826    0.1666    0.1085    0.0974    0.0794    0.0483 
-    >   mercury 
-    >    0.0466 
+    >  selenium    copper   calcium   arsenic manganese   cadmium      lead   mercury 
+    >    0.2705    0.1826    0.1666    0.1085    0.0974    0.0794    0.0483    0.0466 
     > 
     > Mixture log(hazard ratio) (Delta method CI):
     > 
-    >      Estimate Std. Error Lower CI Upper CI Pr(>|t|)
-    > psi1 -0.23356    0.24535 -0.71444  0.24732   0.3411
+    >      Estimate Std. Error Lower CI Upper CI Z value Pr(>|z|)
+    > psi1 -0.23356    0.24535 -0.71444  0.24732 -0.9519   0.3411
     
     results7 = qgcomp.cox.boot(Surv(disease_time, disease_state)~.,
                          expnms=Xnm,
@@ -172,7 +167,7 @@
                          B=10, MCsize=5000)
 
     p7 = plot(results7, suppressprint=TRUE)
-    ggplot2::ggsave("res7.png", plot=p4, dpi=72, width=600/72, height=350/72, units="in")
+    ggplot2::ggsave("res7.png", plot=p7, dpi=72, width=600/72, height=350/72, units="in")
 ![Results 7](inst/fig/res7.png)
 
 

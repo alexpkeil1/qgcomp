@@ -128,17 +128,17 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
+  plab = ifelse(testtype=="Z", "Pr(>|z|)", "Pr(>|t|)")
   if(is.null(dim(x$ci.coef))){
-    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
-    colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
-    rownames(pdat) <- rnm
-    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[1], "Upper CI"=x$ci.coef[2], "test"=x$zstat, "pval"=x$pval)
   } else{
-    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[,1], "Upper CI"=x$ci.coef[,2], "test"=x$zstat, "Pr(>|z|)"=x$pval)
-    colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
-    rownames(pdat) <- rnm
-    printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(x$var.coef), "Lower CI"=x$ci.coef[,1], "Upper CI"=x$ci.coef[,2], "test"=x$zstat, "pval"=x$pval)
   }
+  colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
+  colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
+  rownames(pdat) <- rnm
+  printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+  
   invisible(x)
 }
 
@@ -177,17 +177,16 @@ summary.qgcompfit <- function(object, ...){
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
+  plab = ifelse(testtype=="Z", "Pr(>|z|)", "Pr(>|t|)")
   if(is.null(dim(object$ci.coef))){
-    pdat <- cbind(Estimate=coef(object), "Std. Error"=sqrt(object$var.coef), "Lower CI"=object$ci.coef[1], "Upper CI"=object$ci.coef[2], "test"=object$zstat, "Pr(>|z|)"=object$pval)
-    colnames(pdat)[5] = eval(paste(testtype, "value"))
-    rownames(pdat) <- rnm
-    #printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    pdat <- cbind(Estimate=coef(object), "Std. Error"=sqrt(object$var.coef), "Lower CI"=object$ci.coef[1], "Upper CI"=object$ci.coef[2], "test"=object$zstat, "pval"=object$pval)
   } else{
-    pdat <- cbind(Estimate=coef(object), "Std. Error"=sqrt(object$var.coef), "Lower CI"=object$ci.coef[,1], "Upper CI"=object$ci.coef[,2], "test"=object$zstat, "Pr(>|z|)"=object$pval)
-    colnames(pdat)[5] = eval(paste(testtype, "value"))
-    rownames(pdat) <- rnm
-    #printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+    pdat <- cbind(Estimate=coef(object), "Std. Error"=sqrt(object$var.coef), "Lower CI"=object$ci.coef[,1], "Upper CI"=object$ci.coef[,2], "test"=object$zstat, "pval"=object$pval)
   }
+  colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
+  colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
+  rownames(pdat) <- rnm
+  
   list(coefficents=pdat)
 }
 

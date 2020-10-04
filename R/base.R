@@ -687,6 +687,20 @@ qgcomp.boot <- function(f,
   #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #'   
+  #'  # Note that these give different answers! In the first, the estimate is conditional on Z,
+  #'  # but in the second, Z is marginalized over via standardization. The estimates
+  #'  # can be made approximately the same by centering Z (for linear models), but
+  #'  # the conditional estimate will typically have lower standard errors.
+  #'  dat$z = dat$z - mean(dat$z)
+  #'   
+  #' # Conditional linear slope
+  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
+  #' # Marginal linear slope (population average slope, for a purely linear, 
+  #' #  additive model this will equal the conditional)
+  #'  
+  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+  #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
+  #'  
   #' # Population average mixture slope which accounts for non-linearity and interactions
   #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
   #'  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
