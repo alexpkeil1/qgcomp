@@ -113,8 +113,8 @@
     > psi1        -0.16373    0.17239 -0.50161  0.174158 -0.9497   0.3423
 
     # checking whether model fit seems appropriate (note that the conditional fit
-    # appears slightly non-linear, wheras the marginal structural model is on the
-    # log-probability scale the conditional model is on the log-odds scale). 
+    # appears slightly non-linear. The conditional model is on the log-odds scale
+    # wheras the marginal structural model is on the log-probability scale ). 
     # The plot is on the log-10 scale.
     p4 = plot(results4, suppressprint=TRUE)
     ggplot2::ggsave("res4.png", plot=p4, dpi=72, width=600/72, height=350/72, units="in")
