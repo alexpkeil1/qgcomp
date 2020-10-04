@@ -112,8 +112,10 @@
     > (Intercept) -0.56237    0.23773 -1.02832 -0.096421 -2.3655   0.0180
     > psi1        -0.16373    0.17239 -0.50161  0.174158 -0.9497   0.3423
 
-    # checking whether model fit seems appropriate (note that this appears slightly non-linear
-    # because the model is on the log-odds scale, but the plot is on the additive scale
+    # checking whether model fit seems appropriate (note that the conditional fit
+    # appears slightly non-linear, wheras the marginal structural model is on the
+    # log-probability scale the conditional model is on the log-odds scale). 
+    # The plot is on the log-10 scale.
     p4 = plot(results4, suppressprint=TRUE)
     ggplot2::ggsave("res4.png", plot=p4, dpi=72, width=600/72, height=350/72, units="in")
 ![Results 4](inst/fig/res4.png)

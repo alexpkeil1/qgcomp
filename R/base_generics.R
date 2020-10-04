@@ -138,7 +138,6 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
   rownames(pdat) <- rnm
   printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
-  
   invisible(x)
 }
 
@@ -186,7 +185,6 @@ summary.qgcompfit <- function(object, ...){
   colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
   colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
   rownames(pdat) <- rnm
-  
   list(coefficents=pdat)
 }
 

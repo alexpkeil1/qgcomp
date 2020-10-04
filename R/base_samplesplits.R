@@ -284,15 +284,15 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
 }
 
 .split.cluster.data <- function(data, cluster="id", prop.train=0.4){
-  ids = sort(unique(data[[cluster]]))
-  trididx = sort(sample(1:length(ids), round(length(ids) * 
-                                               prop.train)))
-  trainids = ids[trididx]
-  validids = setdiff(ids, trainids)
-  trainidx <- which(data[[cluster]] %in% trainids)
-  valididx <- which(data[[cluster]] %in% validids)
-  traindata <- data[trainidx, ]
-  validdata <- data[valididx, ]
+  clustids = sort(unique(data[[cluster]]))
+  trainidx = c()
+  for(clust in clustids){
+    inclust = which(data[[cluster]] == clust)
+    trainidx = c(trainidx, sort(sample(inclust, round(length(inclust)*prop.train))))
+  }
+  valididx <- setdiff(1:nrow(data),trainidx)
+  traindata <- data[trainidx,]
+  validdata <- data[valididx,]
   list(
     trainidx = trainidx,
     valididx = valididx,
