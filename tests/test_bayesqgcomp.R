@@ -23,6 +23,31 @@ stopifnot(class(res)=="qgcompfit")
 res = try(qc.fit2 <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian()))
 stopifnot(class(res)=="qgcompfit")
 
+#hitting code coverage just to check
+dat = qgcomp:::.dgm_quantized(N=100)
+dat$y = as.numeric(dat$y>median(dat$y))
+
+qgcomp(y~.,dat=dat, expnms=c("x1", "x2"), family="binomial", rr=FALSE)
+
+res = try(qgcomp(y~x1+x2,dat=dat, expnms=c("x1", "x2"), family=NULL, rr=FALSE), silent=TRUE)
+stopifnot(inherits(res, "try-error"))
+
+qgcomp(y~x1+x2 | x1+x2,dat=dat, expnms=c("x1", "x2"), family="poisson")
+
+res = try(qgcomp(y~x1+x2 | x1+x2 +I(x2^2), B=2,dat=dat, expnms=c("x1", "x2"), bayes=TRUE, family="poisson"), silent=TRUE)
+stopifnot(inherits(res, "try-error"))
+
+
+ft = qgcomp(y~x1+x2 + I(x2^2), B=2,dat=dat, expnms=c("x1", "x2"), bayes=TRUE, family="poisson")
+pp = msm.predict(ft)
+ft = qgcomp(y~x1+x2,dat=dat, expnms=c("x1", "x2"), bayes=TRUE, family="poisson")
+res = try(msm.predict(ft), silent = TRUE)
+stopifnot(inherits(res, "try-error"))
+
+
+ft = qgcomp(y~x1+x2 + I(x2^2), B=2, q=NULL,dat=dat, expnms=c("x1", "x2"), bayes=TRUE, family=binomial())
+
+qc.fit2 <- qgcomp.boot(y~.,expnms = Xnm, dat=metals[,c(Xnm, 'y')],B=2, q=NULL, family=gaussian())
 
 
 ## slight shrinkage with heavily non-linear models that don't converge

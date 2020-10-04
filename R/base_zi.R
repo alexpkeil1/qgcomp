@@ -273,7 +273,8 @@ qgcomp.zi.noboot <- function(f,
   #' # Warning message:
   #' # In eval(family$initialize) : non-integer #successes in a binomial glm!
   #' 
-
+  if(bayes) stop("Bayesian zero inflated models not yet implemented")
+  
   # list containers
   estb <- vcov_mod <- seb <- tstat <- pvalz <- allterms <- containmix <- pos.weights <- neg.weights <- 
     pos.coef <- neg.coef <- pos.psi <- neg.psi <- pos.size <- neg.size <- wcoef <- ci <- tstat <- list()
@@ -332,11 +333,6 @@ qgcomp.zi.noboot <- function(f,
   if(!bayes) fit <- zeroinfl(newform, data = qdata, 
                              weights=weights, 
                              ...)
-  if(bayes){
-    stop("bayesian zero inflated models not yet implemented")
-    #requireNamespace("arm")
-    #fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE], ...)
-  }
   mod <- summary(fit)
   if((length(setdiff(expnms, rownames(mod$coefficients$count)))>0 & containmix$count) |
      (length(setdiff(expnms, rownames(mod$coefficients$zero)))>0 & containmix$zero)
@@ -551,6 +547,8 @@ qgcomp.zi.boot <- function(f,
   #'                    degree=2, MCsize=200, dist="poisson")
   #' res2
   #' }
+  if(bayes) stop("Bayesian zero inflated models not yet implemented")
+
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   #message("qgcomp.zi.boot function is still experimental. Please use with caution and be sure results are reasonable.\n")      
   # list containers
@@ -793,8 +791,8 @@ printZI <- function(x, showweights=TRUE, ...){
     for(modtype in names(x$psi)){
       pdat[[modtype]] <- cbind(Estimate=coef(x)[[modtype]], "Std. Error"=sqrt(x$var.coef[[modtype]]), 
                                "Lower CI"=x$ci.coef[[modtype]][,1], "Upper CI"=x$ci.coef[[modtype]][,2], 
-                               "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
-      colnames(pdat[[modtype]])[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
+                               "Z value"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
+      #colnames(pdat[[modtype]])[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
       #colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
       numpsi = length(x$psi[[modtype]])
       if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',1:max(1, numpsi))))
