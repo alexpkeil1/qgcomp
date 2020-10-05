@@ -225,7 +225,7 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
   #'   )
   #'   
   #'   e.g. if you call `spl = split_data(dat)`, then spl$traindata will contain
-  #'   a 40% sample from the original data, spl$valdidata will contain the other 60%
+  #'   a 40% sample from the original data, spl$validdata will contain the other 60%
   #'   and spl$trainidx, spl$valididx will contain integer indexes that track the 
   #'   row numbers (from the original data `dat`) that have the training and validation
   #'   samples.

@@ -244,6 +244,7 @@
 }
 
 .plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+  # TODO: make the plot more configurable
   surv <- NULL
   scl = qgcomp.survcurve.boot(x)
   cdf0 = scl$cdfq[scl$cdfq$q==1,]
