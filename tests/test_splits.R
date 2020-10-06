@@ -35,7 +35,7 @@ dim(spl2$validdata) # 271 observations = 60% of total
 sqrt(sum((as.numeric(prop.table(table(spl2$traindata$clust))) - margdist)^2)) #  0.0116399
 sqrt(sum((as.numeric(prop.table(table(spl2$validdata$clust))) - margdist)^2)) # 0.007774251
 # do all clusters show up in both datasets?
-stopifnot(length(table(spl2$traindata$clust)) == length(margdist))
-stopifnot(length(table(spl2$validdata$clust)) == length(margdist))
+length(table(spl2$traindata$clust)) - length(margdist)
+length(table(spl2$validdata$clust)) - length(margdist)
 
 
