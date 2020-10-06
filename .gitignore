@@ -36,3 +36,4 @@ NEWS.md
 *.DS_Store
 .Rbuildignore
 CRAN-RELEASE
+.github/workflows/r.yml

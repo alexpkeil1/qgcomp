@@ -46,7 +46,7 @@ stopifnot(inherits(res, "try-error"))
 
 
 ft = qgcomp(y~x1+x2 + I(x2^2), B=2, q=NULL,dat=dat, expnms=c("x1", "x2"), bayes=TRUE, family=binomial())
-
+summary(ft)
 qc.fit2 <- qgcomp.boot(y~.,expnms = Xnm, dat=metals[,c(Xnm, 'y')],B=2, q=NULL, family=gaussian())
 
 

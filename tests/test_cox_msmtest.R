@@ -53,9 +53,11 @@ dat <- data.frame(stop=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
                   d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
 expnms=paste0("x", 1:2)
 f = survival::Surv(start,stop, d)~x1 + x2
-suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=1, MCsize=5000))
+f = survival::Surv(start,stop, d)~x1 + x2
+suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=200, parallel=FALSE))
+suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, deg=2, B=2, MCsize=200, q=NULL, parallel=TRUE))
 #plot(obj)
-
+summary(obj)
 
 ymat = obj$fit$y
 tval = grep("stop|time",colnames(ymat) , value=TRUE)

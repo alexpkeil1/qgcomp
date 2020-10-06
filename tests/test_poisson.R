@@ -19,9 +19,9 @@ dat <- within(dat, {
 
 summary(glm(deaths ~ x2, data = dat, family=poisson(), offset = logtime))$coefficients
 
-qgcomp.noboot(deaths~x2 + offset(logtime), expnms="x2", data = dat, family=poisson(), q=NULL)
-qgcomp.noboot(deaths~x2+x1 + offset(logtime), expnms=c('x1', "x2"), data = dat, family=poisson(), q=4)
-
+res = qgcomp.noboot(deaths~x2 + offset(logtime), expnms="x2", data = dat, family=poisson(), q=NULL)
+res = qgcomp.noboot(deaths~x2+x1 + offset(logtime), expnms=c('x1', "x2"), data = dat, family=poisson(), q=4)
+summary(res)
 
 # error by scoping for using the offset parameter
 #qgcomp.noboot(deaths~x2, expnms="x2", data = dat, family=poisson(), q=4, offset = logtime)
@@ -54,9 +54,7 @@ Xnm = c(paste0("x", 1:6))
 dat = dgm(200)
 m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=gaussian(), q=4)
 m1a = qgcomp(y~., expnms=Xnm, data = dat, family=gaussian(), q=4)
-m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=5, parallel=TRUE, MCsize = 50)
 print(coef(m1), digits=10)
-print(coef(m2$msmfit), digits=10)
 
 #' \dontrun{
 #' m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=poisson(), q=4)
