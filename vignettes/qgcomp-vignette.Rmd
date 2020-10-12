@@ -6,7 +6,8 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette  
 vignette: >
   %\VignetteIndexEntry{The qgcomp package: g-computation on exposure quantiles}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
+
   \usepackage[utf8]{inputenc}
 ---
 
