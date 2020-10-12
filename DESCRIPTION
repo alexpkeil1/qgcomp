@@ -41,8 +41,7 @@ Suggests:
     knitr,
     markdown,
     MASS,
-    mice,
-    rmarkdown
+    mice
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
