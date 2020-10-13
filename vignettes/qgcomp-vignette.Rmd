@@ -421,15 +421,15 @@ Marginal hazards ratios (and bootstrapped quantile g-computation in general) use
 ```{r time-to-event2, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 # bootstrapped version estimates a marginal structural model for the population average effect
 #library(survival)
-#qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
-#                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
-#                         B=5, MCsize=1000, parallel=TRUE)
-#qc.survfit2
+qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=5, MCsize=1000, parallel=TRUE)
+qc.survfit2
 
 # testing proportional hazards (note that x=TRUE is not needed (and will cause an error if used))
-#survival::cox.zph(qc.survfit2$fit)
-#p2 = plot(qc.survfit2, suppressprint = TRUE)  
-#p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
+survival::cox.zph(qc.survfit2$fit)
+p2 = plot(qc.survfit2, suppressprint = TRUE)  
+p2 + labs(title="Linear log(hazard ratio), overall and exposure specific")
 
 
 ```
