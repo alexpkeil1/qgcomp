@@ -115,6 +115,27 @@ considered fixed and so do not have confidence intervals or p-values.
 qc.fit
 ```
 
+Now let's take a brief look under the hood. `qgcomp` works in steps. First, the exposure variables are "quantized" or turned into score variables based on the total number of quantiles from the parameter `q`. You can access these via the `qx` object from the `qgcomp` fit object.
+```{r linear model and runtime c, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+# quantized data
+head(qc.fit$qx)
+```
+
+You can re-fit a linear model using these quantized exposures. This is the "underlying model" of a qgcomp fit.
+```{r linear model and runtime d, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+# regression with quantized data
+qc.fit$qx$y = qc.fit$fit$data$y # first bring outcome back into the quantized data
+newfit <- lm(y ~ arsenic_q + barium_q + cadmium_q + calcium_q + chromium_q + copper_q + 
+    iron_q + lead_q + magnesium_q + manganese_q + mercury_q + selenium_q + 
+    silver_q + sodium_q + zinc_q, data=qc.fit$qx)
+newfit
+```
+Here you can see that, *for a GLM in which all quantized exposures enter linearly and additively into the underlying model* the overall effect from `qgcomp` is simply the sum of the adjusted coefficients from the underlying model. 
+```{r linear model and runtime e, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+sum(newfit$coefficients[-1]) # sum of all coefficients excluding intercept and confounders, if any
+coef(qc.fit) # overall effect and intercept from qgcomp fit
+```
+This equality is why we can fit qgcomp so efficiently under such a model, but `qgcomp` is a much more general method that can allow for non-linearity and non-additivity in the underlying model, as well as non-linearity in the overall model. These extensions are described in some of the following examples.
 
 ### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
 
