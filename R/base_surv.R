@@ -619,12 +619,13 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   set.seed(seed)
   if(parallel){
     Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-    future::plan(strategy = future::multiprocess)
+    future::plan(strategy = future::multisession)
     bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,
                                     f=newform, qdata=qdata, intvals=intvals, 
                                     expnms=expnms, degree=degree, nids=nids, id=id,
+                                    future.seed=TRUE,
                                     weights=qdata$weights, MCsize=MCsize, ...)
-    future::plan(future::sequential)
+    future::plan(strategy = future::transparent)
   }else {
     bootsamps <- sapply(X=1:B, FUN=psi.only,
                         f=newform, qdata=qdata, intvals=intvals, 

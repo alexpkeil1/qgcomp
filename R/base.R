@@ -892,13 +892,14 @@ qgcomp.boot <- function(f,
     set.seed(seed)
     if(parallel){
       Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-      future::plan(strategy = future::multiprocess)
+      future::plan(strategy = future::multisession)
       bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=qdata$weights,MCsize=MCsize,
+                          future.seed=TRUE,
                           ...)
       
-      future::plan(future::sequential)
+      future::plan(strategy = future::transparent)
     }else{
       bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,

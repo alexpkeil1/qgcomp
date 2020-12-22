@@ -265,19 +265,23 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' Note that function only works with standard "qgcompfit" objects from `qgcomp.noboot` (so it doesn't work
 #' with zero inflated, hurdle, or Cox models)
 #' 
+#' Variance calculations for the overall effect estimate arg given by:
+#' \eqn{transpose(G) Cov(\beta)  G}
+#' 
+#' Where
 #'  \eqn{f(\beta) = \sum_i^p \beta_i}
-#' given gradient vector 
+#' 
+#' and the "gradient vector" G is given by 
 #' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
 #'   ...,
 #'   \partial(f(\beta))/\partial\beta_3k= 1]
 #'   }
-#' \eqn{t(G) Cov(\beta)  G} = delta method variance, where t() is the transpose operator
-#' and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient and G is the 
-#' "gradient vector". The vector G takes on values that equal the difference in quantiles of 
+#' and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of 
 #' S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category,
 #' G is a vector of 2s)
 #' 
-#' This is used to create pointwise confidence intervals
+#' This variance is used to create pointwise confidence intervals via a normal approximation:
+#' (e.g. upper 95% CI = psi + variance*1.96)
 #' 
 #' @param x "qgcompfit" object from `qgcomp.noboot`, 
 #' @param alpha alpha level for confidence intervals
