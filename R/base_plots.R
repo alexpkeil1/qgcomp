@@ -198,7 +198,7 @@
 }
 
 .plot.boot.gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link %in% c("identity"))) stop("Plotting not implemented for this link function")
+  if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
   p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
   #
   if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function

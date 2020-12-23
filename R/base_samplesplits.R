@@ -285,7 +285,7 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
 
 .split.cluster.data <- function(data, cluster="id", prop.train=0.4){
   clustids = sort(unique(data[[cluster]]))
-  trainidx = c()
+  trainidx = vector()
   for(clust in clustids){
     inclust = which(data[[cluster]] == clust)
     trainidx = c(trainidx, sort(sample(inclust, round(length(inclust)*prop.train))))

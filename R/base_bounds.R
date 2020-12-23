@@ -339,7 +339,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   diffs = c(rev(seq_len(q-1)), 0:(q-1))
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
   #se.diff = sapply(qdiff, sediff)
-  se.diff = vapply(qdiff, sediff, rep(0, length(diffs)))
+  se.diff = vapply(qdiff, sediff, 0)
   res = switch(link, 
                identity = .pointwise.lin(q, py, se.diff, alpha, pointwiseref), 
                log = .pointwise.log(q, py, se.diff, alpha, pointwiseref),
