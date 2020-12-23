@@ -271,8 +271,8 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
 # experimental functions that may make it into permanent base files
 
 .split.iid.data <- function(data, prop.train=0.4){
-  trainidx <- sort(sample(1:nrow(data), round(nrow(data)*prop.train)))
-  valididx <- setdiff(1:nrow(data),trainidx)
+  trainidx <- sort(sample(seq_len(nrow(data)), round(nrow(data)*prop.train)))
+  valididx <- setdiff(seq_len(nrow(data)),trainidx)
   traindata <- data[trainidx,]
   validdata <- data[valididx,]
   list(
@@ -290,7 +290,7 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
     inclust = which(data[[cluster]] == clust)
     trainidx = c(trainidx, sort(sample(inclust, round(length(inclust)*prop.train))))
   }
-  valididx <- setdiff(1:nrow(data),trainidx)
+  valididx <- setdiff(seq_len(nrow(data)),trainidx)
   traindata <- data[trainidx,]
   validdata <- data[valididx,]
   list(
