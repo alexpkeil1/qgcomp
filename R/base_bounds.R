@@ -8,8 +8,8 @@
 # confidence intervals for pointwise comparisons #
 .pointwise.lin <- function(q, py, se.diff, alpha, pwr){
   # mean, mean differences
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, 
              mean.diff = py - py[pwr],
              se.diff = se.diff, # standard error on link scale
@@ -22,8 +22,8 @@
 
 .pointwise.log <- function(q, py, se.diff, alpha, pwr){
   # risk, risk ratios / prevalence ratios
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, 
              rr = exp(py - py[pwr]),
              se.lnrr = se.diff, # standard error on link scale
@@ -36,8 +36,8 @@
 
 .pointwise.logit <- function(q, py, se.diff, alpha, pwr){
   # odds, odds ratios 
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log odds
              or = exp(py - py[pwr]),
              se.lnor = se.diff, # standard error on link scale
@@ -56,8 +56,8 @@
   lrrdist = sweep(lby,2, lby[pwr,], "-")
   rrdist = exp(lrrdist)
   se.lnrr = apply(lrrdist,1, sd)
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              ey = py, # expected (marginal) rate
              rr = rr,
              se.lnrr = se.lnrr, # standard error on link scale
@@ -97,8 +97,8 @@
 # confidence intervals for model slopes  #
 .modelwise.lin <- function(q, py, se.diff, alpha, ll, ul){
   # mean, mean differences
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, 
              m = py, 
              se.pw = se.diff, # standard error on link scale
@@ -111,8 +111,8 @@
 
 .modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
   # risk
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log risk
              r = exp(py), # risk
              se.pw = se.diff, # standard error on link scale
@@ -125,8 +125,8 @@
 
 .modelwise.logit <- function(q, py, se.diff, alpha, ll, ul){
   # odds
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log odds
              o = exp(py), # odds
              se.pw = se.diff, # standard error on link scale
@@ -141,8 +141,8 @@
   # marginal expected rates
   lby = .safelog(bootY)
   se.lpy = apply(lby,1, sd)
-  data.frame(quantile= (1:q) - 1, 
-             quantile.midpoint=((1:q) - 1 + 0.5)/(q),
+  data.frame(quantile= (seq_len(q)) - 1, 
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # expected (marginal) rate
              r = py, # expected (marginal) rate
              se.pw = se.lpy, # standard error on link scale
@@ -226,7 +226,7 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   pw.diff = c(0,diff(py))
   pw.vars = numeric(length(pw.diff))
   pw.vars[pwr] = 0
-  pw.idx = (1:length(py))[-pwr]
+  pw.idx = seq_len(length(py))[-pwr]
   for(j in pw.idx){
     yc = ycovmat[c(pwr,j),c(pwr,j)]
     #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
@@ -265,18 +265,16 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' Note that function only works with standard "qgcompfit" objects from `qgcomp.noboot` (so it doesn't work
 #' with zero inflated, hurdle, or Cox models)
 #' 
-#' Variance calculations for the overall effect estimate arg given by:
+#' Variance for the overall effect estimate is given by:
 #' \eqn{transpose(G) Cov(\beta)  G}
 #' 
-#' Where
-#'  \eqn{f(\beta) = \sum_i^p \beta_i}
-#' 
-#' and the "gradient vector" G is given by 
+#' Where the "gradient vector" G is given by 
 #' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
 #'   ...,
 #'   \partial(f(\beta))/\partial\beta_3k= 1]
 #'   }
-#' and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of 
+#' \eqn{f(\beta) = \sum_i^p \beta_i},  and \eqn{\partial y/ \partial x} denotes 
+#' the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of 
 #' S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category,
 #' G is a vector of 2s)
 #' 
@@ -338,9 +336,10 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
     # gives standard deviation of pointwise difference on log scale (conditional) 
     se_comb(x$expnms, vcov(x$fit), grad = rep(qdiffj, px))
   }
-  diffs = c(rev(1:(q-1)), 0:(q-1))
+  diffs = c(rev(seq_len(q-1)), 0:(q-1))
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
-  se.diff = sapply(qdiff, sediff)
+  #se.diff = sapply(qdiff, sediff)
+  se.diff = vapply(qdiff, sediff, rep(0, length(diffs)))
   res = switch(link, 
                identity = .pointwise.lin(q, py, se.diff, alpha, pointwiseref), 
                log = .pointwise.log(q, py, se.diff, alpha, pointwiseref),
@@ -422,7 +421,8 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
     coef.boot = x$bootsamps
     boot.err = t(coef.boot - x$coef)
     iV = solve(qr(x$covmat.coef, tol=1e-20))
-    chi.boots = sapply(1:nrow(boot.err), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+    #chi.boots = sapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+    chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
     chicrit = qchisq(1-alpha, length(x$coef))
     C.set = t(coef.boot[,which(chi.boots<chicrit)])
     fx = function(coef, q=x$q, degree=x$degree){
@@ -471,7 +471,8 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
     coef.boot = x$bootsamps
     boot.err = t(coef.boot - x$coef)
     iV = solve(qr(x$covmat.coef, tol=1e-20))
-    chi.boots = sapply(1:nrow(boot.err), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+    #chi.boots = sapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
+    chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
     chicrit = qchisq(1-alpha, length(x$coef))
     C.set = t(coef.boot[,which(chi.boots<chicrit)])
     fx = function(coef, q=x$q, degree=x$degree){
@@ -494,8 +495,8 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
     ll=NA
     ul=NA
   }
-  data.frame(quantile = (1:x$q)-1, 
-             quantile.midpoint=((1:x$q)-1+0.5)/(x$q), 
+  data.frame(quantile = seq_len(x$q)-1, 
+             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q), 
              y.expected = py, 
              se.pw=sqrt(pw.vars), 
              ll.pw=py + qnorm(alpha/2)*sqrt(pw.vars), 
@@ -517,14 +518,14 @@ pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
   pw.diff = c(0,diff(py))
   pw.vars = numeric(length(pw.diff))
   pw.vars[pwr] = 0
-  pw.idx = (1:length(py))[-pwr]
+  pw.idx = seq_len(length(py))[-pwr]
   for(j in pw.idx){
     yc = ycovmat[c(pwr,j),c(pwr,j)]
     #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
     pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
   }
-  data.frame(quantile = (1:x$q)-1, 
-             quantile.midpoint=((1:x$q)-1+0.5)/(x$q), 
+  data.frame(quantile = seq_len(x$q)-1, 
+             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q), 
              y.expected = py, 
              mean.diff=py-py[pwr], 
              se.diff=sqrt(pw.vars),
@@ -537,7 +538,7 @@ pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
 
 pointwisebound.noboot_old <- function(x, alpha=0.05, pointwiseref = 1){
 
-  if(is.null(x$fit$family$family) || x$fit$family$family %in%  c("cox")){
+  if(is.null(x$fit$family$family) || x$fit$family$family == "cox"){
     stop("pointwisebound.noboot not implemented for this method")
   }
   q = x$q
@@ -552,28 +553,33 @@ pointwisebound.noboot_old <- function(x, alpha=0.05, pointwiseref = 1){
   sediff <- function(qdiff){
     se_comb(x$expnms, vcov(x$fit), grad = rep(qdiff, px))
   }
-  diffs = c(rev(1:(q-1)), 0:(q-1))
+  diffs = c(rev(seq_len(q-1)), seq_len(q)-1)
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
-  se.diff = sapply(qdiff, sediff)
-  data.frame(quantile= (1:x$q) - 1, 
-             quantile.midpoint=((1:x$q) - 1 + 0.5)/(x$q),
-             y.expected = sapply(1:length(py), function(i) switch(link, 
+  #se.diff = sapply(qdiff, sediff)
+  se.diff = vapply(qdiff, sediff, 0.0)
+  data.frame(quantile= (seq_len(x$q)) - 1, 
+             quantile.midpoint=(seq_len(x$q) - 1 + 0.5)/(x$q),
+             #y.expected = sapply(seq_len(length(py)), function(i) switch(link, 
+             y.expected = vapply(seq_len(length(py)), function(i) switch(link, 
                                                                   identity = (py[i]), 
                                                                   log=exp(py[i]), 
-                                                                  logit=(1/(1+exp(-py[i]))))),
-             mean.diff = sapply(1:length(py), function(i) switch(link, 
+                                                                  logit=(1/(1+exp(-py[i])))), 0.0),
+             #mean.diff = sapply(seq_len(length(py)), function(i) switch(link, 
+             mean.diff = vapply(seq_len(length(py)), function(i) switch(link, 
                                                                  identity = (py[i] - py[pointwiseref]), 
                                                                  log=exp(py[i]) - exp(py[pointwiseref]), 
-                                                                 logit=(1/(1+exp(-(py[i])))) - (1/(1+exp(-(py[pointwiseref])))))),
+                                                                 logit=(1/(1+exp(-(py[i])))) - (1/(1+exp(-(py[pointwiseref]))))), 0.0),
              se.diff = se.diff,
-             ul.pw = sapply(1:length(py), function(i) switch(link, 
+             #ul.pw = sapply(seq_len(length(py)), function(i) switch(link, 
+             ul.pw = vapply(seq_len(length(py)), function(i) switch(link, 
                                                              identity = (py[i] + qnorm(1-alpha/2) * se.diff[i]), 
                                                              log=exp((py[i] + qnorm(1-alpha/2) * se.diff[i])), 
-                                                             logit=(1/(1+exp(-(py[i] + qnorm(1-alpha/2) * se.diff[i])))))) ,
-             ll.pw = sapply(1:length(py), function(i) switch(link, 
+                                                             logit=(1/(1+exp(-(py[i] + qnorm(1-alpha/2) * se.diff[i]))))), 0.0) ,
+             #ll.pw = sapply(seq_len(length(py)), function(i) switch(link, 
+             ll.pw = vapply(seq_len(length(py)), function(i) switch(link, 
                                                              identity = (py[i] + qnorm(alpha/2) * se.diff[i]), 
                                                              log=exp((py[i] + qnorm(alpha/2) * se.diff[i])), 
-                                                             logit=(1/(1+exp(-(py[i] + qnorm(alpha/2) * se.diff[i]))))))
+                                                             logit=(1/(1+exp(-(py[i] + qnorm(alpha/2) * se.diff[i]))))), 0.0)
   )
 }
 

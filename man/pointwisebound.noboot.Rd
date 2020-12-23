@@ -44,18 +44,16 @@ version of quantile g-computation (under a linear model)
 Note that function only works with standard "qgcompfit" objects from \code{qgcomp.noboot} (so it doesn't work
 with zero inflated, hurdle, or Cox models)
 
-Variance calculations for the overall effect estimate arg given by:
+Variance for the overall effect estimate is given by:
 \eqn{transpose(G) Cov(\beta)  G}
 
-Where
-\eqn{f(\beta) = \sum_i^p \beta_i}
-
-and the "gradient vector" G is given by
+Where the "gradient vector" G is given by
 \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
   ...,
   \partial(f(\beta))/\partial\beta_3k= 1]
   }
-and \eqn{\partial y/ \partial x} denotes the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of
+\eqn{f(\beta) = \sum_i^p \beta_i},  and \eqn{\partial y/ \partial x} denotes
+the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of
 S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category,
 G is a vector of 2s)
 

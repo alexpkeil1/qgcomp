@@ -189,7 +189,7 @@ qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
 
 # weighted model
 N=5000
-dat4 <- data.frame(id=1:N, x1=runif(N), x2=runif(N), z=runif(N))
+dat4 <- data.frame(id=seq_len(N), x1=runif(N), x2=runif(N), z=runif(N))
 dat4$y <- with(dat4, rnorm(N, x1*z + z, 1))
 dat4$w=runif(N) + dat4$z*5
 qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data

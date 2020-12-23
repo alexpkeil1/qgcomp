@@ -115,7 +115,7 @@ zimsm.fit <- function(
 
   if(is.null(id)) {
     id = "id__"
-    qdata$id__ = 1:dim(qdata)[1]
+    qdata$id__ = seq_len(dim(qdata)[1])
   }
   # conditional outcome regression fit
   if(!bayes) fit <- zeroinfl(newform, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
@@ -125,7 +125,7 @@ zimsm.fit <- function(
   if(fit$optim$convergence[1]!=0) warning("Conditional outcome regression model did not converge")
   ## get predictions (set exposure to 0,1,...,q-1)
   if(is.null(intvals)){
-    intvals = (1:length(table(qdata[expnms[1]]))) - 1
+    intvals = seq_len(length(table(qdata[expnms[1]]))) - 1
   }
   predit <- function(idx, newdata){
     newdata[,expnms] <- idx
@@ -155,7 +155,7 @@ zimsm.fit <- function(
                                         replace = TRUE
   )))
   names(newids) <- id
-  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,]
+  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[seq_len(MCsize),]
   predmat <- lapply(intvals, predit, newdata=newdata)
   msmdat <- data.frame(
    # weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
@@ -320,7 +320,7 @@ qgcomp.zi.noboot <- function(f,
   if(is.null(id)) {
     # not yet implemented
     id = "id__"
-    qdata$id__ = 1:dim(qdata)[1]
+    qdata$id__ = seq_len(dim(qdata)[1])
   }
   for(modtype in c("count", "zero")){
     containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
@@ -616,7 +616,7 @@ qgcomp.zi.boot <- function(f,
     } else{
       nvals <- q
     }
-    intvals <- (1:nvals)-1
+    intvals <- seq_len(nvals)-1
   } else {
     # if( is.null(breaks) & is.null(q)) # also includes NA
     qdata <- data
@@ -632,7 +632,7 @@ qgcomp.zi.boot <- function(f,
   }
   if(is.null(id)) {
     id <- "id__"
-    qdata$id__ <- 1:dim(qdata)[1]
+    qdata$id__ <- seq_len(dim(qdata)[1])
   }
   ###
   msmfit <- zimsm.fit(newform, qdata, intvals, expnms, main=TRUE,
@@ -677,7 +677,8 @@ qgcomp.zi.boot <- function(f,
     Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multisession)
     #testenv <- list2env(list(qdata=qdata, weights=weights))
-    bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- future.apply::future_sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    #bootsamps <- future.apply::future_vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                                              expnms=expnms, degree=degree, nids=nids, id=id, 
                                              weights=qdata$weights,
                                              MCsize=MCsize,
@@ -686,7 +687,8 @@ qgcomp.zi.boot <- function(f,
     
     future::plan(strategy = future::transparent)
   }else{
-    bootsamps <- sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    #bootsamps <- vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 
                         weights=weights, 
                         MCsize=MCsize,
@@ -705,7 +707,7 @@ qgcomp.zi.boot <- function(f,
   }
   
   pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))
-  hats = t(bootsamps[-c(1:(maxcidx)),])
+  hats = t(bootsamps[-c(seq_len(maxcidx)),])
   hats.ll <- apply(hats, 2, function(x) quantile(x, 0.025))
   hats.ul <- apply(hats, 2, function(x) quantile(x, 0.975))
   cov.yhat = cov(hats)
@@ -796,7 +798,7 @@ printZI <- function(x, showweights=TRUE, ...){
       #colnames(pdat[[modtype]])[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
       #colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
       numpsi = length(x$psi[[modtype]])
-      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',1:max(1, numpsi))))
+      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',seq_len(max(1, numpsi)))))
       if(numpsi==0) rnm = c("(Intercept)")
       rownames(pdat[[modtype]]) <- rnm
       cat(paste0("Prob(Y ~ ", modtype,"):\n"))
@@ -824,7 +826,7 @@ summaryZI <- function(x){
                                "test"=x$zstat[[modtype]], "Pr(>|z|)"=x$pval[[modtype]])
       colnames(pdat[[modtype]])[5] = eval(paste(testtype, "value"))
       numpsi = length(x$psi[[modtype]])
-      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',1:max(1, numpsi))))
+      if(numpsi>0) rnm = c("(Intercept)", c(paste0('psi',seq_len(max(1, numpsi)))))
       if(numpsi==0) rnm = c("(Intercept)")
       rownames(pdat[[modtype]]) <- rnm
       cat(paste0("Prob(Y ~ ", modtype,"):\n"))
