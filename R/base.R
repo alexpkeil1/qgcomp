@@ -894,8 +894,7 @@ qgcomp.boot <- function(f,
     if(parallel){
       #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
       future::plan(strategy = future::multisession)
-      bootsamps <- future.apply::future_sapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-      #bootsamps <- future.apply::future_vapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=qdata$weights,MCsize=MCsize,
                           future.seed=TRUE,
@@ -903,13 +902,13 @@ qgcomp.boot <- function(f,
       
       future::plan(strategy = future::transparent)
     }else{
-      bootsamps <- sapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
-      #bootsamps <- vapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=weights, MCsize=MCsize,
                           ...)
       
     }
+    bootsamps = do.call("cbind", bootsamps)
     # these are the linear predictors
     hats = t(bootsamps[-c(seq_len(degree+1)),])
     # covariance of the linear predictors

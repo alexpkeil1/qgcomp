@@ -677,8 +677,7 @@ qgcomp.zi.boot <- function(f,
     #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multisession)
     #testenv <- list2env(list(qdata=qdata, weights=weights))
-    bootsamps <- future.apply::future_sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
-    #bootsamps <- future.apply::future_vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                                              expnms=expnms, degree=degree, nids=nids, id=id, 
                                              weights=qdata$weights,
                                              MCsize=MCsize,
@@ -687,14 +686,14 @@ qgcomp.zi.boot <- function(f,
     
     future::plan(strategy = future::transparent)
   }else{
-    bootsamps <- sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
-    #bootsamps <- vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 
                         weights=weights, 
                         MCsize=MCsize,
                         ...)
     
   }
+  bootsamps = do.call("cbind", bootsamps)
   maxcidx=1
   for(modtype in names(containmix)){
       cidx = grep(paste0("^",modtype), names(unlist(msmfit$msmfit$coefficients)))
