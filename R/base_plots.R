@@ -149,7 +149,8 @@
     coord_flip() + 
     theme_butterfly_l
   if((length(x$neg.weights)>0 || length(x$pos.weights)>0)){
-    maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
+    #maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
+    maxstr = max(nchar(c(names(x$neg.weights), names(x$pos.weights))))
     lw = 1+maxstr/20
     p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
   }
@@ -189,7 +190,8 @@
       coord_flip(ylim=c(0,1)) + 
       theme_butterfly_l
     if((length(x$neg.weights[[modtype]])>0 & length(x$pos.weights[[modtype]])>0)){
-      maxstr = max(mapply(nchar, c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
+      #maxstr = max(mapply(nchar, c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
+      maxstr = max(nchar(c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
       lw = 1+maxstr/20
       p1[[modtype]] <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
     }
@@ -201,7 +203,7 @@
   if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
   p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
   #
-  if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function
+  if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # : add alpha to main function
   if(flexfit)       p <- p + .plot.linear.smooth.line(x)
   if(modelfitline)  p <- p + .plot.linear.line(x)
   if(pointwisebars) p <- p + .plot.md.pw.boot(x,alpha,pointwiseref)
@@ -244,7 +246,7 @@
 }
 
 .plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  # TODO: make the plot more configurable
+  # : make the plot more configurable
   surv <- NULL
   scl = qgcomp.survcurve.boot(x)
   cdf0 = scl$cdfq[scl$cdfq$q==1,]

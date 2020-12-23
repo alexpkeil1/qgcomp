@@ -624,7 +624,7 @@ qgcomp.hurdle.boot <- function(f,
     # if no transformation is made (no quantiles, no breaks given)
     # then draw distribution values from quantiles of all the exposures
     # pooled together
-    # TODO: allow user specification of this
+    # : allow user specification of this
     message("\nNote: using quantiles of all exposures combined in order to set 
           proposed intervention values for overall effect (25th, 50th, 75th %ile)
         You can ensure this is valid by scaling all variables in expnms to have similar ranges.")
@@ -665,7 +665,7 @@ qgcomp.hurdle.boot <- function(f,
                    MCsize=MCsize, containmix=containmix, 
                    bayes=FALSE, x=FALSE, msmcontrol=msmcontrol, ...)
     classprob = suppressWarnings(predict(ft$msmfit, type="prob"))
-    # todo: check that this works if class probabilities can be zero in certain bootstrap iterations
+    # : check that this works if class probabilities can be zero in certain bootstrap iterations
     ncats = ncol(classprob)
     yhat = apply(classprob[,], 1, function(x) -1+which.max(rmultinom(1, 1, x)))
 

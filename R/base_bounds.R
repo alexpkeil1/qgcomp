@@ -510,7 +510,7 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
 ############ old functions ############ 
 pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
   if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
-  # todo: error catching for other functions
+  # : error catching for other functions
   
   pwr = pointwiseref+0 # may break this in the future
   py = tapply(x$y.expectedmsm, x$index, mean)

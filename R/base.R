@@ -835,7 +835,7 @@ qgcomp.boot <- function(f,
       # if no transformation is made (no quantiles, no breaks given)
       # then draw distribution values from quantiles of all the exposures
       # pooled together
-      # TODO: allow user specification of this
+      # : allow user specification of this
       nvals = length(table(unlist(data[,expnms])))
       if(nvals < 10){
         message("\nNote: using all possible values of exposure as the 
