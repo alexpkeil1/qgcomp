@@ -58,7 +58,7 @@ meatCL <- function (x, cluster = NULL, type = NULL, cadjust = TRUE, multi0 = FAL
   if (is.null(cluster)) 
     cluster <- attr(x, "cluster")
   if (is.null(cluster)) 
-    cluster <- 1L:n
+    cluster <- seq_len(n)
   if (inherits(cluster, "formula")) {
     cluster_tmp <- expand.model.frame(x, cluster, na.expand = FALSE)
     cluster <- model.frame(cluster, cluster_tmp, na.action = na.pass)
@@ -74,7 +74,7 @@ meatCL <- function (x, cluster = NULL, type = NULL, cadjust = TRUE, multi0 = FAL
     stop("number of observations in 'cluster' and 'estfun()' do not match")
   p <- NCOL(cluster)
   if (p > 1L) {
-    cl <- lapply(1L:p, function(i) combn(1L:p, i, simplify = FALSE))
+    cl <- lapply(seq_len(p), function(i) combn(seq_len(p), i, simplify = FALSE))
     cl <- unlist(cl, recursive = FALSE)
     sign <- sapply(cl, function(i) (-1L)^(length(i) + 1L))
     paste_ <- function(...) paste(..., sep = "_")
@@ -83,7 +83,7 @@ meatCL <- function (x, cluster = NULL, type = NULL, cadjust = TRUE, multi0 = FAL
                                                                cl[[i]]])))
     }
     if (multi0) 
-      cluster[[length(cl)]] <- 1L:n
+      cluster[[length(cl)]] <- seq_len(n)
   }
   else {
     cl <- list(1)
@@ -233,7 +233,7 @@ vcovCL <- function (x, cluster = NULL, type = NULL, sandwich = TRUE, fix = FALSE
 #
 ################################################################################
 # pre quantize
-expnms = c("x1")
+expnms = "x1"
 datl = quantize(dat, expnms = expnms)
 
 

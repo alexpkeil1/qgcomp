@@ -116,7 +116,7 @@ hurdlemsm.fit <- function(
 
   if(is.null(id)) {
     id = "id__"
-    qdata$id__ = 1:dim(qdata)[1]
+    qdata$id__ = seq_len(dim(qdata)[1])
   }
   # conditional outcome regression fit
   if(!bayes) fit <- hurdle(newform, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
@@ -126,7 +126,7 @@ hurdlemsm.fit <- function(
   #if(fit$optim$convergence[1]!=0) warning("Conditional outcome regression model did not converge")
   ## get predictions (set exposure to 0,1,...,q-1)
   if(is.null(intvals)){
-    intvals = (1:length(table(qdata[expnms[1]]))) - 1
+    intvals = seq_len(length(table(qdata[expnms[1]]))) - 1
   }
   predit <- function(idx, newdata){
     newdata[,expnms] <- idx
@@ -156,7 +156,7 @@ hurdlemsm.fit <- function(
                                         replace = TRUE
   )))
   names(newids) <- id
-  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,]
+  newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[seq_len(MCsize),]
   predmat <- lapply(intvals, predit, newdata=newdata)
   msmdat <- data.frame(
    # weights = rep(newdata$weights, times=length(table(qdata[expnms[1]])))
@@ -320,7 +320,7 @@ qgcomp.hurdle.noboot <- function(f,
   if(is.null(id)) {
     # not yet implemented
     id = "id__"
-    qdata$id__ = 1:dim(qdata)[1]
+    qdata$id__ = seq_len(dim(qdata)[1])
   }
   for(modtype in c("count", "zero")){
     containmix[[modtype]] = all(expnms %in% allterms[[modtype]])
@@ -617,7 +617,7 @@ qgcomp.hurdle.boot <- function(f,
     } else{
       nvals <- q
     }
-    intvals <- (1:nvals)-1
+    intvals <- seq_len(nvals)-1
   } else {
     # if( is.null(breaks) & is.null(q)) # also includes NA
     qdata <- data
@@ -633,7 +633,7 @@ qgcomp.hurdle.boot <- function(f,
   }
   if(is.null(id)) {
     id <- "id__"
-    qdata$id__ <- 1:dim(qdata)[1]
+    qdata$id__ <- seq_len(dim(qdata)[1])
   }
   ###
   msmfit <- hurdlemsm.fit(newform, qdata, intvals, expnms, main=TRUE,
@@ -709,7 +709,7 @@ qgcomp.hurdle.boot <- function(f,
   }
   
   pvalz <- lapply(tstat, function(x) 2 - 2 * pnorm(abs(x)))
-  hats = t(bootsamps[-c(1:(maxcidx)),])
+  hats = t(bootsamps[-c(seq_len(maxcidx)),])
   cov.yhat = cov(hats)
   
   qx <- qdata[, expnms]

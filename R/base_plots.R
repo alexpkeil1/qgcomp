@@ -198,7 +198,7 @@
 }
 
 .plot.boot.gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link %in% c('identity'))) stop("Plotting not implemented for this link function")
+  if(!(x$msmfit$family$link %in% c("identity"))) stop("Plotting not implemented for this link function")
   p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
   #
   if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function
@@ -210,16 +210,16 @@
 
 
 .plot.boot.binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link %in% c('log', "logit"))) stop("Plotting not implemented for this link function")
+  if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
   #
   p <- p + scale_y_log10()
-  if(x$msmfit$family$link=='logit'){
+  if(x$msmfit$family$link == "logit"){
     p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
     if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
     if(flexfit)   p <- p + .plot.or.smooth.line(x)
     if(modelfitline) p <- p + .plot.logitlin.line(x)
     if(pointwisebars) p <- p + .plot.or.pw.boot(x,alpha,pointwiseref)
-  } else if(x$msmfit$family$link=='log'){
+  } else if(x$msmfit$family$link=="log"){
     p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
     if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
     if(flexfit)   p <- p + .plot.rr.smooth.line(x)
@@ -231,9 +231,9 @@
 
 
 .plot.boot.poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link %in% c("log"))) stop("Plotting not implemented for this link function")
+  if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
   p <- p + scale_y_log10()
-  if(x$msmfit$family$link=='log'){
+  if(x$msmfit$family$link == "log"){
     p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
     if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
     if(flexfit)   p <- p + .plot.rr.smooth.line(x)
@@ -269,7 +269,7 @@
 .plot.boot.zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   # zero inflated
   p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-  if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha) # TODO: add alpha to main function
+  if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha)
   if(flexfit)       p <- p + .plot.linear.smooth.line(x)
   if(modelfitline)  p <- p + .plot.linear.line(x)
   if(pointwisebars) p <- p + .plot.zi.pw.boot(x, alpha=alpha, pointwiseref)
