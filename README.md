@@ -176,4 +176,4 @@
 See the vignette which is included with the `qgcomp` R package, and is accessible in 
 R via `vignette("qgcomp-vignette", package="qgcomp")`
 
-<img src="fig/sticker.png" alt="drawing" width="100"/>
+<center><img src="fig/fighex.png" alt="" width="100"/></center>
