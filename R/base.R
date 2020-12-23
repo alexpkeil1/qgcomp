@@ -195,7 +195,8 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
     if(length(expnms)==1){
       data[, expnms] <- qt(1)
     }else{
-      data[, expnms] <- sapply(seq_len(length(expnms)), qt)
+      #data[, expnms] <- sapply(seq_len(length(expnms)), qt)
+      data[, expnms] <- vapply(seq_len(length(expnms)), qt, rep(0.0, nrow(data)))
     }
     return(list(data=data, breaks=e$retbr))
 }
@@ -307,7 +308,7 @@ msm.fit <- function(f,
   
     if(is.null(id)) {
       id <- "id__"
-      qdata$id__ <- 1:dim(qdata)[1]
+      qdata$id__ <- seq_len(dim(qdata)[1])
     }
     # conditional outcome regression fit
     nidx = which(!(names(qdata) %in% id))
@@ -324,7 +325,7 @@ msm.fit <- function(f,
     ### 
     # get predictions (set exposure to 0,1,...,q-1)
     if(is.null(intvals)){
-      intvals <- (1:length(table(qdata[expnms[1]]))) - 1
+      intvals <- (seq_len(length(table(qdata[expnms[1]])))) - 1
     }
     predit <- function(idx, newdata){
       #newdata <- qdata
@@ -339,7 +340,7 @@ msm.fit <- function(f,
                                             replace = TRUE
       )))
       names(newids) <- id
-      newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[1:MCsize,]
+      newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[seq_len(MCsize),]
     }
     predmat = lapply(intvals, predit, newdata=newdata)
     # fit MSM using g-computation estimates of expected outcomes under joint 
@@ -505,7 +506,7 @@ qgcomp.noboot <- function(f,
     if(is.null(id)) {
       # not yet implemented
       id = "id__"
-      qdata$id__ = 1:dim(qdata)[1]
+      qdata$id__ = seq_len(dim(qdata)[1])
     }
   
   if(!bayes) fit <- glm(newform, data = qdata,
@@ -759,7 +760,7 @@ qgcomp.boot <- function(f,
   #'
   #' # weighted model
   #' N=5000
-  #' dat4 <- data.frame(id=1:N, x1=runif(N), x2=runif(N), z=runif(N))
+  #' dat4 <- data.frame(id=seq_len(N), x1=runif(N), x2=runif(N), z=runif(N))
   #' dat4$y <- with(dat4, rnorm(N, x1*z + z, 1))
   #' dat4$w=runif(N) + dat4$z*5
   #' qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
@@ -827,7 +828,7 @@ qgcomp.boot <- function(f,
       } else{
         nvals <- q
       }
-      intvals <- (1:nvals)-1
+      intvals <- (seq_len(nvals))-1
     } else {
       # if( is.null(breaks) & is.null(q)) # also includes NA
       qdata <- data
@@ -842,7 +843,7 @@ qgcomp.boot <- function(f,
         p = length(expnms)
         intvals <- as.numeric(names(table(unlist(data[,expnms]))))
         
-        br <- lapply(1:p, function(x) c(-1e16, intvals[2:nvals]-1e-16, 1e16))
+        br <- lapply(seq_len(p), function(x) c(-1e16, intvals[2:nvals]-1e-16, 1e16))
       }else{
     message("\nNote: using quantiles of all exposures combined in order to set 
           proposed intervention values for overall effect (25th, 50th, 75th %ile)
@@ -853,7 +854,7 @@ qgcomp.boot <- function(f,
     }
     if(is.null(id)) {
       id <- "id__"
-      qdata$id__ <- 1:dim(qdata)[1]
+      qdata$id__ <- seq_len(dim(qdata)[1])
     }
     ###
     msmfit <- msm.fit(newform, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id, 
@@ -891,9 +892,10 @@ qgcomp.boot <- function(f,
     }
     set.seed(seed)
     if(parallel){
-      Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
+      #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
       future::plan(strategy = future::multisession)
-      bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      bootsamps <- future.apply::future_sapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      #bootsamps <- future.apply::future_vapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=qdata$weights,MCsize=MCsize,
                           future.seed=TRUE,
@@ -901,20 +903,21 @@ qgcomp.boot <- function(f,
       
       future::plan(strategy = future::transparent)
     }else{
-      bootsamps <- sapply(X=1:B, FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      bootsamps <- sapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
+      #bootsamps <- vapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals, 
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=weights, MCsize=MCsize,
                           ...)
       
     }
     # these are the linear predictors
-    hats = t(bootsamps[-c(1:(degree+1)),])
+    hats = t(bootsamps[-c(seq_len(degree+1)),])
     # covariance of the linear predictors
     cov.yhat = cov(hats)
-    bootsamps = bootsamps[1:(degree+1),]
+    bootsamps = bootsamps[seq_len(degree+1),]
     seb <- apply(bootsamps, 1, sd)
     covmat <- cov(t(bootsamps))
-    colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(intercept)", paste0("psi", 1:(nrow(bootsamps)-1)))
+    colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(intercept)", paste0("psi", seq_len(nrow(bootsamps)-1)))
 
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
@@ -1052,7 +1055,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
       stop("'family' not recognized")
     }
   }
-  if(!(family$family %in% c("binomial")) & rr) {
+  if(!(family$family == "binomial") & rr) {
     #warning("'rr=TRUE' is for bimomial family only, setting rr=FALSE")
     rr = FALSE
   }

@@ -676,10 +676,11 @@ qgcomp.hurdle.boot <- function(f,
   }
   set.seed(seed)
   if(parallel){
-    Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
+    #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     future::plan(strategy = future::multisession)
     #testenv <- list2env(list(qdata=qdata, weights=weights))
-    bootsamps <- future.apply::future_sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- future.apply::future_sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    #bootsamps <- future.apply::future_vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                                              expnms=expnms, degree=degree, nids=nids, id=id, 
                                              weights=qdata$weights,
                                              MCsize=MCsize,
@@ -688,7 +689,8 @@ qgcomp.hurdle.boot <- function(f,
     
     future::plan(strategy = future::transparent)
   }else{
-    bootsamps <- sapply(X=1:B, FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    bootsamps <- sapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
+    #bootsamps <- vapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 
                         weights=weights,
                         MCsize=MCsize,
