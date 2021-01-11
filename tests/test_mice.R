@@ -40,10 +40,10 @@ ff(cdat)
 
 f0 <- function(data, j){
   print(sys.parent())
-  mice.impute.leftcenslognorm(y=cdat$x2, 
-                                    ry=!is.na(cdat$x2), 
-                                    x=cdat[,c("x1", "y", "z")], 
-                                    wy=is.na(cdat$x2), 
+  mice.impute.leftcenslognorm(y=data$x2, 
+                                    ry=!is.na(data$x2), 
+                                    x=data[,c("x1", "y", "z")], 
+                                    wy=is.na(data$x2), 
                                     lod=c(NA, 0.5, 0.75, NA), 
                                     debug=TRUE)
 }
@@ -71,6 +71,52 @@ f1(cdat, 3)
 f2(cdat, 3)
 f3(cdat, 3)
 f4(cdat, 3)
+
+
+
+#  library("mice")
+#  library("survival")
+#  set.seed(1231)
+#  impdat = mice(data = mdat, 
+#                method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+#                lod=c(NA, 0.5, 0.75, NA), debug=FALSE, maxit = 10, m = 5)
+#  set.seed(1231)
+#  impdat2 = mice(data = mdat, 
+#                method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+#                lod=list(rep(NA, N), rep(0.5, N), rep(0.75, N), rep(NA, N)), debug=FALSE, maxit = 10, m = 5)
+#  qc.fit.imp <- list(
+#    call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
+#    call1 = impdat$call,
+#    nmis = impdat$nmis,
+#    analyses = lapply(1:5, function(x) qgcomp.noboot(y~., expnms = c("x1", "x2"),
+#                                                     data=complete(impdat, x), family=gaussian(), bayes=FALSE))
+#  )
+#  qc.fit.imp2 <- list(
+#    call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
+#    call1 = impdat$call,
+#    nmis = impdat$nmis,
+#    analyses = lapply(1:5, function(x) qgcomp.noboot(y~., expnms = c("x1", "x2"),
+#                                                     data=complete(impdat2, x), family=gaussian(), bayes=FALSE))
+#  )
+#  qc1 = pool(qc.fit.imp)
+#  qc2 = pool(qc.fit.imp2)
+#  stopifnot(all.equal(qc1$pooled$estimate, qc2$pooled$estimate))
+# 
+#  
+# newlods = data.frame(rep(NA, N), runif(N, 0, .01), runif(N, 0, 10), rep(NA, N))
+# impdat3 = mice(data = mdat, 
+#                method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+#                lod=newlods, debug=FALSE, maxit = 10, m = 5)
+# qc.fit.imp2 <- list(
+#   call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
+#   call1 = impdat$call,
+#   nmis = impdat$nmis,
+#   analyses = lapply(1:5, function(x) qgcomp.noboot(y~., expnms = c("x1", "x2"),
+#                                                    data=complete(impdat2, x), family=gaussian(), bayes=FALSE))
+# )
+# xcomp = complete(impdat3, 1)
+# stopifnot(all(xcomp[is.na(mdat[,2]),2]<  newlods[is.na(mdat[,2]),2]))
+# stopifnot(all(xcomp[is.na(mdat[,3]),3] < newlods[is.na(mdat[,3]),3] ))
 
 
 # # note the following example imputes from the wrong parametric model and is expected to be biased
