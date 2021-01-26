@@ -155,6 +155,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' # as a result (but it demonstrates how to use qgcomp and mice together)
   #' library("mice")
   #' library("survival")
+  #' set.seed(1231)
   #' impdat = mice(data = mdat,
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=c(NA, 0.5, 0.75, NA), debug=FALSE, m=10)
@@ -167,6 +168,8 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #'  )
   #' #alternative way to specify limits of detection (useful if not all observations have same limit)
   #' lodlist = list(rep(NA, N), rep(0.5, N), rep(0.75, N), rep(NA, N))
+  #' #lodlist = data.frame(rep(NA, N), rep(0.5, N), rep(0.75, N), rep(NA, N)) # also works
+  #' set.seed(1231)
   #' impdat_alt = mice(data = mdat,
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=lodlist, debug=FALSE, m=10)
@@ -183,7 +186,7 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' true
   #' # complete case analysis
   #' cc
-  #' # MI based analysis
+  #' # MI based analysis (identical answers for different ways to specify limits of detection)
   #' summary(obj)
   #' summary(obj_alt)
   #'

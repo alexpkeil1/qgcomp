@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
 Version: 2.7.0
-Date: 2021-01-11
+Date: 2021-01-26
 Authors@R: 
     person(given = "Alexander",
            family = "Keil",
@@ -48,4 +48,4 @@ Encoding: UTF-8
 Language: en-US
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
