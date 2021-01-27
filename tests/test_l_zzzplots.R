@@ -29,8 +29,8 @@ n=100
    plot(ee)
    pointwisebound.noboot(ee) 
    qgcomp:::pointwisebound.noboot_old(ee) 
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=8, family=gaussian())
-   plot(ff)
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=3, B=3, family=gaussian())
+   plot(ff, flexfit = FALSE)
    modelbound.boot(ff)
    qgcomp:::modelbound.boot_old(ff)
    
@@ -55,7 +55,7 @@ n=100
    res = try(pointwisebound.noboot(ee), silent = TRUE) # not working
    stopifnot(class(res)=="try-error")   
    plot(ee)
-   suppressWarnings(ff <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=1000))
+   suppressWarnings(ff <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=500))
    plot(ff)
    res = try(modelbound.boot(ff, pwonly=TRUE), silent = TRUE) # not working
    stopifnot(class(res)=="try-error")   
@@ -68,7 +68,7 @@ n=100
   plot(ee)
   res = try(pointwisebound.noboot(ee), silent = TRUE) # not working
   stopifnot(class(res)=="try-error")   
-  ffz = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=2, MCsize=1000, dist="negbin")
+  ffz = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=7, B=2, MCsize=500, dist="negbin")
   pointwisebound.boot(ffz)
   modelbound.boot(ffz, pwonly=TRUE)
   plot(ffz)

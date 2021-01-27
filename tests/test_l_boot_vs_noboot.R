@@ -21,7 +21,7 @@ Xnm = c(paste0("x", 1:6))
 repit <- function(i){
   dat = dgm(50)
   m1 = qgcomp.noboot(y~., expnms=Xnm, data = dat, family=gaussian(), q=4)
-  m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=5, parallel=TRUE)
+  m2 = qgcomp.boot(  y~., expnms=Xnm, data = dat, family=gaussian(), q=4, B=2, parallel=FALSE)
   res = c(m1$coef, m1$var.coef, 1*(m1$pval>0.05), with(m1, ci.coef[1]<2 & ci.coef[2]>2), m2$coef, m2$var.coef, 1*(m2$pval>0.05), with(m2, ci.coef[2,1]<2 & ci.coef[2,2]>2))
   names(res) <- c("psiint", "psi", "varint", "var",  "powint", "pow",  "cover", "b.psiint", "b.psi", "b.varint", "b.var", "b.powint", "b.pow", "b.cover")
   res

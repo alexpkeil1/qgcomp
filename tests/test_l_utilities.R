@@ -22,9 +22,9 @@ qgcomp::qgcomp.zi.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
 
 
 ftz = qgcomp::qgcomp.zi.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
-                            data=dat, q=2, dist="negbin", B=2, parallel=TRUE) # equivalent
+                            data=dat, q=3, dist="negbin", B=2, parallel=FALSE, MCsize = 100) # equivalent
 fth = qgcomp::qgcomp.hurdle.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
-                            data=dat, q=2, dist="poisson", B=2, parallel=TRUE) # equivalent
+                            data=dat, q=3, dist="poisson", B=2, parallel=FALSE, MCsize = 100) # equivalent
 
 
 res = try(qgcomp:::glance.qgcompfit(ftz), silent=TRUE)
@@ -33,9 +33,9 @@ res = try(qgcomp:::glance.qgcompfit(fth), silent=TRUE)
 stopifnot(inherits(res,"try-error"))
 
 ft = qgcomp::qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
-                           data=dat, q=2, family="gaussian") # equivalent
+                           data=dat, q=3, family="gaussian") # equivalent
 qgcomp:::glance.qgcompfit(ft)
 ft = qgcomp::qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), 
-                           data=dat, q=2, family="poisson") # equivalent
+                           data=dat, q=3, family="poisson") # equivalent
 
 qgcomp:::tidy.qgcompfit(ft)

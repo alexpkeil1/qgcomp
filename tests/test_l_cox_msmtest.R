@@ -55,7 +55,7 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(start,stop, d)~x1 + x2
 f = survival::Surv(start,stop, d)~x1 + x2
 suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=2, MCsize=200, parallel=FALSE))
-suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, deg=2, B=2, MCsize=200, q=NULL, parallel=TRUE))
+suppressWarnings(obj <- qgcomp.cox.boot(f, expnms = expnms, data = dat, deg=2, B=2, MCsize=200, q=NULL, parallel=FALSE))
 #plot(obj)
 summary(obj)
 
