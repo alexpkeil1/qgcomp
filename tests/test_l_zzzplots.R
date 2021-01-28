@@ -29,7 +29,7 @@ n=100
    plot(ee)
    pointwisebound.noboot(ee) 
    qgcomp:::pointwisebound.noboot_old(ee) 
-   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=3, B=3, family=gaussian())
+   ff = qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=7, B=3, family=gaussian())
    plot(ff, flexfit = FALSE)
    modelbound.boot(ff)
    qgcomp:::modelbound.boot_old(ff)
