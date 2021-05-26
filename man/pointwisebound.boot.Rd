@@ -53,6 +53,7 @@ are made at the median value of all covariates).
 set.seed(12)
 \dontrun{
 n=100
+# non-linear model for continuous outcome
 dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
                   y=runif(100)+x1+x1^2)
 ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)

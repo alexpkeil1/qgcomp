@@ -8,9 +8,9 @@
 # confidence intervals for pointwise comparisons #
 .pointwise.lin <- function(q, py, se.diff, alpha, pwr){
   # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, 
+             hx = py,
              mean.diff = py - py[pwr],
              se.diff = se.diff, # standard error on link scale
              ll.diff =  py - py[pwr] + qnorm(alpha/2) * se.diff,
@@ -18,13 +18,13 @@
   )
 }
 
-  
+
 
 .pointwise.log <- function(q, py, se.diff, alpha, pwr){
   # risk, risk ratios / prevalence ratios
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, 
+             hx = py,
              rr = exp(py - py[pwr]),
              se.lnrr = se.diff, # standard error on link scale
              ll.rr = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
@@ -35,8 +35,8 @@
 
 
 .pointwise.logit <- function(q, py, se.diff, alpha, pwr){
-  # odds, odds ratios 
-  data.frame(quantile= (seq_len(q)) - 1, 
+  # odds, odds ratios
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log odds
              or = exp(py - py[pwr]),
@@ -56,7 +56,7 @@
   lrrdist = sweep(lby,2, lby[pwr,], "-")
   rrdist = exp(lrrdist)
   se.lnrr = apply(lrrdist,1, sd)
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              ey = py, # expected (marginal) rate
              rr = rr,
@@ -97,42 +97,42 @@
 # confidence intervals for model slopes  #
 .modelwise.lin <- function(q, py, se.diff, alpha, ll, ul){
   # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, 
-             m = py, 
+             hx = py,
+             m = py,
              se.pw = se.diff, # standard error on link scale
              ll.pw = py + qnorm(alpha/2) * se.diff,
              ul.pw = py + qnorm(1-alpha/2) * se.diff,
-             ll.simul= ifelse(is.na(ll), NA, ll), 
+             ll.simul= ifelse(is.na(ll), NA, ll),
              ul.simul=ifelse(is.na(ul), NA, ul)
   )
 }
 
 .modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
   # risk
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log risk
              r = exp(py), # risk
              se.pw = se.diff, # standard error on link scale
              ll.pw = exp(py + qnorm(alpha/2) * se.diff),# risk
              ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # risk
-             ll.simul= ifelse(is.na(ll), NA, exp(ll)), 
+             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
              ul.simul=ifelse(is.na(ul), NA, exp(ul))
   )
 }
 
 .modelwise.logit <- function(q, py, se.diff, alpha, ll, ul){
   # odds
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log odds
              o = exp(py), # odds
              se.pw = se.diff, # standard error on link scale
              ll.pw = exp(py + qnorm(alpha/2) * se.diff),
              ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # odds
-             ll.simul= ifelse(is.na(ll), NA, exp(ll)), 
+             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
              ul.simul=ifelse(is.na(ul), NA, exp(ul))
   )
 }
@@ -141,52 +141,52 @@
   # marginal expected rates
   lby = .safelog(bootY)
   se.lpy = apply(lby,1, sd)
-  data.frame(quantile= (seq_len(q)) - 1, 
+  data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # expected (marginal) rate
              r = py, # expected (marginal) rate
              se.pw = se.lpy, # standard error on link scale
              ll.pw = exp(.safelog(py) + qnorm(alpha/2) * se.lpy),
              ul.pw = exp(.safelog(py) + qnorm(1-alpha/2) * se.lpy),
-             ll.simul = NA, 
+             ll.simul = NA,
              ul.simul = NA
   )
 }
 
 
 
-############ pointwise boot ############ 
+############ pointwise boot ############
 #' @title Estimating pointwise comparisons for qgcomp.boot objects
 #'
 #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
 #' and the standard error of the mean difference (link scale) for pointwise comparisons
-#' 
+#'
 #' @details The comparison of interest following a qgcomp fit is often comparisons of model
 #' predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
 #' at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure,
-#' and marginalized over non-exposure covariates (W), is  
+#' and marginalized over non-exposure covariates (W), is
 #' given as E(Y^s|S) = sum_w E_w(Y|S,W)Pr(W) = sum_i E(Y_i|S) where Pr(W) is the emprical distribution of
-#' W and S takes on integer values 0 to q-1. 
+#' W and S takes on integer values 0 to q-1.
 #' Thus, comparisons are of the type
 #' E_w(Y|S=s) - E_w(Y|S=s2) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
 #' This function yields E_w(Y|S) as well as E_w(Y|S=s) - E_w(Y|S=p) where s is any value of S and p is
 #' the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/
 #' prevalence difference at all values of S, with the referent category S=p-1. The standard error
-#' of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E_w(Y|S), such that 
+#' of E(Y|S=s) - E(Y|S=p) is calculated from the bootstrap covariance matrix of E_w(Y|S), such that
 #' the standard error for E_w(Y|S=s) - E_w(Y|S=p) is given by
-#' 
+#'
 #' Var(E_w(Y|S=s)) + - Var(E_w(Y|S=p)) - 2*Cov(E_w(Y|S=p), - E_w(Y|S=s))
-#' 
+#'
 #' This is used to create pointwise confidence intervals. Note that this differs slightly from the
 #' \code{\link[qgcomp]{pointwisebound.noboot}} function, which estimates the variance of the conditional
 #' regression line given by E(Y|S,W=w), where w is a vector of medians of W (i.e. predictions
 #' are made at the median value of all covariates).
-#' 
-#' @param x "qgcompfit" object from `qgcomp.boot`, 
+#'
+#' @param x "qgcompfit" object from `qgcomp.boot`,
 #' @param alpha alpha level for confidence intervals
-#' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+#' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as
 #' the referent category for calculating all mean differences/standard deviations)
-#' @return A data frame containing 
+#' @return A data frame containing
 #'  \describe{
 #'  \item{linpred: }{The linear predictor from the marginal structural model}
 #'  \item{rr/or/mean.diff: }{The canonical effect measure (risk ratio/odds ratio/mean difference) for the marginal structural model link}
@@ -199,6 +199,7 @@
 #' set.seed(12)
 #' \dontrun{
 #' n=100
+#' # non-linear model for continuous outcome
 #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
 #'                   y=runif(100)+x1+x1^2)
 #' ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
@@ -229,11 +230,11 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   pw.idx = seq_len(length(py))[-pwr]
   for(j in pw.idx){
     yc = ycovmat[c(pwr,j),c(pwr,j)]
-    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
+    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
     pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
   }
-  res = switch(link, 
-               identity = .pointwise.lin.boot(x$q, py, sqrt(pw.vars), alpha, pointwiseref), 
+  res = switch(link,
+               identity = .pointwise.lin.boot(x$q, py, sqrt(pw.vars), alpha, pointwiseref),
                log = .pointwise.log.boot(x$q, log(py), sqrt(pw.vars), alpha, pointwiseref),
                logit = .pointwise.logit.boot(x$q, .logit(py), sqrt(pw.vars), alpha, pointwiseref),
                zi = .pointwise.zi.boot(x$q, py, NULL, alpha, pwr, bootY)
@@ -245,47 +246,47 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 }
 
 
-############ pointwise noboot ############ 
+############ pointwise noboot ############
 #' @title Estimating pointwise comparisons for qgcomp.noboot objects
 #'
 #' @description Calculates: expected outcome (on the link scale), mean difference (link scale)
 #' and the standard error of the mean difference (link scale) for pointwise comparisons
-#' 
+#'
 #' @details The comparison of interest following a qgcomp fit is often comparisons of model
 #' predictions at various values of the joint-exposures (e.g. expected outcome at all exposures
-#' at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure 
-#' and at a given level of non-exposure covariates (W) is 
+#' at the 1st quartile vs. the 3rd quartile). The expected outcome at a given joint exposure
+#' and at a given level of non-exposure covariates (W) is
 #' given as E(Y|S,W=w), where S takes on integer values 0 to q-1. Thus, comparisons are of the type
 #' E(Y|S=s,W=w) - E(Y|S=s2,W=w) where s and s2 are two different values of the joint exposures (e.g. 0 and 2).
 #' This function yields E(Y|S,W=w) as well as E(Y|S=s,W=w) - E(Y|S=p,W=w) where s is any value of S and p is
 #' the value chosen via "pointwise ref" - e.g. for binomial variables this will equal the risk/
 #' prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped
 #' version of quantile g-computation (under a linear model)
-#' 
+#'
 #' Note that function only works with standard "qgcompfit" objects from `qgcomp.noboot` (so it doesn't work
 #' with zero inflated, hurdle, or Cox models)
-#' 
+#'
 #' Variance for the overall effect estimate is given by:
 #' \eqn{transpose(G) Cov(\beta)  G}
-#' 
-#' Where the "gradient vector" G is given by 
+#'
+#' Where the "gradient vector" G is given by
 #' \deqn{G = [\partial(f(\beta))/\partial\beta_1 = 1,
 #'   ...,
 #'   \partial(f(\beta))/\partial\beta_3k= 1]
 #'   }
-#' \eqn{f(\beta) = \sum_i^p \beta_i},  and \eqn{\partial y/ \partial x} denotes 
-#' the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of 
+#' \eqn{f(\beta) = \sum_i^p \beta_i},  and \eqn{\partial y/ \partial x} denotes
+#' the partial derivative/gradient. The vector G takes on values that equal the difference in quantiles of
 #' S for each pointwise comparison (e.g. for a comparison of the 3rd vs the 5th category,
 #' G is a vector of 2s)
-#' 
+#'
 #' This variance is used to create pointwise confidence intervals via a normal approximation:
 #' (e.g. upper 95% CI = psi + variance*1.96)
-#' 
-#' @param x "qgcompfit" object from `qgcomp.noboot`, 
+#'
+#' @param x "qgcompfit" object from `qgcomp.noboot`,
 #' @param alpha alpha level for confidence intervals
-#' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as 
+#' @param pointwiseref referent quantile (e.g. 1 uses the lowest joint-exposure category as
 #' the referent category for calculating all mean differences/standard deviations)
-#' @return A data frame containing 
+#' @return A data frame containing
 #'  \describe{
 #'  \item{hx: }{The "partial" linear predictor \eqn{\beta_0 + \psi\sum_j X_j^q w_j}, or the effect of the mixture + intercept after
 #'  conditioning out any confounders. This is similar to the h(x) function in bkmr. This is not a full prediction of the outcome, but
@@ -302,20 +303,22 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' n = 100
 #' dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
 #'                   y=rnorm(n)+x1 + x2 - x3 +z)
+#' linear model for continuous outcome
 #' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
 #' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
 #' pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 #' pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
 #' dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
 #'                   y=rbinom(n, 1, 1/(1+exp(-(x1 + x2 - x3 +z)))))
-#' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
-#' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+#' glms for binary outcome
+#' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
+#' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 #' pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 #' pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
 #' dat$z = as.factor(sample(1:3, n, replace=TRUE))
-#' ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+#' ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 #' pointwisebound.noboot(ftf, alpha=0.05, pointwiseref=3)
-#' }  
+#' }
 pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   if(x$bootstrap || inherits(x, "ziqgcompfit") || inherits(x, "survqgcompfit")){
     stop("This function is only for qgcomp.noboot objects")
@@ -333,15 +336,15 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   py = cbind(rep(1, q), 0:(q-1)) %*% c(coef(x))
   px = length(x$expnms)
   sediff <- function(qdiffj){
-    # gives standard deviation of pointwise difference on log scale (conditional) 
+    # gives standard deviation of pointwise difference on log scale (conditional)
     se_comb(x$expnms, vcov(x$fit), grad = rep(qdiffj, px))
   }
   diffs = c(rev(seq_len(q-1)), 0:(q-1))
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
   #se.diff = sapply(qdiff, sediff)
   se.diff = vapply(qdiff, sediff, 0)
-  res = switch(link, 
-               identity = .pointwise.lin(q, py, se.diff, alpha, pointwiseref), 
+  res = switch(link,
+               identity = .pointwise.lin(q, py, se.diff, alpha, pointwiseref),
                log = .pointwise.log(q, py, se.diff, alpha, pointwiseref),
                logit = .pointwise.logit(q, py, se.diff, alpha, pointwiseref)
   )
@@ -350,7 +353,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 }
 
 
-############ model boot ############ 
+############ model boot ############
 #' @title Estimating qgcomp regression line confidence bounds
 #'
 #' @description Calculates: expected outcome (on the link scale), and upper and lower
@@ -360,7 +363,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 #' to estimate pointwise regression line confidence bounds. These are defined as the bounds
 #' that, for each value of the independent variable X (here, X is the joint exposure quantiles)
 #' the 95% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
-#' true value of E(Y|X) in 95% of studies. The "simultaneous" bounds are also calculated, and the 95%  
+#' true value of E(Y|X) in 95% of studies. The "simultaneous" bounds are also calculated, and the 95%
 #' simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% of studies. The
 #' latter are more conservative and account for the multiple testing implied by the former. Pointwise
 #' bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
@@ -368,17 +371,17 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
 #' sample bounds that assume normality and thus will be underconservative in small samples. These
 #' bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
 #' should be interpreted cautiously in small samples.
-#' 
-#' 
+#'
+#'
 #' Reference:
-#' 
-#' Cheng, Russell CH. "Bootstrapping simultaneous confidence bands." 
+#'
+#' Cheng, Russell CH. "Bootstrapping simultaneous confidence bands."
 #' Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
-#' 
-#' @param x "qgcompfit" object from `qgcomp.boot`, 
+#'
+#' @param x "qgcompfit" object from `qgcomp.boot`,
 #' @param alpha alpha level for confidence intervals
 #' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
-#' @return A data frame containing 
+#' @return A data frame containing
 #'  \describe{
 #'  \item{linpred: }{The linear predictor from the marginal structural model}
 #'  \item{r/o/m: }{The canonical measure (risk/odds/mean) for the marginal structural model link}
@@ -416,7 +419,7 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
   pw.vars = diag(ycovmat)
-  
+
   if(!pwonly){
     coef.boot = x$bootsamps
     boot.err = t(coef.boot - x$coef)
@@ -445,8 +448,8 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
     ll=NA
     ul=NA
   }
-  res = switch(link, 
-               identity = .modelwise.lin(x$q, py, sqrt(pw.vars), alpha, ll, ul), 
+  res = switch(link,
+               identity = .modelwise.lin(x$q, py, sqrt(pw.vars), alpha, ll, ul),
                log = .modelwise.log(x$q, log(py), sqrt(pw.vars), alpha, ll, ul),
                logit = .modelwise.logit(x$q, .logit(py), sqrt(pw.vars), alpha, ll, ul),
                zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
@@ -466,7 +469,7 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
   pw.vars = diag(ycovmat)
-  
+
   if(!pwonly){
     coef.boot = x$bootsamps
     boot.err = t(coef.boot - x$coef)
@@ -495,23 +498,23 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
     ll=NA
     ul=NA
   }
-  data.frame(quantile = seq_len(x$q)-1, 
-             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q), 
-             y.expected = py, 
-             se.pw=sqrt(pw.vars), 
-             ll.pw=py + qnorm(alpha/2)*sqrt(pw.vars), 
-             ul.pw=py + qnorm(1-alpha/2)*sqrt(pw.vars), 
-             ll.simul=ll, 
+  data.frame(quantile = seq_len(x$q)-1,
+             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q),
+             y.expected = py,
+             se.pw=sqrt(pw.vars),
+             ll.pw=py + qnorm(alpha/2)*sqrt(pw.vars),
+             ul.pw=py + qnorm(1-alpha/2)*sqrt(pw.vars),
+             ll.simul=ll,
              ul.simul=ul
   )
 }
 
 
-############ old functions ############ 
+############ old functions ############
 pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
   if(!x$bootstrap) stop("This function is only for qgcomp.boot objects")
   # : error catching for other functions
-  
+
   pwr = pointwiseref+0 # may break this in the future
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
@@ -521,13 +524,13 @@ pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
   pw.idx = seq_len(length(py))[-pwr]
   for(j in pw.idx){
     yc = ycovmat[c(pwr,j),c(pwr,j)]
-    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances  
+    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
     pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
   }
-  data.frame(quantile = seq_len(x$q)-1, 
-             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q), 
-             y.expected = py, 
-             mean.diff=py-py[pwr], 
+  data.frame(quantile = seq_len(x$q)-1,
+             quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q),
+             y.expected = py,
+             mean.diff=py-py[pwr],
              se.diff=sqrt(pw.vars),
              ul.pw = py + qnorm(1-alpha/2)*sqrt(pw.vars),
              ll.pw = py + qnorm(alpha/2)*sqrt(pw.vars)
@@ -557,28 +560,28 @@ pointwisebound.noboot_old <- function(x, alpha=0.05, pointwiseref = 1){
   qdiff = diffs[(q:(q*2-1)) - pointwiseref+1]
   #se.diff = sapply(qdiff, sediff)
   se.diff = vapply(qdiff, sediff, 0.0)
-  data.frame(quantile= (seq_len(x$q)) - 1, 
+  data.frame(quantile= (seq_len(x$q)) - 1,
              quantile.midpoint=(seq_len(x$q) - 1 + 0.5)/(x$q),
-             #y.expected = sapply(seq_len(length(py)), function(i) switch(link, 
-             y.expected = vapply(seq_len(length(py)), function(i) switch(link, 
-                                                                  identity = (py[i]), 
-                                                                  log=exp(py[i]), 
+             #y.expected = sapply(seq_len(length(py)), function(i) switch(link,
+             y.expected = vapply(seq_len(length(py)), function(i) switch(link,
+                                                                  identity = (py[i]),
+                                                                  log=exp(py[i]),
                                                                   logit=(1/(1+exp(-py[i])))), 0.0),
-             #mean.diff = sapply(seq_len(length(py)), function(i) switch(link, 
-             mean.diff = vapply(seq_len(length(py)), function(i) switch(link, 
-                                                                 identity = (py[i] - py[pointwiseref]), 
-                                                                 log=exp(py[i]) - exp(py[pointwiseref]), 
+             #mean.diff = sapply(seq_len(length(py)), function(i) switch(link,
+             mean.diff = vapply(seq_len(length(py)), function(i) switch(link,
+                                                                 identity = (py[i] - py[pointwiseref]),
+                                                                 log=exp(py[i]) - exp(py[pointwiseref]),
                                                                  logit=(1/(1+exp(-(py[i])))) - (1/(1+exp(-(py[pointwiseref]))))), 0.0),
              se.diff = se.diff,
-             #ul.pw = sapply(seq_len(length(py)), function(i) switch(link, 
-             ul.pw = vapply(seq_len(length(py)), function(i) switch(link, 
-                                                             identity = (py[i] + qnorm(1-alpha/2) * se.diff[i]), 
-                                                             log=exp((py[i] + qnorm(1-alpha/2) * se.diff[i])), 
+             #ul.pw = sapply(seq_len(length(py)), function(i) switch(link,
+             ul.pw = vapply(seq_len(length(py)), function(i) switch(link,
+                                                             identity = (py[i] + qnorm(1-alpha/2) * se.diff[i]),
+                                                             log=exp((py[i] + qnorm(1-alpha/2) * se.diff[i])),
                                                              logit=(1/(1+exp(-(py[i] + qnorm(1-alpha/2) * se.diff[i]))))), 0.0) ,
-             #ll.pw = sapply(seq_len(length(py)), function(i) switch(link, 
-             ll.pw = vapply(seq_len(length(py)), function(i) switch(link, 
-                                                             identity = (py[i] + qnorm(alpha/2) * se.diff[i]), 
-                                                             log=exp((py[i] + qnorm(alpha/2) * se.diff[i])), 
+             #ll.pw = sapply(seq_len(length(py)), function(i) switch(link,
+             ll.pw = vapply(seq_len(length(py)), function(i) switch(link,
+                                                             identity = (py[i] + qnorm(alpha/2) * se.diff[i]),
+                                                             log=exp((py[i] + qnorm(alpha/2) * se.diff[i])),
                                                              logit=(1/(1+exp(-(py[i] + qnorm(alpha/2) * se.diff[i]))))), 0.0)
   )
 }
