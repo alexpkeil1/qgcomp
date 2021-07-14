@@ -37,3 +37,4 @@ NEWS.md
 .Rbuildignore
 CRAN-RELEASE
 .github/workflows/r.yml
+vignettes/qgcomp-vignette.html

@@ -28,6 +28,19 @@ provide a useful road map for how to interpret the results of a qgcomp fit, and
 where efforts should be spent in terms of ensuring accurate model specification
 and selection of exposures that are sufficient to control co-pollutant confounding.
 
+### The model
+Say we have an outcome $Y$, some exposures $\mathbb{X}$ and possibly some other covariates (e.g. potential confounders) denoted by $\mathbb{Z}$.
+
+The basic model of quantile g-computation is a joint marginal structural model given by
+
+\[
+\mathbb{E}(Y^{\mathbf{X}_q}) = g(\psi_0 + \psi_1 S_q +  \mathbf{\eta Z})
+\]
+
+where $g(\cdot)$ is a link function in a generalized linear model (e.g. the inverse logit function in the case of a logistic model for the probability that $Y=1$), $\psi_0$ is the model intercept, $\mathbf{\eta}$ is a set of model coefficients for the covariates and $S_q$ is an "index" that represents a joint value of exposures. Quantile g-computation (by default) transforms all exposures $\mathbf{X}$ into $\mathbf{X}_q$, which are "scores" taking on discrete values 0,1,2,etc. representing a categorical "bin" of exposure. By default, there are four bins with evenly spaced quantile cutpoints for each exposure, so ${X}_q=0$ means that $X$ was below the observed 25th percentile for that exposure. The index $S_q$ represents all exposures being set to the same value (again, by default, discrete values 0,1,2,3). Thus, *the parameter $\psi_1$ quantifies the expected change in the outcome, given a one quantile increase in all exposures simultaneously,* possibly adjusted for $\mathbf{Z}$. 
+
+There are nuances to this particular model form that are available in the `qgcomp` package which will be explored below.
+
 ## How to use the `qgcomp` package
 Here we use a running example from the `metals` dataset from the from the package 
 `qgcomp` to demonstrate some features of the package and method. 
@@ -301,6 +314,8 @@ qcboot.fit5 <- qgcomp(y~. + .^2,
 plot(qcboot.fit5)
 ```
 
+
+
 Once again, we can access numerical estimates of uncertainty:
 ```{r overall non-linearityb, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 qgcomp::pointwisebound.boot(qcboot.fit5)
@@ -309,6 +324,23 @@ qgcomp:::modelbound.boot(qcboot.fit5)
 
 Ideally, the smooth fit will look very similar to the model prediction regression 
 line.
+
+#### Interpretation of model parameters
+
+As the output below shows, setting "degree=2" yields a second parameter in the model fit ($\psi_2$). The output of qgcomp now corresponds to estimates of the marginal structural model given by 
+\[
+\mathbb{E}(Y^{\mathbf{X}_q}) = g(\psi_0 + \psi_1 S_q + \psi_2 S_q^2)
+\]
+
+```{r overall non-linearity psi interp, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+qcboot.fit5
+```
+
+
+so that $\psi_2$ can be interpreted similar to quadratic terms that might appear in a generalized linear model. $\psi_2$ estimates the change in the outcome for an additional unit of squared joint exposure, over-and-above the linear effect given by $\psi_1$. Informally, this is a way of formally assessing specific types of non-linearity in the joint exposure-response curves, and there are many other (slightly incorrect but intuitively useful) ways of interpreting parameters for squared terms in regressions (beyond the scope of this document). Intuition from generalized linear models applies directly to the models fit by quantile g-computation.
+
+
+
 
 ### Example 5: Comparing model fits and further exploring non-linearity
 Exploring a non-linear fit in settings with multiple exposures is challenging. One way to explore non-linearity, as demonstrated above, is to to include all 2-way interaction terms (including quadratic terms, or "self-interactions"). Sometimes this approach is not desired, either because the number of terms in the model can become very large, or because some sort of model selection procedure is required, which risks inducing over-fit (biased estimates and standard errors that are too small). Short of having a set of a priori non-linear terms to include, we find it best to take a default approach (e.g. taking all second order terms) that doesn't rely on statistical significance, or to simply be honest that the search for a non-linear model is exploratory and shouldn't be relied upon for robust inference. Methods such as kernel machine regression may be good alternatives, or supplementary approaches to exploring non-linearity.
@@ -738,6 +770,19 @@ A common form of missing data that occurs in mixtures are exposure values that a
 
 ### Multiple imputation
 Multiple imputation uses multiple datasets with different imputed values for each missing value across datasets. Separate analyses are performed on each of these datasets, and the results are combined using standard rules. The function `mice.impute.leftcenslognorm` can be interfaced with the `mice` package for efficient programming of multiple imputation based analysis with quantile g-computation. Examples cannot be included here without explicitly installing the `mice` package, but an example can be seen in the help file for `mice.impute.leftcenslognorm`.
+
+## FAQ
+### Why don't I get weights from the `boot` functions?
+Users often use the `qgcomp.*.boot` functions because the want to marginalize over confounders or fit a non-linear joint exposure function. In both cases, the overall exposure response will no longer correspond to a simple weighted average of model coefficients, so none of the `qgcomp.*.boot` functions will calculate weights. In most use cases, the weights would vary according to which level of joint exposure you're at, so it is not a straightforward proposition to calculate them (and you may not wish to report 4 sets of weights if you use the default `q=4`). If you fit an otherwise linear model, you can get weights from a `qgcomp.*.noboot` which will be very close to the weights you might get from a linear model fit via `qgcomp.*.boot` functions, but be explicit that the weights come from a different model than the inference about joint exposure effects.
+
+### Do I need to model non-linearity and non-additivity of exposures?
+Maybe. The inferential object of qgcomp is the set of $\psi$ parameters that correspond to a joint exposure response. As it turns out, with correlated exposures non-linearity can disguise itself as non-additivity (Belzak and Bauer [2019] Addictive Behaviors). If we were inferring independent effects, this distinction would be crucial, but if we only wish to be accurate for predicting the outcome at joint levels of exposure, it may turn out that it doesn't matter a whole lot if you model non-linearity in the joint response function through non-additivity or non-linearity of individual exposures in a given study. Models fit in qgcomp still make the crucial assumption that you are able to model the joint exposure response via parametric models, so that assumption should not be forgotten in an effort to try to disentagle non-linearity (e.g. quadratic terms of exposures) from non-additivity (e.g. product terms between exposures). The important part to note about parametric modeling is that we have to explicitly tell the model to be non-linear, and no adaptation to non-linear settings will happen automatically. Exploring non-linearity is not a trivial endeavor.
+
+### Do I have to use quantiles?
+No. You can turn off "quantization" by setting `q=NULL` or you can supply your own categorization cutpoints via the "breaks" argument. It is up to the user to interpret the results if either of these options is taken.
+
+### Can I cite this document?
+Probably not in a scientific manuscript. If you find an idea here that is not published anywhere else and wish to develop it into a full manuscript, feel free! (But probably check with akeil@unc.edu to ask if a paper is already in development.)
 
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
