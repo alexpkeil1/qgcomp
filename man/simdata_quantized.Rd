@@ -20,13 +20,13 @@ simdata_quantized(
 )
 }
 \arguments{
-\item{outcometype}{}
+\item{outcometype}{Character variable that is one of c("continuous", "logistic", "survival"). Selects what type of outcome should be simulated (or how). continuous = normal, continous outcome, logistic= binary outcome from logistic model, survival = right censored survival outcome from Weibull model.}
 
 \item{n}{Sample size}
 
 \item{corr}{NULL, or vector of correlations between the first exposure and subsequent exposures (if length(corr) < (length(coef)-1), then this will be backfilled with zeros)}
 
-\item{b0}{(continuous, binary outcomes)}
+\item{b0}{(continuous, binary outcomes) model intercept}
 
 \item{coef}{Vector of coefficients for the outcome (i.e. model coefficients for exposures). The length of this determines the number of exposures.}
 
@@ -34,11 +34,11 @@ simdata_quantized(
 
 \item{yscale}{(continuous outcomes) error scale (residual error) for normally distributed outcomes}
 
-\item{shape0}{(survival outcomes)}
+\item{shape0}{(survival outcomes) baseline shape of weibull distribution \link[stats]{rweibull}}
 
-\item{scale0}{(survival outcomes)}
+\item{scale0}{(survival outcomes) baseline scale of weibull distribution \link[stats]{rweibull}}
 
-\item{censtime}{(survival outcomes)}
+\item{censtime}{(survival outcomes) administrative censoring time}
 
 \item{ncheck}{(logical, default=TRUE) adjust sample size if needed so that exposures are exactly evenly distributed (so that qgcomp::quantize(exposure) = exposure)}
 

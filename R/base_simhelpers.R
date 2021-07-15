@@ -41,16 +41,16 @@
 #' 
 #' @details Simulate continuous (normally distributed errors), binary (logistic function), or event-time outcomes as a linear function 
 #' 
-#' @param outcometype 
+#' @param outcometype Character variable that is one of c("continuous", "logistic", "survival"). Selects what type of outcome should be simulated (or how). continuous = normal, continous outcome, logistic= binary outcome from logistic model, survival = right censored survival outcome from Weibull model.
 #' @param n Sample size
 #' @param corr NULL, or vector of correlations between the first exposure and subsequent exposures (if length(corr) < (length(coef)-1), then this will be backfilled with zeros)
-#' @param b0  (continuous, binary outcomes)
+#' @param b0  (continuous, binary outcomes) model intercept
 #' @param coef Vector of coefficients for the outcome (i.e. model coefficients for exposures). The length of this determines the number of exposures.
 #' @param q Number of levels or "quanta" of each exposure
 #' @param yscale (continuous outcomes) error scale (residual error) for normally distributed outcomes
-#' @param shape0 (survival outcomes)
-#' @param scale0 (survival outcomes)
-#' @param censtime (survival outcomes)
+#' @param shape0 (survival outcomes) baseline shape of weibull distribution \link[stats]{rweibull}
+#' @param scale0 (survival outcomes) baseline scale of weibull distribution \link[stats]{rweibull}
+#' @param censtime (survival outcomes) administrative censoring time
 #' @param ncheck (logical, default=TRUE) adjust sample size if needed so that exposures are exactly evenly distributed (so that qgcomp::quantize(exposure) = exposure)
 #' @param ... unused
 #'

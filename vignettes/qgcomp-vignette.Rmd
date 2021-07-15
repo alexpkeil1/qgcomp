@@ -12,7 +12,7 @@ vignette: >
 
 ```{r invisibles, echo=FALSE, results='markup', message=FALSE}
 library("knitr")
-library("gWQS")
+#library("gWQS")
 ```
 
 

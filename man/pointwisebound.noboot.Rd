@@ -64,22 +64,29 @@ This variance is used to create pointwise confidence intervals via a normal appr
 set.seed(12)
 \dontrun{
 n = 100
-dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
+dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), 
+                  x3=(x3 <- runif(n)), z=(z <- runif(n)),
                   y=rnorm(n)+x1 + x2 - x3 +z)
 linear model for continuous outcome
-ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
-ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+       expnms=c('x1','x2','x3'), data=dat, q=10)
+ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, 
+        expnms=c('x1','x2','x3'), data=dat, q=10)
 pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
-dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), x3=(x3 <- runif(n)), z=(z <- runif(n)),
+dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)), 
+                   x3=(x3 <- runif(n)), z=(z <- runif(n)),
                   y=rbinom(n, 1, 1/(1+exp(-(x1 + x2 - x3 +z)))))
 glms for binary outcome
-ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
-ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
+ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+        expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
+ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, 
+        expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
 dat$z = as.factor(sample(1:3, n, replace=TRUE))
-ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
+ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+       expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 pointwisebound.noboot(ftf, alpha=0.05, pointwiseref=3)
 }
 }
