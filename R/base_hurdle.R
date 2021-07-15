@@ -409,22 +409,25 @@ qgcomp.hurdle.noboot <- function(f,
     res
 }
 
-qgcomp.hurdle.boot <- function(f, 
-                           data, 
-                           expnms=NULL, 
-                           q=4, 
-                           breaks=NULL, 
-                           id=NULL,
-                           weights,
-                           alpha=0.05, 
-                           B=200, 
-                           degree=1, 
-                           seed=NULL, 
-                           bayes=FALSE, 
-                           parallel=FALSE, 
-                           MCsize=10000, 
-                           msmcontrol=hurdlemsm.fit.control(),
-                          ...){
+qgcomp.hurdle.boot <- function(
+ f, 
+ data, 
+ expnms=NULL, 
+ q=4, 
+ breaks=NULL, 
+ id=NULL,
+ weights,
+ alpha=0.05, 
+ B=200, 
+ degree=1, 
+ seed=NULL, 
+ bayes=FALSE, 
+ parallel=FALSE, 
+ MCsize=10000, 
+ msmcontrol=hurdlemsm.fit.control(),
+ parplan = FALSE,
+ ...
+){
   #' @title Quantile g-computation for hurdle count outcomes
   #'  
   #' @description This function estimates a linear dose-response parameter representing a one quantile
@@ -497,6 +500,7 @@ qgcomp.hurdle.boot <- function(f,
   #'  linear fits with qgcomp.hurdle.noboot to gain some intuition for the level of expected simulation 
   #'  error at a given value of MCsize)
   #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.hurdle.noboot}},\code{\link[qgcomp]{qgcomp.boot}}, 
   #' \code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{hurdle}}
@@ -677,7 +681,7 @@ qgcomp.hurdle.boot <- function(f,
   set.seed(seed)
   if(parallel){
     #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-    future::plan(strategy = future::multisession)
+    if(parplan) future::plan(strategy = future::multisession)
     #testenv <- list2env(list(qdata=qdata, weights=weights))
     bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                                              expnms=expnms, degree=degree, nids=nids, id=id, 
@@ -686,7 +690,7 @@ qgcomp.hurdle.boot <- function(f,
                                              future.seed=TRUE,
                                              ...)
     
-    future::plan(strategy = future::transparent)
+    if(parplan) future::plan(strategy = future::transparent)
   }else{
     bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=newform, qdata=qdata, intvals=intvals, 
                         expnms=expnms, degree=degree, nids=nids, id=id, 

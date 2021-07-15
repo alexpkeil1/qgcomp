@@ -10,6 +10,12 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+```{r invisibles, echo=FALSE, results='markup', message=FALSE}
+library("knitr")
+library("gWQS")
+```
+
+
 ## Introduction
 `qgcomp` is a package to implement g-computation for analyzing the effects of exposure
 mixtures. Quantile g-computation yields estimates of the effect of increasing
@@ -34,12 +40,27 @@ Say we have an outcome $Y$, some exposures $\mathbb{X}$ and possibly some other 
 The basic model of quantile g-computation is a joint marginal structural model given by
 
 \[
-\mathbb{E}(Y^{\mathbf{X}_q}) = g(\psi_0 + \psi_1 S_q +  \mathbf{\eta Z})
+\mathbb{E}(Y^{\mathbf{X}_q} | \mathbf{Z,\psi,\eta}) = g(\psi_0 + \psi_1 S_q +  \mathbf{\eta Z})
 \]
 
 where $g(\cdot)$ is a link function in a generalized linear model (e.g. the inverse logit function in the case of a logistic model for the probability that $Y=1$), $\psi_0$ is the model intercept, $\mathbf{\eta}$ is a set of model coefficients for the covariates and $S_q$ is an "index" that represents a joint value of exposures. Quantile g-computation (by default) transforms all exposures $\mathbf{X}$ into $\mathbf{X}_q$, which are "scores" taking on discrete values 0,1,2,etc. representing a categorical "bin" of exposure. By default, there are four bins with evenly spaced quantile cutpoints for each exposure, so ${X}_q=0$ means that $X$ was below the observed 25th percentile for that exposure. The index $S_q$ represents all exposures being set to the same value (again, by default, discrete values 0,1,2,3). Thus, *the parameter $\psi_1$ quantifies the expected change in the outcome, given a one quantile increase in all exposures simultaneously,* possibly adjusted for $\mathbf{Z}$. 
 
-There are nuances to this particular model form that are available in the `qgcomp` package which will be explored below.
+There are nuances to this particular model form that are available in the `qgcomp` package which will be explored below. There exists one special case of quantile g-computation that leads to fast fitting: linear/additive exposure effects. Here we simulate "pre-quantized" data where the exposures $X_1, X_2, X_3$ can only take on values of 0,1,2,3 in equal proportions. The model underlying the outcomes is given by the linear regression:
+
+\[
+\mathbb{E}(Y | \mathbf{X,\beta}) = \beta_0 + \beta_1 X_1 + \beta_2 X_2  + \beta_3 X_3 
+\]
+
+with the true values of $\beta_0=0, \beta_1 =0.25, \beta_2 =-0.1, \beta_3=0.05$, and $X_1$ is strongly positively correlated with $X_2$ ($\rho=0.95$) and negatively correlated with $X_3$ ($\rho=-0.3$). In this simple setting, the parameter $\psi_1$ will equal the sum of the $\beta$ coefficients (0.2). Here we see that qgcomp estimates a value very close to 0.2 (as we increase sample size, the estimated value will be expected to become increasingly close to 0.2).
+```{r first step, echo=TRUE, results='markup', message=FALSE}
+library("qgcomp")
+set.seed(543210)
+qdat = simdata_quantized(n=5000, outcomtype="continuous", cor=c(.95, -0.3), b0=0, coef=c(0.25, -0.1, 0.05), q=4)
+head(qdat)
+cor(qdat[,c("x1", "x2", "x3")])
+qgcomp(y~x1+x2+x3, expnms=c("x1", "x2", "x3"), data=qdat)
+```
+
 
 ## How to use the `qgcomp` package
 Here we use a running example from the `metals` dataset from the from the package 
@@ -57,9 +78,8 @@ weighted quantile sum (WQS) regression, and at https://jenfb.github.io/bkmr/over
 
 The `metals` dataset from the from the package `qgcomp`, comprises a set of simulated well water exposures and two health outcomes (one continuous, one binary/time-to-event). The exposures are transformed to have mean = 0.0, standard deviation = 1.0. The data are used throughout to demonstrate usage and features of the `qgcomp` package.
 
+
 ```{r metals data, echo=TRUE, results='markup', message=FALSE}
-library("qgcomp")
-library("knitr")
 library("ggplot2")
 data("metals", package="qgcomp")
 head(metals)
@@ -85,8 +105,8 @@ system.time(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussia
 #  0.011   0.002   0.018 
 
 # contrasting other methods with computational speed
-# WQS regression
-#system.time(wqs.fit <- gwqs(y~NULL,mix_name=Xnm, data=metals[,c(Xnm, 'y')], family="gaussian"))
+# WQS regression (v3.0.1 of gWQS package)
+#system.time(wqs.fit <- gWQS::gwqs(y~wqs,mix_name=Xnm, data=metals[,c(Xnm, 'y')], family="gaussian"))
 #   user  system elapsed 
 # 35.775   0.124  36.114 
 

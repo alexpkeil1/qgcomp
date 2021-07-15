@@ -19,6 +19,7 @@ qgcomp.cox.boot(
   degree = 1,
   seed = NULL,
   parallel = FALSE,
+  parplan = FALSE,
   ...
 )
 }
@@ -74,6 +75,8 @@ is quadratic.}
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
 
 \item{parallel}{logical (default FALSE): use future package to speed up bootstrapping}
+
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)}
 
 \item{...}{arguments to glm (e.g. family)}
 }

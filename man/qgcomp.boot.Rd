@@ -20,6 +20,7 @@ qgcomp.boot(
   bayes = FALSE,
   MCsize = nrow(data),
   parallel = FALSE,
+  parplan = FALSE,
   ...
 )
 }
@@ -78,6 +79,8 @@ be important with binary or count outcomes.}
 
 \item{parallel}{use (safe) parallel processing from the future and future.apply packages}
 
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)}
+
 \item{...}{arguments to glm (e.g. family)}
 }
 \value{
@@ -111,63 +114,63 @@ set.seed(30)
 dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 # Conditional linear slope
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
-# Marginal linear slope (population average slope, for a purely linear, 
+# Marginal linear slope (population average slope, for a purely linear,
 #  additive model this will equal the conditional)
  \dontrun{
-qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
-  
+
  # Note that these give different answers! In the first, the estimate is conditional on Z,
  # but in the second, Z is marginalized over via standardization. The estimates
  # can be made approximately the same by centering Z (for linear models), but
  # the conditional estimate will typically have lower standard errors.
  dat$z = dat$z - mean(dat$z)
-  
+
 # Conditional linear slope
 qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
-# Marginal linear slope (population average slope, for a purely linear, 
+# Marginal linear slope (population average slope, for a purely linear,
 #  additive model this will equal the conditional)
- 
-qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, 
+
+qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
- 
+
 # Population average mixture slope which accounts for non-linearity and interactions
-qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
+qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
- 
+
 # generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
-qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian", 
+qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, B=200, deg=2)
- 
+
 # binary outcome
 dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 
 # Conditional mixture OR
-qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2)
-  
-#Marginal mixture OR (population average OR - in general, this will not equal the 
+
+#Marginal mixture OR (population average OR - in general, this will not equal the
 # conditional mixture OR due to non-collapsibility of the OR)
-qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2, B=3, rr=FALSE)
-  
+
 # Population average mixture RR
-qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2, rr=TRUE, B=3)
-  
+
 # Population average mixture RR, indicator variable representation of x2
 # note that I(x==...) operates on the quantile-based category of x,
 # rather than the raw value
-res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
+res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200)
-res$fit  
+res$fit
 plot(res)
 
 # now add in a non-linear MSM
-res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3), 
-  family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200, 
+res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
+  family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200,
   degree=2)
-res2$fit  
+res2$fit
 res2$msmfit  # correct point estimates, incorrect standard errors
 res2  # correct point estimates, correct standard errors
 plot(res2)
@@ -176,14 +179,14 @@ dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
 dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
 # note that I(x>...) now operates on the untransformed value of x,
 # rather than the quantized value
-res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-  family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200, 
+res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+  family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   degree=2)
 res2
 # using parallel processing
 
-qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9), 
-  family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200, 
+qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+  family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   degree=2, parallel=TRUE)
 
 
@@ -195,17 +198,17 @@ dat4$w=runif(N) + dat4$z*5
 qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
 # first equivalent models with no covariates
 qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
-qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
               weights=w)
 
 set.seed(13)
-qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
             weights=w)
 # using the correct model
 set.seed(13)
-qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(), 
+qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
             weights=w, id="id")
-(qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+(qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
                        family=gaussian(), weights=w))
 qgcfit$fit
 summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))

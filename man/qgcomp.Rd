@@ -62,17 +62,17 @@ set.seed(1231)
 qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 set.seed(1231)
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
-  
+
 # automatically selects appropriate method when specifying rr or degree explicitly
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=FALSE)
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial(), rr=TRUE)
-qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4, 
+qgcomp(y ~ z + factor(x1) + factor(x2), degree=2, expnms = c('x1', 'x2'), data=dat, q=4,
 family=binomial())
 
 #survival objects
 set.seed(50)
 N=200
-dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))),
                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=runif(N))
 expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2

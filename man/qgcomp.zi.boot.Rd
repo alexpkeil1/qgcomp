@@ -20,6 +20,7 @@ qgcomp.zi.boot(
   parallel = FALSE,
   MCsize = 10000,
   msmcontrol = zimsm.fit.control(),
+  parplan = FALSE,
   ...
 )
 }
@@ -69,6 +70,8 @@ linear fits with qgcomp.zi.noboot to gain some intuition for the level of expect
 error at a given value of MCsize)}
 
 \item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm.fit.control}}}
+
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)}
 
 \item{...}{arguments to glm (e.g. family)}
 }

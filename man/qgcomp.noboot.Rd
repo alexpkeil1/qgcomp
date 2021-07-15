@@ -96,7 +96,7 @@ N=5000
 dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
 dat4$w=runif(N)*2
 qdata = quantize(dat4, expnms = c("x1", "x2"))$data
-(qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, 
+(qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
                          family=gaussian(), weights=w))
 qgcfit$fit
 glm(y ~ z + x1 + x2, data = qdata, weights=w)

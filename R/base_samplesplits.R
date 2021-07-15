@@ -60,7 +60,8 @@ qgcomp.partials <- function(
   #' @export
   #' @examples 
   #' set.seed(123223)
-  #' dat = qgcomp:::.dgm_quantized(N=1000, coef=c(0.25,-0.25,0,0), ncor=1)
+  #' dat = qgcomp::simdata_quantized(n=1000, outcomtype="continuous", cor=c(.75, 0), 
+  #'                                 b0=0, coef=c(0.25,-0.25,0,0), q=4)
   #' cor(dat)
   #' # overall fit (more or less null due to counteracting exposures)
   #' (overall <- qgcomp.noboot(f=y~., q=NULL, expnms=c("x1", "x2", "x3", "x4"), data=dat))
@@ -70,19 +71,20 @@ qgcomp.partials <- function(
   #' valididx <- setdiff(1:nrow(dat),trainidx)
   #' traindata = dat[trainidx,]
   #' validdata = dat[valididx,]
-  #' splitres <- qgcomp:::qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
+  #' splitres <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
   #'     traindata=traindata,validdata=validdata, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres
   #' \dontrun{
   #' # under the null, both should give null results
   #' set.seed(123223)
-  #' dat <- qgcomp:::.dgm_quantized(N=1000, coef=c(0,0,0,0), ncor=1)
+  #' dat = simdata_quantized(n=1000, outcomtype="continuous", cor=c(.75, 0), 
+  #'                                 b0=0, coef=c(0,0,0,0), q=4)
   #' # 40% training/60% validation
   #' trainidx2 <- sample(1:nrow(dat), round(nrow(dat)*0.4))
   #' valididx2 <- setdiff(1:nrow(dat),trainidx2)
   #' traindata2 <- dat[trainidx2,]
   #' validdata2 <- dat[valididx2,]
-  #' splitres2 <- qgcomp:::qgcomp.partials(fun="qgcomp.noboot", f=y~., 
+  #' splitres2 <- qgcomp.partials(fun="qgcomp.noboot", f=y~., 
   #'    q=NULL, traindata=traindata2,validdata=validdata2, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres2
   #' 
@@ -91,16 +93,16 @@ qgcomp.partials <- function(
   #' valididx3 <- setdiff(1:nrow(dat),trainidx3)
   #' traindata3 <- dat[trainidx3,]
   #' validdata3 <- dat[valididx3,]
-  #' splitres3 <- qgcomp:::qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
+  #' splitres3 <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
   #'     traindata=traindata3,validdata=validdata3, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres3
   #' 
   #' # survival outcome
   #' set.seed(50)
   #' N=1000
-  #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
-  #'      d=1.0*(tmg<0.1), x1=runif(N)+(tmg<0.1)*0.1, x2=runif(N)-(tmg<0.1)*0.1, x3=runif(N),
-  #'                       x4=runif(N), x5=runif(N) , z=runif(N))
+  #' dat = simdata_quantized(n=1000, outcomtype="survival", cor=c(.75, 0, 0, 0, 1), 
+  #'                                 b0=0, coef=c(1,0,0,0,0,1), q=4)
+  #' names(dat)[which(names(dat=="x5"))] = "z"
   #' trainidx4 <- sample(1:nrow(dat), round(nrow(dat)*0.6))
   #' valididx4 <- setdiff(1:nrow(dat),trainidx4)
   #' traindata4 <- dat[trainidx4,]

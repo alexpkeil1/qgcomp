@@ -2,7 +2,8 @@ cat("# basics test\n")
 # se_comb
 COV = matrix(c(.1, .2, .2, .1), nrow=2)
 colnames(COV) <- c("x1", "x2")
-stopifnot(sqrt(sum(COV))==qgcomp:::se_comb(covmat=COV, expnms = c("x1", "x2")))
+stopifnot(sqrt(sum(COV))==qgcomp::se_comb(covmat=COV, expnms = c("x1", "x2")))
+stopifnot(sqrt(sum(COV))==qgcomp::se_comb(covmat=COV, expnms = c("x1", "x2"), grad=c(1,1)))
 
 
 #vc_comb
@@ -19,7 +20,7 @@ for(deg in 1:3){
 # stats
 set.seed(50)
 # linear model
-dat = qgcomp:::.dgm_quantized()
+dat = qgcomp::simdata_quantized()
 ft = qgcomp::qgcomp.noboot(f=y ~ x1 + x2 + x3 + x4, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian(), bayes=TRUE)
 summary(ft)
 df.residual(ft)

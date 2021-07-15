@@ -20,6 +20,7 @@ qgcomp.hurdle.boot(
   parallel = FALSE,
   MCsize = 10000,
   msmcontrol = hurdlemsm.fit.control(),
+  parplan = FALSE,
   ...
 )
 }
@@ -69,6 +70,8 @@ linear fits with qgcomp.hurdle.noboot to gain some intuition for the level of ex
 error at a given value of MCsize)}
 
 \item{msmcontrol}{named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}}
+
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)}
 
 \item{...}{arguments to glm (e.g. family)}
 }
