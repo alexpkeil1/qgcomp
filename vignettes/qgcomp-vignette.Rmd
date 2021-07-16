@@ -530,7 +530,7 @@ Marginal hazards ratios (and bootstrapped quantile g-computation in general) use
 #library(survival)
 qc.survfit2 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ .,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
-                         B=5, MCsize=1000, parallel=TRUE)
+                         B=5, MCsize=1000, parallel=TRUE, parplan=TRUE)
 qc.survfit2
 
 # testing proportional hazards (note that x=TRUE is not needed (and will cause an error if used))
@@ -547,7 +547,7 @@ All bootstrapped functions in `qgcomp` allow parellelization via the parallel=TR
 ```{r time-to-event3, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
-                         B=5, MCsize=1000, parallel=TRUE)
+                         B=5, MCsize=1000, parallel=TRUE, parplan=TRUE)
 qc.survfit3
 p3 = plot(qc.survfit3, suppressprint = TRUE) 
 p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
@@ -555,13 +555,25 @@ p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific 
 ```
 
 
-While `qgcompcox.boot` fits a smooth hazard ratio function, the hazard ratios contrasting specific quantiles with a referent quantile can be obtained, as demonstrated with `qc.survfit4`. As in `qgcomp.boot` plots, the conditional model fit and the MSM fit are overlaid as a way to judge how well the MSM fits the conditional fit (and whether, for example non-linear terms should be added or removed from the overall fit via the degree parameter - we note here that we know of no statistical test for quantifying the difference between these lines, so this is up to user discretion and the plots are provided as visuals to aid in exploratory data analysis).
+*Technical Note:* this mode of usage is designed for simplicity. The implementation relies on the `future` and `future.apply` packages. Use guidelines of the `future` package dictates that the user should be able to control the future "plan", rather than embedding it in functions as has been done here. This slightly more advanced usage (which allows nesting within larger parallel schemes such as simulations) is demonstrated here by setting the "parplan" parameter to FALSE and explicitly specifying a "plan" outside of qgcomp functions. This will move much of the overhead due to parallel processing outside of the actual qgcomp functions. The final code block of this vignette shows how to exit the "plan" and return to standard evaluation via `plan(transparent)` - doing so at the end means that the next parallel call (with parplan=FALSE) we make will have lower overhead and run slightly faster.
+```{r time-to-event3b, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+future::plan(future::multisession)# parallel evaluation
+qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
+                         data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
+                         B=5, MCsize=1000, parallel=TRUE, parplan=FALSE)
+qc.survfit3
+p3 = plot(qc.survfit3, suppressprint = TRUE) 
+p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific ln-HR")
+
+```
+
+
+Returning to substance: while `qgcompcox.boot` fits a smooth hazard ratio function, the hazard ratios contrasting specific quantiles with a referent quantile can be obtained, as demonstrated with `qc.survfit4`. As in `qgcomp.boot` plots, the conditional model fit and the MSM fit are overlaid as a way to judge how well the MSM fits the conditional fit (and whether, for example non-linear terms should be added or removed from the overall fit via the degree parameter - we note here that we know of no statistical test for quantifying the difference between these lines, so this is up to user discretion and the plots are provided as visuals to aid in exploratory data analysis).
  
 ```{r time-to-event4, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
-
 qc.survfit4 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
                          data=metals[,c(Xnm, 'disease_time', 'disease_state')], q=4, 
-                         B=5, MCsize=1000, parallel=TRUE, degree=2)
+                         B=5, MCsize=1000, parallel=TRUE, parplan=FALSE, degree=2)
 qc.survfit4
 # examining the overall hazard ratio as a function of overall exposure
 hrs_q = exp(matrix(c(0,0,1,1,2,4,3,9), ncol=2, byrow=TRUE)%*%qc.survfit4$msmfit$coefficients)
@@ -782,8 +794,8 @@ all.equal(qc.cc$qx$arsenic_q, qc.cc2$qx$arsenic_q[complete.cases(qc.cc2$qx$arsen
 
 all.equal(qc.cc$qx$cadmium_q, qc.cc2$qx$cadmium_q[complete.cases(qc.cc2$qx$arsenic_q)])
 # not equal
-
 ```
+
 
 ### Limits of detection
 A common form of missing data that occurs in mixtures are exposure values that are missing due to being below the limit of detection. A common approach to such missing data is imputation, either through filling in small numeric values in place of the missing values, or in a more formal multiple imputation from a parametric model. Notably, with quantile g-computation, if the proportion of values below the limit of detection is below 1/q (the number of quantiles), all appropriate missing data approaches will yield the same answer because such values would be known to be in the lowest category. Thus, if one has 3 exposures each with 10% of the values below the limit of detection, one can impute small values below those limits (a common approach is the limit of detection divided by the square root of 2) and proceed with quantile g-computation on the imputed data. This analysis leverages the fact that, even if a value below the limit of detection cannot be known with certainty, the category score used in quantile g-computation is known with certainty. In cases with more than 1/q% measurements below the LOD, the packages `qgcomp` comes with a convenience function `mice.impute.leftcenslognorm` that can be used to impute values below the limit of detection from a left censored log-normal regression model.
@@ -811,3 +823,9 @@ Alexandra J. White. A quantile-based g-computation approach to addressing the ef
 ## Acknowledgments
 
 The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing was performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, and Katie O'Brien.
+
+```{r parend, echo=TRUE}
+# return to standard processing
+future::plan(future::transparent) # return to standard evaluation
+```
+

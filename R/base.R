@@ -458,7 +458,7 @@ qgcomp.boot <- function(
   #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
   #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
-  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect

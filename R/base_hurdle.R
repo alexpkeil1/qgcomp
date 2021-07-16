@@ -491,7 +491,7 @@ qgcomp.hurdle.boot <- function(
   #'  linear fits with qgcomp.hurdle.noboot to gain some intuition for the level of expected simulation 
   #'  error at a given value of MCsize)
   #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}
-  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.hurdle.noboot}},\code{\link[qgcomp]{qgcomp.boot}}, 
   #' \code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{hurdle}}

@@ -489,7 +489,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #'  to 2 decimal places).
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param parallel logical (default FALSE): use future package to speed up bootstrapping
-  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multiprocess) (and set to plan(invisible) after bootstrapping)
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
