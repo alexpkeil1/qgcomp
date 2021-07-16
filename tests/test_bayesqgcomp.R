@@ -17,11 +17,11 @@ stopifnot(class(res)=="try-error")
 # error
 
 res = try(qc.fit <- qgcomp.noboot(y~.,dat=metals[,c(Xnm2, 'y')], family=gaussian(), bayes=TRUE))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res, "qgcompfit"))
 
 # compare to results with colinear exposure removed
 res = try(qc.fit2 <- qgcomp.noboot(y~.,dat=metals[,c(Xnm, 'y')], family=gaussian()))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res, "qgcompfit"))
 
 #hitting code coverage just to check
 dat = qgcomp:::.dgm_quantized(N=100)

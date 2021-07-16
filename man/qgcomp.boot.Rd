@@ -119,6 +119,9 @@ qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gau
  \dontrun{
 qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
+# no intercept model
+qgcomp.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  family=gaussian(), B=200) # B should be at least 200 in actual examples
 
  # Note that these give different answers! In the first, the estimate is conditional on Z,
  # but in the second, Z is marginalized over via standardization. The estimates

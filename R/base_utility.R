@@ -276,3 +276,22 @@ checknames <- function(terms){
     return(TRUE)
   }
 }
+
+.qgcomp_object <- function(...){
+  res = list(...)
+  nms = names(res)
+  if(is.na(match("hasintercept", nms))) res$hasintercept = TRUE
+  if(is.na(match("bootstrap", nms))) res$bootstrap=FALSE
+  if(is.na(match("cov.yhat", nms))) res$cov.yhat=NULL
+  if(is.na(match("degree", nms))) res$degree=1
+  if(is.na(match("pos.psi", nms))) res$pos.psi = NULL
+  if(is.na(match("neg.psi", nms))) res$neg.psi = NULL
+  if(is.na(match("pos.weights", nms))) res$pos.weights = NULL
+  if(is.na(match("neg.weights", nms))) res$neg.weights = NULL
+  if(is.na(match("pos.size", nms))) res$pos.size = NULL
+  if(is.na(match("neg.size", nms))) res$neg.size = NULL
+  if(is.na(match("df", nms))) res$df = NULL
+  attr(res, "class") <- c("list", "qgcompfit")
+  res
+}
+
