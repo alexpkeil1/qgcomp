@@ -47,13 +47,13 @@ f4 = d ~ x1*x2
 f5 = d ~ x1 + x2 + I(x1*x2) 
 f6 = d ~ x1 + x2 + x1:x2
 res = try(obj0b <- qgcomp(f0b, expnms = expnms, data = dat, B=2, family=binomial()))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 res = try(obj4 <- qgcomp(f4, expnms = expnms, data = dat, B=2, family=binomial()))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 res = try(obj5 <- qgcomp(f5, expnms = expnms, data = dat, B=2, family=binomial()))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 res = try(obj6 <- qgcomp(f6, expnms = expnms, data = dat, B=2, family=binomial()))
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 
 stopifnot(all.equal(
   obj0b$fit$coefficients, 
@@ -114,7 +114,7 @@ stopifnot(all.equal(
 
 res = try(obj0 <- qgcomp(f0, expnms = expnms, 
                          data = dat, B=2, family=binomial())) # defaults to RR
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 #res = try(obj0 <- qgcomp(f0, expnms = expnms, 
 #         data = dat, B=2, family=gaussian())) # gives error due to B
 
@@ -125,7 +125,7 @@ res = try(obj1 <- qgcomp(f1, expnms = expnms, data = dat, B=2, family=binomial()
 
 res = try(obj3 <- qgcomp(f3, expnms = expnms, 
                          data = dat, B=2, family=binomial())) # defaults to RR
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 #res = try(obj0 <- qgcomp(f0, expnms = expnms, 
 #         data = dat, B=2, family=gaussian())) # gives error due to B
 
@@ -133,7 +133,7 @@ res = try(obj4 <- qgcomp(f4, expnms = expnms, data = dat, B=2, family=binomial()
 #res = try(obj1 <- qgcomp(f1, expnms = expnms, 
 #         data = dat, B=2, family=gaussian())) # gives error due to B
 
-stopifnot(class(res)=="qgcompfit")
+stopifnot(inherits(res,"qgcompfit"))
 stopifnot(all.equal(
   obj0$fit$coefficients, 
   obj1$fit$coefficients, check.names=FALSE))
