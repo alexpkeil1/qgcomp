@@ -10,7 +10,7 @@ msm.fit <- function(f,
                     id=NULL,
                     weights,
                     bayes=FALSE,
-                    MCsize=nrow(qdata), ...){
+                    MCsize=nrow(qdata), hasintercept=TRUE, ...){
   #' @title Fitting marginal structural model (MSM) within quantile g-computation
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
   #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
@@ -56,6 +56,7 @@ msm.fit <- function(f,
   #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
   #'  linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
   #'  error at a given value of MCsize)
+  #' @param hasintercept (logical) does the model have an intercept?
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
@@ -135,19 +136,25 @@ msm.fit <- function(f,
       )
       )
     # to do: allow functional form variations for the MSM via specifying the model formula
+    msmforms = paste0("Ya ~ ", 
+                     ifelse(hasintercept, "1 +", "-1 +"), 
+                     "poly(psi, degree=",degree,", raw=TRUE)"
+                     )
+    msmform = as.formula(msmforms)
+    
     if(bayes){
-      if(!rr) suppressWarnings(msmfit <- bayesglm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
+      if(!rr) suppressWarnings(msmfit <- bayesglm(msmform, data=msmdat,
                                                   weights=weights, x=TRUE,
                                                   ...))
-      if(rr)  suppressWarnings(msmfit <- bayesglm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
+      if(rr)  suppressWarnings(msmfit <- bayesglm(msmform, data=msmdat,
                                                   family=binomial(link='log'), start=rep(-0.0001, degree+1),
                                                   weights=weights, x=TRUE))
     }
     if(!bayes){
-      if(!rr) suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
+      if(!rr) suppressWarnings(msmfit <- glm(msmform, data=msmdat,
                                              weights=weights, x=TRUE,
                                              ...))
-      if(rr)  suppressWarnings(msmfit <- glm(Ya ~ poly(psi, degree=degree, raw=TRUE), data=msmdat,
+      if(rr)  suppressWarnings(msmfit <- glm(msmform, data=msmdat,
                                              family=binomial(link='log'), start=rep(-0.0001, degree+1),
                                              weights=weights, x=TRUE))
     }
@@ -230,8 +237,10 @@ qgcomp.noboot <- function(f,
   #' @examples
   #' set.seed(50)
   #' # linear model
-  #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
+  #' dat <- data.frame(y=runif(50,-1,1), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+  #' # not intercept model
+  #' qgcomp.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
   #' # logistic model
   #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
@@ -249,7 +258,8 @@ qgcomp.noboot <- function(f,
   #' glm(y ~ z + x1 + x2, data = qdata, weights=w)
 
   newform <- terms(f, data = data)
-
+  hasintercept = as.logical(attr(newform, "intercept"))
+  
   nobs = nrow(data)
   origcall <- thecall <- match.call(expand.dots = FALSE)
   names(thecall) <- gsub("f", "formula", names(thecall))
@@ -298,17 +308,6 @@ qgcomp.noboot <- function(f,
                     weights=weights,
                     ...)
   }
-
-
-    #if(!bayes) fit <- glm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
-    #                      #weights=weights,
-    #                      ...)
-    #if(bayes){
-    #  requireNamespace("arm")
-    #  fit <- bayesglm(f, data = qdata[,!(names(qdata) %in% id), drop=FALSE],
-    #                  #weights=weights,
-    #                  ...)
-    #}
     mod <- summary(fit)
     if(length(setdiff(expnms, rownames(mod$coefficients)))>0){
       stop("Model aliasing occurred, likely due to perfectly correlated quantized exposures.
@@ -318,8 +317,12 @@ qgcomp.noboot <- function(f,
              3) check correlation matrix of exposures, and drop all but one variable in each highly correlated set  (not recommended)
            ")
     }
-    estb <- c(fit$coefficients[1], sum(mod$coefficients[expnms,1, drop=TRUE]))
-    seb <- c(sqrt(mod$cov.scaled[1,1]), se_comb(expnms, covmat = mod$cov.scaled))
+    estb <- sum(mod$coefficients[expnms,1, drop=TRUE])
+    seb <- se_comb(expnms, covmat = mod$cov.scaled)
+    if(hasintercept){
+      estb <- c(fit$coefficients[1], estb)
+      seb <- c(sqrt(mod$cov.scaled[1,1]), seb)
+    }
     tstat <- estb / seb
     df <- mod$df.null - length(expnms)
     pval <- 2 - 2 * pt(abs(tstat), df = df)
@@ -332,34 +335,38 @@ qgcomp.noboot <- function(f,
     neg.coef <- which(wcoef <= 0)
     pos.weights <- abs(wcoef[pos.coef]) / sum(abs(wcoef[pos.coef]))
     neg.weights <- abs(wcoef[neg.coef]) / sum(abs(wcoef[neg.coef]))
-    # 'post-hoc' positive and negative estimators
-    # similar to constrained gWQS
     pos.psi <- sum(wcoef[pos.coef])
     neg.psi <- sum(wcoef[neg.coef])
-    #nmpos <- names(pos.weights)
-    #nmneg <- names(neg.weights)
-    #se.pos.psi <- se_comb(nmpos, covmat = mod$cov.scaled)
-    #se.neg.psi <- se_comb(nmneg, covmat = mod$cov.scaled)
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
-    names(estb) <- c('(Intercept)', "psi1")
-    res <- list(
+    psiidx = 1+hasintercept
+    names(estb)[psiidx] <- c("psi1")
+    cnms = "psi1"
+    if(hasintercept){
+      covmat.coef=vc_comb(aname="(Intercept)", expnms=expnms, covmat = mod$cov.scaled)
+      cnms = c("(intercept)", cnms)
+    }
+    if(!hasintercept)
+      covmat.coef=as.matrix(seb^2,nrow=1,ncol=1)
+    colnames(covmat.coef) <- rownames(covmat.coef) <- names(estb) <- cnms
+    res <- .qgcomp_object(
       qx = qx, fit = fit,
-      psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=c('psi1' = seb[-1]^2), ci = ci[-1,],
+      psi = estb[psiidx], 
+      var.psi = seb[psiidx] ^ 2, 
+      covmat.psi=c('psi1' = seb[psiidx]^2),
+      ci = ci[psiidx,],
       coef = estb, var.coef = seb ^ 2,
-      #covmat.coef=c('(Intercept)' = seb[1]^2, 'psi1' = seb[2]^2),
-      covmat.coef=vc_comb(aname="(Intercept)", expnms=expnms, covmat = mod$cov.scaled),
-      ci.coef = ci,
-      expnms=expnms, q=q, breaks=br, degree=1,
+      covmat.coef=covmat.coef,
+      ci.coef = ci[,],
+      expnms=expnms, q=q, breaks=br, 
       pos.psi = pos.psi, neg.psi = neg.psi,
       pos.weights = sort(pos.weights, decreasing = TRUE),
       neg.weights = sort(neg.weights, decreasing = TRUE),
       pos.size = sum(abs(wcoef[pos.coef])),
       neg.size = sum(abs(wcoef[neg.coef])),
-      bootstrap=FALSE,
-      cov.yhat=NULL,
       alpha=alpha,
-      call=origcall
+      call=origcall,
+      hasintercept=hasintercept
     )
       if(fit$family$family=='gaussian'){
         res$tstat <- tstat
@@ -370,7 +377,7 @@ qgcomp.noboot <- function(f,
         res$zstat <- tstat
         res$pval <- pvalz
       }
-    attr(res, "class") <- "qgcompfit"
+    #attr(res, "class") <- "qgcompfit"
     res
 }
 
@@ -390,7 +397,7 @@ qgcomp.boot <- function(
   bayes=FALSE,
   MCsize=nrow(data),
   parallel=FALSE, 
-   parplan = FALSE,
+  parplan = FALSE,
  ...
 ){
 
@@ -472,6 +479,9 @@ qgcomp.boot <- function(
   #' #  additive model this will equal the conditional)
   #'  \dontrun{
   #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
+  #' # no intercept model
+  #' qgcomp.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #'
   #'  # Note that these give different answers! In the first, the estimate is conditional on Z,
@@ -572,6 +582,7 @@ qgcomp.boot <- function(
     if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
 
     newform <- terms(f, data = data)
+    hasintercept = as.logical(attr(newform, "intercept"))
     class(newform) <- "formula"
 
     nobs = nrow(data)
@@ -646,7 +657,7 @@ qgcomp.boot <- function(
     msmfit <- msm.fit(newform, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id,
                       weights,
                       bayes,
-                      MCsize=MCsize,
+                      MCsize=MCsize, hasintercept = hasintercept,
                       ...)
     # main estimate
     #estb <- as.numeric(msmfit$msmfit$coefficients[-1])
@@ -657,7 +668,7 @@ qgcomp.boot <- function(
     starttime = Sys.time()
     psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, rr=rr, degree=degree,
                          nids=nids, id=id,
-                         weights,MCsize=MCsize,
+                         weights,MCsize=MCsize, hasintercept = hasintercept,
                          ...){
       if(i==2 & !parallel){
         timeiter = as.numeric(Sys.time() - starttime)
@@ -669,6 +680,7 @@ qgcomp.boot <- function(
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
       ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
+                   hasintercept = hasintercept,
                    ...)
       yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])
       as.numeric(
@@ -682,7 +694,7 @@ qgcomp.boot <- function(
       if(parplan) future::plan(strategy = future::multisession)
       bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          weights=qdata$weights,MCsize=MCsize,
+                          weights=qdata$weights,MCsize=MCsize, hasintercept = hasintercept,
                           future.seed=TRUE,
                           ...)
 
@@ -690,19 +702,22 @@ qgcomp.boot <- function(
     }else{
       bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
-                          weights=weights, MCsize=MCsize,
+                          weights=weights, MCsize=MCsize, hasintercept = hasintercept,
                           ...)
 
     }
     bootsamps = do.call("cbind", bootsamps)
     # these are the linear predictors
-    hats = t(bootsamps[-c(seq_len(degree+1)),])
+    hats = t(bootsamps[-c(seq_len(degree+ifelse(hasintercept,1,0))),,drop=FALSE])
     # covariance of the linear predictors
     cov.yhat = cov(hats)
-    bootsamps = bootsamps[seq_len(degree+1),]
+    bootsamps = bootsamps[seq_len(degree+ifelse(hasintercept,1,0)),,drop=FALSE]
     seb <- apply(bootsamps, 1, sd)
     covmat <- cov(t(bootsamps))
-    colnames(covmat) <- rownames(covmat) <- names(estb) <- c("(intercept)", paste0("psi", seq_len(nrow(bootsamps)-1)))
+    cnms = c(paste0("psi", seq_len(nrow(bootsamps)-1)))
+    if(hasintercept)
+      cnms = c("(intercept)", cnms)
+    colnames(covmat) <- rownames(covmat) <- names(estb) <- cnms
 
     tstat <- estb / seb
     df <- nobs - length(attr(terms(f, data = data), "term.labels")) - 1 - degree # df based on obs - gcomp terms - msm terms
@@ -714,19 +729,22 @@ qgcomp.boot <- function(
     if (!is.null(oldq)){
       q = oldq
     }
+    psiidx = seq_len(degree)+ifelse(hasintercept,1,0)
     qx <- qdata[, expnms]
-    res <- list(
+    res <- .qgcomp_object(
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit,
-      psi = estb[-1], var.psi = seb[-1] ^ 2, covmat.psi=covmat[-1,-1, drop=FALSE], ci = ci[-1,],
+      psi = estb[psiidx], var.psi = seb[psiidx] ^ 2, 
+      covmat.psi=covmat[psiidx,psiidx, drop=FALSE], 
+      ci = ci[psiidx,],
       coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
       expnms=expnms, q=q, breaks=br, degree=degree,
-      pos.psi = NULL, neg.psi = NULL,
-      pos.weights = NULL, neg.weights = NULL, pos.size = NULL,neg.size = NULL, bootstrap=TRUE,
+      bootstrap=TRUE,
       y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
       bootsamps = bootsamps,
       cov.yhat=cov.yhat,
       alpha=alpha,
-      call=origcall
+      call=origcall,
+      hasintercept=hasintercept
     )
       if(msmfit$fit$family$family=='gaussian'){
         res$tstat <- tstat

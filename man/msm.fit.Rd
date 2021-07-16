@@ -16,6 +16,7 @@ msm.fit(
   weights,
   bayes = FALSE,
   MCsize = nrow(qdata),
+  hasintercept = TRUE,
   ...
 )
 }
@@ -59,6 +60,8 @@ zero inflated model parameters. This can be left small for testing, but should b
 as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
 linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize)}
+
+\item{hasintercept}{(logical) does the model have an intercept?}
 
 \item{...}{arguments to glm (e.g. family)}
 }

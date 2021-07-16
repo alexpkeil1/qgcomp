@@ -81,6 +81,10 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' print(obj1)
   #' print(obj2)
   fam <- x$fit$family$family
+  rnm =  c(paste0('psi',1:max(1, length(coef(x)))))
+  if(x$hasintercept){
+    rnm = c("(Intercept)",rnm[-length(rnm)])
+  }
   if(inherits(x, "ziqgcompfit")){
     printZI(x, showweights=showweights, ...)
     return(invisible(x))
@@ -104,25 +108,21 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "poisson"){
     #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "gaussian"){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "t"
     x$zstat = x$tstat
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(x))-1))))
   }
   if (fam == "cox"){
     cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
-    rnm = c(paste0('psi',1:max(1, length(coef(x)))))
   }
   if (!(fam %in% c("poisson", "binomial", "cox", "gaussian"))){
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution

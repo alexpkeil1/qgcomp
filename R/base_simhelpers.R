@@ -154,8 +154,8 @@ simdata_quantized <- function(
   # simulate under data structure where WQS/qgcomp is the truth:
   #  e.g. a multivariate exposure with multinomial distribution
   #  and an outcome that is a linear function of exposure scores
-  lst = .quantized_design(N,b0,coef,ncor,corr,q)
-  y = rnorm(N,0,yscale) + lst$mu
+  lst = .quantized_design(N=N,b0=b0,coef=coef,ncor=ncor,corr=corr,q=q)
+  y = rnorm(N,mean=0,sd=yscale) + lst$mu
   res = data.frame(lst$X,y)
   attr(res, "truecoefs") = list(intercept=b0,coef=coef)
   res
@@ -174,7 +174,7 @@ simdata_quantized <- function(
   # simulate under data structure where WQS/qgcomp is the truth:
   #  e.g. a multivariate exposure with multinomial distribution
   #  and an outcome that is a linear function of exposure scores
-  lst = .quantized_design(N,b0,coef,ncor,corr,q)
+  lst = .quantized_design(N=N,b0=b0,coef=coef,ncor=ncor,corr=corr,q=q)
   py <- .expit(lst$mu)
   pextreme = mean(py>.995) + mean(py<0.005)
   if(pextreme > .10) warning("model implies > 10% of observations with very high/low (<0.5%) outcome probability, which may distort estimates")
@@ -201,7 +201,7 @@ simdata_quantized <- function(
   # simulate under data structure where WQS/qgcomp is the truth:
   #  e.g. a multivariate exposure with multinomial distribution
   #  and an outcome that is a linear function of exposure scores
-  lst = .quantized_design(N,b0,coef,ncor,corr,q)
+  lst = .quantized_design(N=N,b0=b0,coef=coef,ncor=ncor,corr=corr,q=q)
   #py <- .expit(lst$mu)
   t0 <- rweibull(N, shape = shape0, scale = scale0)
   #t1 <- exp(log(t0) - log(HR)/(shape0))
