@@ -131,7 +131,7 @@ dat <- data.frame(y=rbinom(n, 1, 0.5)*rpois(n, 1.2), x1=runif(n), x2=runif(n), z
 \dontrun{
 # warning: the examples below can take a long time to run
 res = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-    data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE)
+    data=dat, q=4, dist="poisson", B=1000, MCsize=10000, parallel=TRUE, parplan=TRUE)
 qgcomp.zi.noboot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
     data=dat, q=4, dist="poisson")
 res
@@ -139,7 +139,7 @@ res
 # accuracy for small MCsize is suspect (compare coefficients between boot/noboot versions), 
 # so re-check with MCsize set to larger value (this takes a long time to run)
 res2 = qgcomp.zi.boot(f=y ~ x1 + x2 | x1 + x2, expnms = c('x1', 'x2'), 
-    data=dat, q=4, dist="poisson", B=1000, MCsize=50000, parallel=TRUE)
+    data=dat, q=4, dist="poisson", B=1000, MCsize=50000, parallel=TRUE, parplan=TRUE)
  res2
 plot(density(res2$bootsamps[4,]))
 

@@ -517,7 +517,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' 
   #' # using future package, marginalizing over confounder z
   #' (obj3 <- qgcomp.cox.boot(survival::Surv(time, d)~x1 + x2 + z, expnms = expnms, data = dat, 
-  #'                          B=1000, MCsize=20000, parallel=TRUE))
+  #'                          B=1000, MCsize=20000, parallel=TRUE, parplan=TRUE))
   #' # non-constant hazard ratio, non-linear terms
   #' (obj4 <- qgcomp.cox.boot(survival::Surv(time, d)~factor(x1) + splines::bs(x2) + z, 
   #'                          expnms = expnms, data = dat, 

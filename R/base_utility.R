@@ -291,7 +291,7 @@ checknames <- function(terms){
   if(is.na(match("pos.size", nms))) res$pos.size = NULL
   if(is.na(match("neg.size", nms))) res$neg.size = NULL
   if(is.na(match("df", nms))) res$df = NULL
-  attr(res, "class") <- c("list", "qgcompfit")
+  attr(res, "class") <- c("qgcompfit", "list")
   res
 }
 

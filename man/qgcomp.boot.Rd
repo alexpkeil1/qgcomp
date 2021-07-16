@@ -190,7 +190,7 @@ res2
 
 qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
-  degree=2, parallel=TRUE)
+  degree=2, parallel=TRUE, parplan=TRUE)
 
 
 # weighted model
