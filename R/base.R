@@ -457,7 +457,7 @@ qgcomp.boot <- function(
   #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
   #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
-  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)
+  #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
   #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @return a qgcompfit object, which contains information about the effect
@@ -690,14 +690,17 @@ qgcomp.boot <- function(
     set.seed(seed)
     if(parallel){
       #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
-      if(parplan) future::plan(strategy = future::multisession)
+      if (parplan) {
+        oplan <- future::plan(strategy = future::multisession)
+        on.exit(future::plan(oplan), add = TRUE)      
+      }
       bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,
                           weights=qdata$weights,MCsize=MCsize, hasintercept = hasintercept,
                           future.seed=TRUE,
                           ...)
 
-      if(parplan) future::plan(strategy = future::transparent)
+      
     }else{
       bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                           expnms=expnms, rr=rr, degree=degree, nids=nids, id=id,

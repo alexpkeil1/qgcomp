@@ -71,7 +71,7 @@ error at a given value of MCsize)}
 
 \item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm.fit.control}}}
 
-\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to plan(transparent) after bootstrapping)}
+\item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)}
 
 \item{...}{arguments to glm (e.g. family)}
 }

@@ -185,7 +185,7 @@ summary.qgcompfit <- function(object, ...){
   colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
   colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
   rownames(pdat) <- rnm
-  list(coefficents=pdat)
+  list(coefficients=pdat)
 }
 
 family.qgcompfit <- function(object, ...){
