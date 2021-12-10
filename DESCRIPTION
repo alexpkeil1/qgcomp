@@ -1,6 +1,6 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.8.2
+Version: 2.8.3
 Date: 2021-12-10
 Authors@R: 
     person(given = "Alexander",
@@ -20,6 +20,8 @@ Description: G-computation for a set of time-fixed exposures with
     Alexandra J. White (2019) A quantile-based g-computation approach to
     addressing the effects of exposure mixtures; <doi:10.1289/EHP5838>.
 License: GPL (>= 2)
+URL: https://github.com/alexpkeil1/qgcomp/
+BugReports: https://github.com/alexpkeil1/qgcomp/issues
 Depends: 
     R (>= 3.5.0)
 Imports: 
