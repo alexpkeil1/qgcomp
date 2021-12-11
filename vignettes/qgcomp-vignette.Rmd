@@ -555,7 +555,7 @@ p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific 
 ```
 
 
-*Technical Note:* this mode of usage is designed for simplicity. The implementation relies on the `future` and `future.apply` packages. Use guidelines of the `future` package dictates that the user should be able to control the future "plan", rather than embedding it in functions as has been done here. This slightly more advanced usage (which allows nesting within larger parallel schemes such as simulations) is demonstrated here by setting the "parplan" parameter to FALSE and explicitly specifying a "plan" outside of qgcomp functions. This will move much of the overhead due to parallel processing outside of the actual qgcomp functions. The final code block of this vignette shows how to exit the "plan" and return to standard evaluation via `plan(transparent)` - doing so at the end means that the next parallel call (with parplan=FALSE) we make will have lower overhead and run slightly faster.
+*Technical Note:* this mode of usage is designed for simplicity. The implementation relies on the `future` and `future.apply` packages. Use guidelines of the `future` package dictates that the user should be able to control the future "plan", rather than embedding it in functions as has been done here. This slightly more advanced usage (which allows nesting within larger parallel schemes such as simulations) is demonstrated here by setting the "parplan" parameter to FALSE and explicitly specifying a "plan" outside of qgcomp functions. This will move much of the overhead due to parallel processing outside of the actual qgcomp functions. The final code block of this vignette shows how to exit the "plan" and return to standard evaluation via `plan(sequential)` - doing so at the end means that the next parallel call (with parplan=FALSE) we make will have lower overhead and run slightly faster.
 ```{r time-to-event3b, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 future::plan(future::multisession)# parallel evaluation
 qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
@@ -826,6 +826,6 @@ The development of this package was supported by NIH Grant RO1ES02953101. Invalu
 
 ```{r parend, echo=TRUE}
 # return to standard processing
-future::plan(future::transparent) # return to standard evaluation
+future::plan(future::sequential) # return to standard evaluation
 ```
 
