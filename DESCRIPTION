@@ -1,12 +1,9 @@
 Package: qgcomp
 Title: Quantile G-Computation
 Version: 2.8.4
-Date: 2021-12-11
+Date: 2021-12-12
 Authors@R: 
-    person(given = "Alexander",
-           family = "Keil",
-           role = c("aut", "cre"),
-           email = "akeil@unc.edu")
+    person("Alexander", "Keil", , "akeil@unc.edu", role = c("aut", "cre"))
 Author: Alexander Keil [aut, cre]
 Maintainer: Alexander Keil <akeil@unc.edu>
 Description: G-computation for a set of time-fixed exposures with
@@ -48,6 +45,5 @@ VignetteBuilder:
     knitr
 Encoding: UTF-8
 Language: en-US
-LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

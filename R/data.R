@@ -6,7 +6,7 @@
 #'
 #' A dataset containing well water measurements and health outcomes for 253 individuals. 
 #' All continuous variables are standardized to have mean 0, standard deviation 1.
-#'
+#' @usage data(metals)
 #' @format A data frame with 253 rows and 24 variables:
 #' \describe{
 #'   \item{y}{continuous birth outcome}

@@ -36,7 +36,7 @@ A data frame with 253 rows and 24 variables:
 }
 }
 \usage{
-metals
+data(metals)
 }
 \description{
 Simulated well water measurements in North Carolina: 16 metals, 6 water chemistry
