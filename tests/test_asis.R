@@ -35,12 +35,16 @@ stopifnot(all.equal(
 
 stopifnot(all.equal(
   obj1$fit$coefficients, 
-  obj2$fit$coefficients, 
   obj3$fit$coefficients, check.names=FALSE))
 stopifnot(all.equal(
+  obj1$fit$coefficients, 
+  obj2$fit$coefficients, check.names=FALSE))
+stopifnot(all.equal(
   obj1$msmfit$coefficients, 
-  obj2$msmfit$coefficients, 
   obj3$msmfit$coefficients, check.names=FALSE))
+stopifnot(all.equal(
+  obj1$msmfit$coefficients, 
+  obj2$msmfit$coefficients, check.names=FALSE))
 
 f0b = d ~ x1 + x2
 f4 = d ~ x1*x2
