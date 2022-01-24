@@ -62,12 +62,16 @@ stopifnot(all.equal(
 
 stopifnot(all.equal(
   obj4$fit$coefficients, 
-  obj5$fit$coefficients, 
   obj6$fit$coefficients, check.names=FALSE))
 stopifnot(all.equal(
   obj4$msmfit$coefficients, 
-  obj5$msmfit$coefficients, 
   obj6$msmfit$coefficients, check.names=FALSE))
+stopifnot(all.equal(
+  obj4$fit$coefficients, 
+  obj5$fit$coefficients, check.names=FALSE))
+stopifnot(all.equal(
+  obj4$msmfit$coefficients, 
+  obj5$msmfit$coefficients, check.names=FALSE))
 
 
 ##### non linear
