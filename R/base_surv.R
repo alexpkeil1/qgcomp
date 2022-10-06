@@ -45,6 +45,12 @@
 #' 
 #'
 qgcomp.survcurve.boot <- function(x, ...){
+  if(is.null(x$q)){
+    q = length(x$breaks[[1]])-1
+    warning("q is NULL in the qgcomp fit: be sure that the given breaks between categories are meaningful")
+  } else{
+    q = x$q
+  }
   namespaceImport("survival")
   rootdat <- as.data.frame(x$fit$x)
   psidat <- data.frame(psi=0)
@@ -60,15 +66,15 @@ qgcomp.survcurve.boot <- function(x, ...){
     df[,"psi4"] <- idx^4
     df
   }
-  newmarg = lapply(0:(x$q-1), rootfun2, df=psidat)
+  newmarg = lapply(0:(q-1), rootfun2, df=psidat)
   margdf = data.frame(do.call("rbind", newmarg))
-  newcond = lapply(0:(x$q-1), rootfun, df=rootdat)
+  newcond = lapply(0:(q-1), rootfun, df=rootdat)
   conddf = data.frame(do.call("rbind", newcond))
   msmobj = survival::survfit(x$msmfit, newdata=margdf)
   gcompobj = survival::survfit(x$fit, newdata=conddf)
   #
-  mdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$msmfit, newdata=newmarg[[zz]]), data.frame(time=time, surv=surv, q=zz)))
-  cdfl = lapply(seq_len(x$q), function(zz) with(survival::survfit(x$fit, newdata=newcond[[zz]][1,]), data.frame(time=time, surv=surv, q=zz)))
+  mdfl = lapply(seq_len(q), function(zz) with(survival::survfit(x$msmfit, newdata=newmarg[[zz]]), data.frame(time=time, surv=surv, q=zz)))
+  cdfl = lapply(seq_len(q), function(zz) with(survival::survfit(x$fit, newdata=newcond[[zz]][1,]), data.frame(time=time, surv=surv, q=zz)))
   mdfq = do.call(rbind, mdfl)
   cdfq = do.call(rbind, cdfl)
   mdf = with(msmobj, data.frame(time=time, surv=apply(surv, 1, mean)))
@@ -172,6 +178,15 @@ coxmsm.fit <- function(
   fit <- coxph(newform, data = qdata, x=TRUE, y=TRUE, 
                weights=weights,# cluster=cluster, 
                ...)
+  if(nrow(qdata) != length(fit$linear.predictors)){
+    cat("nobs:", nobs)
+    cat("; n preds:", length(predmat[[1]]))
+    stop("You have missing data. qgcomp.cox.boot only works 
+             on complete case data. Observations with missing 
+             values of outcomes, exposures or covariates should be removed 
+             from the dataset prior to fitting.")
+  }
+  
   ## get predictions (set exposure to 0,1,...,q-1)
   if(is.null(intvals)){
     intvals = seq_len(length(table(qdata[expnms[1]]))) - 1
@@ -193,10 +208,11 @@ coxmsm.fit <- function(
     # assuming censoring at random and no late entry
     pfit = survfit(fit, newdata=newdata, se.fit=FALSE)
     if(any(diff(pfit$n.risk)>0)){
-      warning("Late entry/counting process style data is still under 
-              testing in qgcomp.cox.boot: be cautious of output. Note
-              that this function should not be used with time varying
-              exposures/covariates in the model (results will be invalid)."
+      warning("Late entry/counting process style data is detected 
+              in call to qgcomp.cox.boot. Note:
+              this function is not valid with time varying
+              exposures/covariates in the model if using counting process
+              style data (>1 record per individual)."
               )
     }
     ch = pfit$cumhaz

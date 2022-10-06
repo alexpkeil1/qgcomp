@@ -688,7 +688,7 @@ dim(validdata) # 271 observations = 60% of total
 
 The qgcomp package then facilitates the analysis of these partitioned data to allow valid estimation and hypothesis testing of partial effects.  The `qgcomp.partials` function is used to estimate partial effects. Note that the variables with "negative effect sizes" differs slightly from the overall analysis given in the `qc.fit` object that represents our first pass analysis on these data. This is to be expected, and is a feature of this approach: different random subsets of the data will be expected to yield different estimated effects. If the true effect is null, then the estimated effects will vary from positive to negative around the null, and sample splitting is an important way to distinguish between estimates that reflect underlying patterns in the entire dataset from estimates that are simply due to natural sampling variation inherent to small and moderate samples. 
 ```{r pe3a, fig.height=5, fig.width=7.5}
-	
+    
 
 splitres <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=4, 
            traindata=traindata[,c(Xnm, covars, "y")],validdata=validdata[,c(Xnm, covars, "y")], expnms=Xnm)

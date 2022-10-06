@@ -270,7 +270,7 @@ qgcomp.noboot <- function(f,
   thecall$drop.unused.levels <- TRUE
 
   thecall[[1L]] <- quote(stats::model.frame)
-  thecalle <- eval(thecall, parent.frame())
+  thecalle <- eval(thecall, parent.frame()) # a model frame pulled in from the environment in which the function was called
   if(hasweights){
     data$weights <- as.vector(model.weights(thecalle))
   } else data$weights = rep(1, nobs)
