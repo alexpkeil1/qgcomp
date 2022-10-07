@@ -3,65 +3,6 @@
   devtools::install_github("alexpkeil1/qgcomp",...)
 }
 
-# to replace qgcomp partials
-.qgcomp.partials <- function(
-    fun = c("qgcomp.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
-    traindata=NULL,
-    validdata=NULL,
-    expnms=NULL,
-    .fixbreaks=FALSE,
-    ...
-){
-  # currently broken
-  if(is.null(traindata) | is.null(validdata))
-    stop("traindata and validdata must both be specified")
-  #
-  traincall <- validcall <- match.call(expand.dots = TRUE)
-  droppers <- match(c("traindata", "validdata", ".fixbreaks", "fun"), names(traincall), 0L) #index (will need to add names here if more arguments are added)
-  traincall[["data"]] <- eval(traincall[["traindata"]], parent.frame())
-  validcall[["data"]] <- eval(validcall[["validdata"]], parent.frame())
-  traincall <- traincall[-c(droppers)]
-  validcall <- validcall[-c(droppers)]
-  hasbreaks = ifelse("breaks" %in% names(traincall), TRUE, FALSE)
-  if(hasbreaks && .fixbreaks)
-    .fixbreaks=FALSE
-  #
-  if(is.function(fun)){
-    traincall[[1L]] <- validcall[[1L]] <- fun
-  }else{
-    traincall[[1L]] <- validcall[[1L]] <- as.name(fun[1])
-  }
-  train.fit = eval(traincall, parent.frame())
-  #####
-  if(.fixbreaks){
-    validcall$breaks = train.fit$breaks
-    validcall$q = NULL
-  }
-  ######
-  posnms = names(train.fit$pos.weights)
-  negnms = names(train.fit$neg.weights)
-  if(length(posnms)==1 && all(posnms==c("count", "zero"))){
-    posnms = names(train.fit$pos.weights$count)
-    negnms = names(train.fit$neg.weights$count)
-  }
-  res = list(train.fit=train.fit)
-  res$negmix <- res$posmix <- "none"
-  if(length(posnms)>0){
-    res$posmix = posnms
-    vc = as.list(validcall)
-    vc$expnms = c(posnms)
-    res$pos.fit <- eval(as.call(vc), parent.frame())
-  }
-  if(length(negnms)>0){
-    res$negmix = negnms
-    vc = as.list(validcall)
-    vc$expnms = c(negnms)
-    res$neg.fit <- eval(as.call(vc), parent.frame())
-    
-  }
-  class(res) <- "qgcompmultifit"
-  res
-}
 
 .fold_list <- function (fold, set1, set2) {
   fold_list <- list(fold = fold, set1 = set1, set2 = set2)
@@ -78,14 +19,14 @@
 .make_xfitfolds_iid <- function (n, V = 5) {
   folds <- rep(seq_len(V), length = n)
   folds <- sample(folds)
-  combinations <- combn(V, V - 1)
+  combinations <- utils::combn(V, V - 1)
   combinations <- rbind(combinations, apply(combinations, 2, 
                                             function(x) setdiff(1:V, x)))
   if (V > 1) 
     foldobj = lapply(1:V, .xfitfold_list_from_foldvec, 
                      folds = folds, ordermat = combinations)
   if (V == 1) 
-    foldobj = list(.xfitfold_list_from_foldvec(fold = 1, set1 = 1:n, 
+    foldobj = list(.fold_list(fold = 1, set1 = 1:n, 
                                            set2 = 1:n))
   foldobj
 }
@@ -117,8 +58,8 @@
 .xfit_proclist <- function(proclist,n){
   int_ests = apply(proclist$intercepts, 2, median)
   psi_ests = apply(proclist$psis, 2, median)
-  int_resids = t(t(proclist$intercepts)-int_est)
-  psi_resids = t(t(proclist$psis)-psi_est)
+  int_resids = t(t(proclist$intercepts)-int_ests)
+  psi_resids = t(t(proclist$psis)-psi_ests)
   int_vars = proclist$vars_intercept/n + int_resids^2
   psi_vars = proclist$vars_psi/n + psi_resids^2
   c(proclist, list(int_ests=int_ests,
@@ -131,6 +72,29 @@
   )
 }
   
+.calcxfitci <- function(xdf, alpha=0.05){
+  xdf =  cbind(xdf, xdf[,1] + qnorm(alpha/2)* xdf[,2])
+  xdf =  cbind(xdf, xdf[,1] + qnorm(1-alpha/2)* xdf[,2])
+  xdf =  cbind(xdf, xdf[,1]/xdf[,2])
+  xdf =  cbind(xdf, 2 - 2 * pnorm(abs(xdf[,1]/xdf[,2])))
+  colnames(xdf) <- c("Estimate", "Std. Err", "Lower CI", "Upper CI", "z value", "Pr(>|t|)")
+  rownames(xdf) <- c("(Intercept)", "psi")
+  xdf
+}
+
+.xfit_coeftab <- function(x){
+  x$neg.coeftab = (rbind(
+    c(x$int_ests[2],sqrt(x$int_vars[2])),
+    c(x$psi_ests[2],sqrt(x$psi_vars[2]))
+  ))
+  x$pos.coeftab = (rbind(
+    c(x$int_ests[1], sqrt(x$int_vars[1])),
+    c(x$psi_ests[1], sqrt(x$psi_vars[1]))
+  ))
+  x$neg.coeftab = .calcxfitci(x$neg.coeftab)
+  x$pos.coeftab = .calcxfitci(x$pos.coeftab)
+  x
+}
 
 
 .qgcomp_xfitpartials <- function(
@@ -138,25 +102,51 @@
     fun = c("qgcomp.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
     V=10,
     expnms=NULL,
+    .fixbreaks=TRUE,
     ...
 ){
-  folds <- .make_xfitfolds_iid(n=nrow(data), V=V)
+  n = nrow(data)
+  folds <- .make_xfitfolds_iid(n=n, V=V)
   foldres = list()
   for(f in folds){
-    traindata = dat[f$set1,]
-    validdata = dat[f$set2,]
-    foldres[[f$fold]] = .qgcomp.partials(
+    traindata = data[f$set1,,drop=FALSE]
+    validdata = data[f$set2,,drop=FALSE]
+    foldres[[f$fold]] = qgcomp.partials(
       fun=fun,
       expnms = expnms, 
       traindata = traindata, 
       validdata = validdata,
+      .fixbreaks = .fixbreaks,
       ...
     )
   }
   res = .xfit_procfolds(foldres)
   res = .xfit_proclist(res, n)
+  res = .xfit_coeftab(res)
   alpha = foldres[[1]]$pos.fit$alpha
-  list(res=res, foldres = foldres, n=nrow(data))
+  res = c(res, list(foldres = foldres, n=n))
+  class(res) <-  "qgcompmultixfit"
+  res
 }
 
+
+print.qgcompmultixfit <- function(x,...){
+  #' @export
+  #cat(paste0("\nVariables with positive effect sizes in training data: ", paste(x$posmix, collapse = ", ")))
+  #cat(paste0("\nVariables with negative effect sizes in training data: ", paste(x$negmix, collapse = ", ")))
+  cat("\nPartial effect sizes estimated using V-fold cross-fitting\n")
+  cat("Positive direction \n")
+  if(!is.null(x$pos.coeftab)){
+    printCoefmat(x$pos.coeftab, has.Pvalue = TRUE)
+  } else{
+    cat("\n No positive coefficients in model fit to training data ")
+  }
+  cat("\nNegative direction \n")
+  if(!is.null(x$neg.coeftab)){
+    printCoefmat(x$neg.coeftab, has.Pvalue = TRUE)
+  } else{
+    cat("\n No negative coefficients in model fit to training data ")
+  } 
+  
+}
 

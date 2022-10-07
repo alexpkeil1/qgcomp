@@ -9,6 +9,7 @@ qgcomp.partials(
   traindata = NULL,
   validdata = NULL,
   expnms = NULL,
+  .fixbreaks = TRUE,
   ...
 )
 }
@@ -23,6 +24,8 @@ function is used to fit the model. (default = "qgcomp.noboot")}
 \item{validdata}{Data frame with validation data}
 
 \item{expnms}{Exposure mixture of interest}
+
+\item{.fixbreaks}{(logical) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.}
 
 \item{...}{Arguments to \code{\link[qgcomp]{qgcomp.noboot}},
 \code{\link[qgcomp]{qgcomp.cox.noboot}}, or
