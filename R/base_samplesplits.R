@@ -152,9 +152,18 @@ qgcomp.partials <- function(
   traincall <- traincall[-c(droppers)]
   validcall <- validcall[-c(droppers)]
   hasbreaks = ifelse("breaks" %in% names(traincall), TRUE, FALSE)
+  hasq = ifelse("q" %in% names(traincall), TRUE, FALSE)
+  qnull = ifelse(is.null(traincall$q), TRUE, FALSE)
   if(hasbreaks && .fixbreaks)
     .fixbreaks=FALSE
-  #
+  # if q is set to null, and no breaks are provided ensure that no breaks are created
+  if(hasq){
+    if(!hasbreaks && qnull && .fixbreaks)
+      .fixbreaks=FALSE
+    if(!hasbreaks && qnull && .globalbreaks)
+      .globalbreaks=FALSE
+  }
+  
   if(is.function(fun)){
     traincall[[1L]] <- validcall[[1L]] <- fun
   }else{
@@ -167,12 +176,12 @@ qgcomp.partials <- function(
     global.fit = eval(globalcall, parent.frame())
     #print(dim(global.fit$fit$data))
     #
-    validcall[["breaks"]] = global.fit$breaks
-    validcall[["q"]] = NULL
-    traincall[["breaks"]] = global.fit$breaks
-    traincall[["q"]] = NULL
-    #print(validcall[["breaks"]])
-    #print(traincall[["breaks"]])
+    if(!is.null(global.fit$breaks)){
+      validcall[["breaks"]] = global.fit$breaks
+      validcall[["q"]] = NULL
+      traincall[["breaks"]] = global.fit$breaks
+      traincall[["q"]] = NULL
+    }
   }
   train.fit = eval(traincall, parent.frame())
   #####
@@ -192,9 +201,9 @@ qgcomp.partials <- function(
   if(length(posnms)>0){
     res$posmix = posnms
     poscall <- validcall
-    if(.fixbreaks || .globalbreaks){
+    if(!is.null(poscall$breaks)  && (.fixbreaks || .globalbreaks)){
       posidx <- which(expnms %in% posnms)
-      poscall[["breaks"]] <- poscall[["breaks"]][posidx]
+      poscall$breaks <- poscall$breaks[posidx]
     }
     vc = as.list(poscall)
     vc$expnms = c(posnms)
@@ -203,9 +212,10 @@ qgcomp.partials <- function(
   if(length(negnms)>0){
     res$negmix = negnms
     negcall <- validcall
-    if(.fixbreaks || .globalbreaks){
+    if(!is.null(negcall$breaks)  && (.fixbreaks || .globalbreaks)){
+      #if(.fixbreaks || .globalbreaks){
       negidx <- which(expnms %in% negnms)
-      negcall[["breaks"]] <- negcall[["breaks"]][negidx]
+      negcall$breaks <- negcall$breaks[negidx]
     }
     vc = as.list(negcall)
     vc$expnms = c(negnms)
