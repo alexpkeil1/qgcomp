@@ -14,8 +14,33 @@ Xnm <- c(
 dim(spl$traindata) # 181 observations = 40% of total
 dim(spl$validdata) # 271 observations = 60% of total
 splitres <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=4, 
-  traindata=spl$traindata,validdata=spl$validdata, expnms=Xnm)
+  traindata=spl$traindata,validdata=spl$validdata, expnms=Xnm, .fixbreaks = FALSE, .globalbreaks = TRUE)
 splitres
+
+# check for break preservation
+posbr = splitres$pos.fit$breaks[[1]]
+posnm = splitres$pos.fit$expnms[[1]]
+negbr = splitres$neg.fit$breaks[[1]]
+negnm = splitres$neg.fit$expnms[[1]]
+posidx = which(splitres$train.fit$expnms == posnm)
+negidx = which(splitres$train.fit$expnms == negnm)
+stopifnot(all.equal(splitres$train.fit$breaks[[posidx]], posbr))
+stopifnot(all.equal(splitres$train.fit$breaks[[negidx]], negbr))
+
+splitres2 <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=4, 
+                            traindata=spl$traindata,validdata=spl$validdata, expnms=Xnm, .fixbreaks = TRUE, .globalbreaks = FALSE)
+splitres2
+
+# check for break preservation
+posbr2 = splitres2$pos.fit$breaks[[1]]
+posnm2 = splitres2$pos.fit$expnms[[1]]
+negbr2 = splitres2$neg.fit$breaks[[1]]
+negnm2 = splitres2$neg.fit$expnms[[1]]
+posidx2 = which(splitres2$train.fit$expnms == posnm)
+negidx2 = which(splitres2$train.fit$expnms == negnm)
+stopifnot(all.equal(splitres2$train.fit$breaks[[posidx2]], posbr2))
+stopifnot(all.equal(splitres2$train.fit$breaks[[negidx2]], negbr2))
+
 
 # are clusters allocated equally across training/testing?
 margdist = as.numeric(prop.table(table(metals$clust))) # 70/30 split

@@ -10,6 +10,7 @@ qgcomp.partials(
   validdata = NULL,
   expnms = NULL,
   .fixbreaks = TRUE,
+  .globalbreaks = FALSE,
   ...
 )
 }
@@ -25,7 +26,9 @@ function is used to fit the model. (default = "qgcomp.noboot")}
 
 \item{expnms}{Exposure mixture of interest}
 
-\item{.fixbreaks}{(logical) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.}
+\item{.fixbreaks}{(logical, overridden by .globalbreaks) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.}
+
+\item{.globalbreaks}{(logical, if TRUE, overrides .fixbreaks) Use the same quantile cutpoints in the training and validation data (selected in combined training and validation data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.}
 
 \item{...}{Arguments to \code{\link[qgcomp]{qgcomp.noboot}},
 \code{\link[qgcomp]{qgcomp.cox.noboot}}, or

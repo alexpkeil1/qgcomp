@@ -6,6 +6,7 @@ qgcomp.partials <- function(
     validdata=NULL,
     expnms=NULL,
     .fixbreaks=TRUE,
+    .globalbreaks=FALSE,
     ...
 ){
   #' @title Partial effect sizes, confidence intervals, hypothesis tests
@@ -55,7 +56,8 @@ qgcomp.partials <- function(
   #' @param traindata Data frame with training data
   #' @param validdata Data frame with validation data
   #' @param expnms Exposure mixture of interest
-  #' @param .fixbreaks (logical) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.
+  #' @param .fixbreaks (logical, overridden by .globalbreaks) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.
+  #' @param .globalbreaks (logical, if TRUE, overrides .fixbreaks) Use the same quantile cutpoints in the training and validation data (selected in combined training and validation data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.
   #' @param ... Arguments to \code{\link[qgcomp]{qgcomp.noboot}}, 
   #'    \code{\link[qgcomp]{qgcomp.cox.noboot}}, or 
   #'    \code{\link[qgcomp]{qgcomp.zi.noboot}}
@@ -140,12 +142,11 @@ qgcomp.partials <- function(
   #' splitres5
   #'                 
   #' }
-  # currently broken
   if(is.null(traindata) | is.null(validdata))
     stop("traindata and validdata must both be specified")
   #
   traincall <- validcall <- match.call(expand.dots = TRUE)
-  droppers <- match(c("traindata", "validdata", ".fixbreaks", "fun"), names(traincall), 0L) #index (will need to add names here if more arguments are added)
+  droppers <- match(c("traindata", "validdata", ".fixbreaks", ".globalbreaks", "fun"), names(traincall), 0L) #index (will need to add names here if more arguments are added)
   traincall[["data"]] <- eval(traincall[["traindata"]], parent.frame())
   validcall[["data"]] <- eval(validcall[["validdata"]], parent.frame())
   traincall <- traincall[-c(droppers)]
@@ -159,15 +160,29 @@ qgcomp.partials <- function(
   }else{
     traincall[[1L]] <- validcall[[1L]] <- as.name(fun[1])
   }
+  if(.globalbreaks){
+    #
+    globalcall <- traincall
+    globalcall[["data"]] <- eval(rbind(traincall[["data"]], validcall[["data"]]), parent.frame())
+    global.fit = eval(globalcall, parent.frame())
+    #print(dim(global.fit$fit$data))
+    #
+    validcall[["breaks"]] = global.fit$breaks
+    validcall[["q"]] = NULL
+    traincall[["breaks"]] = global.fit$breaks
+    traincall[["q"]] = NULL
+    #print(validcall[["breaks"]])
+    #print(traincall[["breaks"]])
+  }
   train.fit = eval(traincall, parent.frame())
   #####
-  if(.fixbreaks){
+  if(.fixbreaks && !.globalbreaks){
     validcall$breaks = train.fit$breaks
     validcall$q = NULL
   }
   ######
-  posnms = names(train.fit$pos.weights)
-  negnms = names(train.fit$neg.weights)
+  posnms = expnms[is.element(expnms, names(train.fit$pos.weights))]
+  negnms = expnms[is.element(expnms, names(train.fit$neg.weights))]
   if(length(posnms)==1 && all(posnms==c("count", "zero"))){
     posnms = names(train.fit$pos.weights$count)
     negnms = names(train.fit$neg.weights$count)
@@ -176,13 +191,23 @@ qgcomp.partials <- function(
   res$negmix <- res$posmix <- "none"
   if(length(posnms)>0){
     res$posmix = posnms
-    vc = as.list(validcall)
+    poscall <- validcall
+    if(.fixbreaks || .globalbreaks){
+      posidx <- which(expnms %in% posnms)
+      poscall[["breaks"]] <- poscall[["breaks"]][posidx]
+    }
+    vc = as.list(poscall)
     vc$expnms = c(posnms)
     res$pos.fit <- eval(as.call(vc), parent.frame())
   }
   if(length(negnms)>0){
     res$negmix = negnms
-    vc = as.list(validcall)
+    negcall <- validcall
+    if(.fixbreaks || .globalbreaks){
+      negidx <- which(expnms %in% negnms)
+      negcall[["breaks"]] <- negcall[["breaks"]][negidx]
+    }
+    vc = as.list(negcall)
     vc$expnms = c(negnms)
     res$neg.fit <- eval(as.call(vc), parent.frame())
     
@@ -190,6 +215,7 @@ qgcomp.partials <- function(
   class(res) <- "qgcompmultifit"
   res
 }
+
 
 
 

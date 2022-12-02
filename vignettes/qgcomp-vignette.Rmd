@@ -694,7 +694,7 @@ splitres <- qgcomp.partials(
   fun="qgcomp.noboot", f=y~., q=4, 
   traindata=traindata[,c(Xnm, covars, "y")],validdata=validdata[,c(Xnm, covars, "y")], expnms=Xnm,
   bayes=FALSE, 
-  .fixbreaks = TRUE
+  .fixbreaks = TRUE, .globalbreaks=FALSE
   )
 splitres
 ```
@@ -706,6 +706,19 @@ plot(splitres$pos.fit)
 ```
 
 Consistent with our overall results, the overall effect of metals on the simulated outcome `y` is predominantly positive, which is driven mainly by calcium. The partial positive effect of psi=0.42 is slightly attenuated from the partial positive effect given in the original fit (0.44), but is slightly larger than the overall effect from the original fit (psi1=0.34). We note that the effect direction of cadmium is negative, even though it was selected based on positive associations in the training data. This suggests this variable has effects that are close to the null and their direction will depend on which subset of the data are used. This feature allows valid testing of hypotheses - a `global null` in which no exposures have effects will be characterized by variables that randomly switch effect directions between training and validation datasets, which will yield partial effect estimates close to the null with hypothesis tests that have appropriate type-1 error rates in large datasets. Performance in smaller samples is unexplored at this point (and may make an interesting methodologic research question).
+
+By default (subject to change) quantile cut points ("breaks") are defined within the training data and applied to the validation data. You may also change this behavior to allow the breaks to be defined using quantiles from the entire dataset, which treats the quantiles as fixed. This will be expected to improve stability in small samples and may eventually replace the default behavior as the quantiles themselves are not generally treated as random variables within quantile g-computation. For this particular dataset (and seed value), there is little impact of this setting on the results.
+```{r pe3c, fig.height=5, fig.width=7.5}
+    
+
+splitres_alt <- qgcomp.partials(
+  fun="qgcomp.noboot", f=y~., q=4, 
+  traindata=traindata[,c(Xnm, covars, "y")],validdata=validdata[,c(Xnm, covars, "y")], expnms=Xnm,
+  bayes=FALSE, 
+  .fixbreaks = TRUE, .globalbreaks=TRUE
+  )
+splitres_alt
+```
 
 One careful note: when there are multiple exposures with small positive or negative effects, the partial effects may be biased towards the null in studies with moderate or small sample sizes. This occurs because, in the training set, some exposures with small effects are likely to be mis-classified with regard to their effect direction. This means that small negative effects can be added to large positive effects to yield smaller positive effects, and vice versa. In some instances, both the positive and negative partial effects can be in the same direction. This occurs if individual effects are predominantly in one direction, but some are small and subject to having mis-classified directions. As one example: if there is a null overall effect, but there is a positive partial effect driven strongly by one exposure and a balancing negative partial effect driven by numerous weaker associations, partial effect estimates will not sum to the overall effect because the negative partial effect will experience more downward bias in typical sample sizes. Thus, when the overall effect does not equal the sum of the partial effects, there is likely some bias in at least one of the partial effect estimates. This is not necessarily a unique feature of quantile-based g-computation, but may also be a concern for methods that focus on estimation of partial effects, such as weighted quantile sum regression.
 
