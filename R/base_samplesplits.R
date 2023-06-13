@@ -115,7 +115,7 @@ qgcomp.partials <- function(
   #' f = survival::Surv(time, d)~x1 + x2 + x3 + x4 + x5 + z
   #' (fit1 <- survival::coxph(f, data = dat))
   #' (overall <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-  #' (splitres4 <- qgcomp:::qgcomp.partials(fun="qgcomp.cox.noboot", f=f, q=4,
+  #' (splitres4 <- qgcomp.partials(fun="qgcomp.cox.noboot", f=f, q=4,
   #'                traindata=traindata4,validdata=validdata4,
   #'                 expnms=expnms))
   #'  

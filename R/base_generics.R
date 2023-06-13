@@ -120,11 +120,11 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     testtype = "t"
     x$zstat = x$tstat
   }
-  if (fam == "cox"){
+  if (fam %in% c("cox", "cch")){
     cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
   }
-  if (!(fam %in% c("poisson", "binomial", "cox", "gaussian"))){
+  if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
@@ -167,12 +167,12 @@ summary.qgcompfit <- function(object, ...){
     testtype = "t"
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
   }
-  if (fam == "cox"){
+  if (fam %in% c("cox", "cch")){
     cat(paste0("Mixture log(hazard ratio)", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(object)))))
   }
-  if (!(fam %in% c("poisson", "binomial", "cox", "gaussian"))){
+  if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }

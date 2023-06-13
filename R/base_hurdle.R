@@ -90,7 +90,7 @@ hurdlemsm.fit <- function(
   #' q = 4
   #' qdata = quantize(dat, q=q, expnms=expnms)$data
   #' f = y ~ x1 + x2 + z | 1
-  #' msmfit <- qgcomp:::hurdlemsm.fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
+  #' msmfit <- hurdlemsm.fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
   #'   degree=1, id=NULL, MCsize=10000, containmix=list(count=TRUE, zero=FALSE),  
   #'   x=FALSE)
   #' msmfit$msmfit

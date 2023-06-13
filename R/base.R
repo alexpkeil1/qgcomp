@@ -1,6 +1,6 @@
 
 
-msm.fit <- function(f,
+msm_fit <- function(f,
                     qdata,
                     intvals,
                     expnms,
@@ -61,12 +61,13 @@ msm.fit <- function(f,
   #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
   #' @import stats arm
+  #' @export
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(200), x1=runif(200), x2=runif(200), z=runif(200))
   #' X <- c('x1', 'x2')
   #' qdat <- quantize(dat, X, q=4)$data
-  #' mod <- qgcomp:::msm.fit(f=y ~ z + x1 + x2 + I(x1*x2),
+  #' mod <- msm_fit(f=y ~ z + x1 + x2 + I(x1*x2),
   #'         expnms = c('x1', 'x2'), qdata=qdat, intvals=1:4, bayes=FALSE)
   #' summary(mod$fit) # outcome regression model
   #' summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
@@ -168,6 +169,8 @@ msm.fit <- function(f,
     }
     res
 }
+
+msm.fit <- msm_fit
 
 
 qgcomp.noboot <- function(f,
@@ -402,10 +405,10 @@ qgcomp.boot <- function(
 
   #' @title Quantile g-computation for continuous and binary outcomes
   #'
-  #' @description This function estimates a linear dose-response parameter representing a one quantile
+  #' @description This function estimates a dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This model estimates the parameters of a marginal
   #' structural model (MSM) based on g-computation with quantized exposures. Note: this function
-  #' allows linear and non-additive effects of individual components of the exposure, as well as
+  #' allows non-linear and non-additive effects of individual components of the exposure, as well as
   #' non-linear joint effects of the mixture via polynomial basis functions, which increase the
   #' computational computational burden due to the need for non-parametric bootstrapping.
   #'
@@ -653,7 +656,7 @@ qgcomp.boot <- function(
       qdata$id__ <- seq_len(dim(qdata)[1])
     }
     ###
-    msmfit <- msm.fit(newform, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id,
+    msmfit <- msm_fit(newform, qdata, intvals, expnms, rr, main=TRUE,degree=degree, id=id,
                       weights,
                       bayes,
                       MCsize=MCsize, hasintercept = hasintercept,
@@ -678,7 +681,7 @@ qgcomp.boot <- function(
                                              )))
       names(bootids) <- id
       qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-      ft = msm.fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
+      ft = msm_fit(f, qdata_, intvals, expnms, rr, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
                    hasintercept = hasintercept,
                    ...)
       yhatty = data.frame(yhat=predict(ft$msmfit), psi=ft$msmfit$data[,"psi"])

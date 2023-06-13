@@ -9,8 +9,8 @@ qgcomp.zi.noboot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=2, d
 qgcomp.zi.noboot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
 qgcomp.hurdle.noboot(f=y ~ z + x1 + x2 | x1 + x2 + z, expnms = c('x1', 'x2'), data=dat, q=2, dist="negbin")
 
-qgcomp.zi.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, B=1, expnms = c('x1', 'x2'), msmcontrol =zimsm.fit.control(predmethod="catprobs") , data=dat, q=2, dist="negbin")
-qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, B=1, expnms = c('x1', 'x2'), msmcontrol =zimsm.fit.control(predmethod="components") , data=dat, q=2, dist="negbin")
+qgcomp.zi.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, B=1, expnms = c('x1', 'x2'), msmcontrol =zimsm_fit.control(predmethod="catprobs") , data=dat, q=2, dist="negbin")
+qgcomp.hurdle.boot(f=y ~ z + x1 + x2 | x1 + x2 + z, B=1, expnms = c('x1', 'x2'), msmcontrol =zimsm_fit.control(predmethod="components") , data=dat, q=2, dist="negbin")
 
 
 
@@ -22,7 +22,7 @@ qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B =
 #summary(rr)
 #'\dontrun{
 #' qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 1000, 
-#'                dist="negbin", msmcontrol = zimsm.fit.control(predmethod="catprobs"))
+#'                dist="negbin", msmcontrol = zimsm_fit.control(predmethod="catprobs"))
 #' ff = qgcomp.zi.boot(f=y ~ z + x1 + x2 | z, expnms = c('x1', 'x2'), data=dat, q=4, B = 10, MCsize = 100, 
 #'                dist="geometric")
 #' plot(ff)

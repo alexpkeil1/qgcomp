@@ -91,10 +91,10 @@ marginal structural model (msmfit) used to estimate the final effect
 estimates.
 }
 \description{
-This function estimates a linear dose-response parameter representing a one quantile
+This function estimates a dose-response parameter representing a one quantile
 increase in a set of exposures of interest. This model estimates the parameters of a marginal
 structural model (MSM) based on g-computation with quantized exposures. Note: this function
-allows linear and non-additive effects of individual components of the exposure, as well as
+allows non-linear and non-additive effects of individual components of the exposure, as well as
 non-linear joint effects of the mixture via polynomial basis functions, which increase the
 computational computational burden due to the need for non-parametric bootstrapping.
 }

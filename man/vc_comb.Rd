@@ -44,5 +44,5 @@ vcov = rbind(c(0.010051348, -0.0039332248, -0.0036965571),
 colnames(vcov) <- rownames(vcov) <- c("(Intercept)", "x1", "x2")
 expnms <- rownames(vcov)[2:3]
 aname = rownames(vcov)[1]
-qgcomp:::vc_comb(aname, expnms, vcov) # returns the given covariance matrix
+vc_comb(aname, expnms, vcov) # returns the given covariance matrix
 }

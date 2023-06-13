@@ -88,7 +88,7 @@ qgcomp.survcurve.boot <- function(x, ...){
 }
 
 
-coxmsm.fit <- function(
+coxmsm_fit <- function(
   f, qdata, intvals, expnms, main=TRUE, degree=1, id=NULL, weights, cluster=NULL, MCsize=10000, ...){
   #' @title Marginal structural Cox model (MSM) fitting within quantile g-computation
   #' @description this is an internal function called by \code{\link[qgcomp]{qgcomp.cox.noboot}},
@@ -133,17 +133,18 @@ coxmsm.fit <- function(
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
   #' @concept variance mixtures
   #' @import survival
+  #' @export
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(time=(tmg <- pmin(.1,rweibull(50, 10, 0.1))), d=1.0*(tmg<0.1), 
   #'                   x1=runif(50), x2=runif(50), z=runif(50))
   #' expnms=paste0("x", 1:2)
-  #' qdata  = qgcomp:::quantize(dat, expnms)$data
+  #' qdata  = quantize(dat, expnms)$data
   #' f = survival::Surv(time, d)~x1 + x2
   #' fit <- survival::coxph(f, data = qdata, y=TRUE, x=TRUE)
   #' r1 = qdata[1,,drop=FALSE]
   #' times = survival::survfit(fit, newdata=r1, se.fit=FALSE)$time
-  #' (obj <- qgcomp:::coxmsm.fit(f, qdata, intvals=c(0,1,2,3), expnms, main=TRUE, degree=1, 
+  #' (obj <- coxmsm_fit(f, qdata, intvals=c(0,1,2,3), expnms, main=TRUE, degree=1, 
   #'    id=NULL, MCsize=100))
   #' #dat2 <- data.frame(psi=seq(1,4, by=0.1))
   #' #summary(predict(obj))
@@ -258,6 +259,8 @@ coxmsm.fit <- function(
   class(res$msmfit) = c("coxmsmfit",class(res$msmfit))
   res
 }
+
+coxmsm.fit = coxmsm_fit
 
 #predict.coxmsmfit <- function(msmfit, newdata=NULL, ...){
 #  if(is.null(newdata)){
@@ -611,7 +614,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   if(dim(qdata)[1]>MCsize) MCsize = dim(qdata)[1]
   ###
   environment(newform) <- list2env(list(qdata=qdata))
-  msmfit <- coxmsm.fit(newform, qdata, intvals, expnms, main=TRUE,degree=degree, 
+  msmfit <- coxmsm_fit(newform, qdata, intvals, expnms, main=TRUE,degree=degree, 
                        weights=weights,
                        # cluster = cluster,
                        id=id, MCsize=MCsize, ...)
@@ -631,7 +634,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-    newft = coxmsm.fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, 
+    newft = coxmsm_fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, 
                        weights=weights, #cluster = cluster,
                        MCsize=MCsize, ...)
     as.numeric(newft$msmfit$coefficients)

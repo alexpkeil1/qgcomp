@@ -81,10 +81,10 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #' @examples
   #' vcov = rbind(c(1.2, .9),c(.9, 2.0))
   #' colnames(vcov) <- rownames(vcov) <- expnms <- c("x1", "x2")
-  #' qgcomp:::se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
-  #' qgcomp:::se_comb(expnms, vcov, c(1, 1)) # default linear MSM fit: all exposures
+  #' se_comb(expnms, vcov, c(1, 0))^2 # returns the given variance
+  #' se_comb(expnms, vcov, c(1, 1)) # default linear MSM fit: all exposures
   #' # have equal weight
-  #' qgcomp:::se_comb(expnms, vcov, c(.3, .1)) # used when one exposure contributes
+  #' se_comb(expnms, vcov, c(.3, .1)) # used when one exposure contributes
   #'   # to the overall fit more than others  = d(msmeffect)/dx
   
   if(!is.matrix(covmat)) {
@@ -140,7 +140,7 @@ vc_comb <- function(aname="(Intercept)", expnms, covmat, grad=NULL){
   #' colnames(vcov) <- rownames(vcov) <- c("(Intercept)", "x1", "x2")
   #' expnms <- rownames(vcov)[2:3]
   #' aname = rownames(vcov)[1]
-  #' qgcomp:::vc_comb(aname, expnms, vcov) # returns the given covariance matrix
+  #' vc_comb(aname, expnms, vcov) # returns the given covariance matrix
   
   if(!is.matrix(covmat)) {
     nm <- names(covmat)

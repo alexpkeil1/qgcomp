@@ -19,7 +19,7 @@ qgcomp.zi.boot(
   bayes = FALSE,
   parallel = FALSE,
   MCsize = 10000,
-  msmcontrol = zimsm.fit.control(),
+  msmcontrol = zimsm_fit.control(),
   parplan = FALSE,
   ...
 )
@@ -69,7 +69,7 @@ as needed to reduce simulation error to an acceptable magnitude (can compare psi
 linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize)}
 
-\item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm.fit.control}}}
+\item{msmcontrol}{named list from \code{\link[qgcomp]{zimsm_fit.control}}}
 
 \item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)}
 
