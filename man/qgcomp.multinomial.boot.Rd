@@ -115,12 +115,11 @@ metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "
 # restrict to smaller dataset for simplicity
 smallmetals = metals[,c("ycat", "arsenic", "lead", "cadmium", "mage35")]
 
-
 ### 1: Define mixture and underlying model ####
 mixture = c("arsenic", "lead", "cadmium")
 f = ycat ~ arsenic + lead + cadmium + mage35 # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
 
-rr = qgcomp.multinomial.noboot(
+rr = qgcomp.multinomial.boot(
  f, 
  expnms = mixture,
  q=4, 
@@ -132,10 +131,10 @@ rr = qgcomp.multinomial.noboot(
  summary(rr, tests=c("H")) # include homogeneity test
  
  # 95\% confidence intervals
- confint(rr, level=0.95)
- rr$breaks # quantile cutpoints for exposures
+ #confint(rr, level=0.95)
+ #rr$breaks # quantile cutpoints for exposures
  # homogeneity_test(rr)
- joint_test(rr)
+ #joint_test(rr)
 }
 \seealso{
 \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}

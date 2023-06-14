@@ -386,33 +386,44 @@ qgcomp.multinomial.noboot <- function(f,
   labs = fit$lab
   reflabs = labs[2:length(fit$lab)]
   stderrs = sqrt(cbind(`(Intercept)`=as.numeric(diag(vcov(fit)[paste0(reflabs, ":(Intercept)"),paste0(reflabs, ":(Intercept)")])), psi=diag(psi_vcov)))
-  Z = coeftable / stderrs
   estb = flatten(coeftable)
-  psiidx = which(!grepl("[Ii]ntercept", names(estb)))
   seb = flatten(stderrs)
+  Z = estb / seb
+  psiidx = which(!grepl("[Ii]ntercept", names(estb)))
   ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
-  .qgcomp_object
+  #.qgcomp_object
   #qgcompobj = list(
   qgcompobj = .qgcomp_object(
+    qx = qdata[, expnms],
     fit = fit,
     labs = labs,
-    nlevels = length(fit$lab)-1,
+    nlevels = length(labs)-1,
     psi = psi,
+    var.psi = diag(psi_vcov),
     covmat.psi = psi_vcov,
     ci.psi = ci[psiidx,],
-    weights=qgcweights,
+    #
     coef = estb,
     var.coef=seb^2,
+    # covmat.coef
     ci.coef = ci,
-    Z = estb / seb,
-    pvalues = pnorm(abs(Z), lower.tail=FALSE)*2,
-    breaks = br,
-    alpha=alpha
+    zstat = Z,
+    pval = pnorm(abs(Z), lower.tail=FALSE)*2,
+    #
+    expnms=expnms, q=q, breaks=br, degree=NULL,
+    weights=qgcweights,
+    alpha=alpha,
+    call=origcall,
+    hasintercept=hasintercept,
+    bootstrap=TRUE
   )
   attr(qgcompobj, "class") <- c("qgcompmultfit", "qgcompfit", "list")
   qgcompobj
 }
 
+#----------------------------------------------------------------#
+# modeling functions ####
+#----------------------------------------------------------------#
 
 msm_multinomial_fit <- function(f,
                                 qdata,
@@ -491,7 +502,9 @@ msm_multinomial_fit <- function(f,
   
   newform <- terms(f, data = qdata)
   origY <- eval(attr(newform, "variables")[[2]], qdata)
-  class(origY)
+  ytype = "factor"
+  if(is.numeric(origY))
+    ytype = "numeric"
   nobs = nrow(qdata)
   thecall <- match.call(expand.dots = FALSE)
   names(thecall) <- gsub("qdata", "data", names(thecall))
@@ -532,7 +545,7 @@ msm_multinomial_fit <- function(f,
   if(is.null(intvals)){
     intvals <- (seq_len(length(table(qdata[expnms[1]])))) - 1
   }
-  predit <- function(idx, newdata){
+  predit <- function(idx, newdata, ytype=ytype){
     #newdata <- qdata
     newdata[,expnms] <- idx
     classpreds = suppressWarnings(predict(fit, newdata=newdata, type='probs'))
@@ -554,13 +567,13 @@ msm_multinomial_fit <- function(f,
     newdata <- merge(qdata,newids, by=id, all.x=FALSE, all.y=TRUE)[seq_len(MCsize),]
   }
   predmat = lapply(intvals, predit, newdata=newdata)
-  if(is.factor(origY)){
+  if(ytype=="factor"){
     factfun = function(x, levs=levels(origY)){
       factor(x,levs)
     }
     predmat = lapply(predmat, factfun)
   }
-  if(is.numeric(origY)){
+  if(ytype=="numeric"){
     predmat = lapply(predmat, as.numeric)
   }
   # fit MSM using g-computation estimates of expected outcomes under joint
@@ -688,12 +701,11 @@ msm_multinomial_fit <- function(f,
 #' # restrict to smaller dataset for simplicity
 #' smallmetals = metals[,c("ycat", "arsenic", "lead", "cadmium", "mage35")]
 #' 
-#' 
 #' ### 1: Define mixture and underlying model ####
 #' mixture = c("arsenic", "lead", "cadmium")
 #' f = ycat ~ arsenic + lead + cadmium + mage35 # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
 #' 
-#' rr = qgcomp.multinomial.noboot(
+#' rr = qgcomp.multinomial.boot(
 #'  f, 
 #'  expnms = mixture,
 #'  q=4, 
@@ -705,10 +717,10 @@ msm_multinomial_fit <- function(f,
 #'  summary(rr, tests=c("H")) # include homogeneity test
 #'  
 #'  # 95% confidence intervals
-#'  confint(rr, level=0.95)
-#'  rr$breaks # quantile cutpoints for exposures
+#'  #confint(rr, level=0.95)
+#'  #rr$breaks # quantile cutpoints for exposures
 #'  # homogeneity_test(rr)
-#'  joint_test(rr)
+#'  #joint_test(rr)
 qgcomp.multinomial.boot <- function(
     f,
     data,
@@ -732,7 +744,7 @@ qgcomp.multinomial.boot <- function(
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   
   newform <- terms(f, data = data)
-  origY <- eval(attr(newform, "variables")[[2]], qdata)
+  origY <- eval(attr(newform, "variables")[[2]], data)
   class(origY)
   hasintercept = as.logical(attr(newform, "intercept"))
   class(newform) <- "formula"
@@ -821,6 +833,7 @@ qgcomp.multinomial.boot <- function(
   psi.only <- function(i=1, f=f, qdata=qdata, intvals=intvals, expnms=expnms, degree=degree,
                        nids=nids, id=id,
                        weights,MCsize=MCsize, hasintercept = hasintercept,
+                       ytype,
                        ...){
     if(i==2 & !parallel){
       timeiter = as.numeric(Sys.time() - starttime)
@@ -834,24 +847,24 @@ qgcomp.multinomial.boot <- function(
     ft = msm_multinomial_fit(f, qdata_, intvals, expnms, main=FALSE, degree, id, weights=weights, bayes, MCsize=MCsize,
                              hasintercept = hasintercept,
                              ...)
-    # FIX THIS IN A FEW WAYS
     levs = msmfit$fit$lev
     ypredmat=predict(ft$msmfit, type="probs")
     sampmulti = function(len, pp) {
       levs[sample.int(len, prob = pp)[1]]
     }
-    
+    #
     ypred = apply(ypredmat, 1, sampmulti, len = length(levs))
-    if(is.factor(origY)){
+    if(ytype=="factor"){
       ypred = factor(ypred, levels(origY))
     }
-    if(is.numeric(origY)){
+    if(ytype=="numeric"){
       ypred = as.numeric(ypred)
     }
     
     
     yhatty = data.frame(yhat=ypredmat, psi=ft$msmfit$model[,"psi"])
     
+    #
     sumfun <- function(ypredmat, psi, psival){
       cm = colMeans(ypredmat[which(psi == psival),])
       cmt = t(c(cm))
@@ -867,6 +880,9 @@ qgcomp.multinomial.boot <- function(
     )
   }
   set.seed(seed)
+  ytype = "factor"
+  if(is.numeric(origY))
+    ytype= "numeric"
   if(parallel){
     #Sys.setenv(R_FUTURE_SUPPORTSMULTICORE_UNSTABLE="quiet")
     if (parplan) {
@@ -876,30 +892,25 @@ qgcomp.multinomial.boot <- function(
     bootsamps <- future.apply::future_lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                                              expnms=expnms, degree=degree, nids=nids, id=id,
                                              weights=qdata$weights,MCsize=MCsize, hasintercept = hasintercept,
-                                             future.seed=TRUE,
+                                             future.seed=TRUE, ytype=ytype,
                                              ...)
-    
-    
   }else{
     bootsamps <- lapply(X=seq_len(B), FUN=psi.only,f=f, qdata=qdata, intvals=intvals,
                         expnms=expnms, degree=degree, nids=nids, id=id,
                         weights=weights, MCsize=MCsize, hasintercept = hasintercept,
+                        ytype=ytype,
                         ...)
-    
   }
-  #bootsamps = do.call("rbind", that)
-  # these are the linear predictors
+  # bootstrap samples of marginal class probabilities
   hats = do.call("rbind", lapply(bootsamps, function(x) flatten(x$margpreds, "pred")))
-  #hats = t(bootsamps[-c(seq_len(degree+ifelse(hasintercept,1,0))),,drop=FALSE])
+  # bootstrap samples of coefficients
   tcoef = do.call("rbind", lapply(bootsamps, function(x) flatten(x$cf, "coef")))
-  # covariance of the linear predictors
-  #cov.yhat = lapply(unique(hats$psi), function(x) cov(hats[hats$psi==x,-which(names(hats)=="psi")]))
   estb = flatten(estb, "coef")
   psiidx = which(!grepl("[Ii]ntercept", names(estb)))
   cov.yhat = cov(hats)
   seb <- apply(tcoef, 2, sd)
   covmat <- cov(tcoef)
-  gsub("([a-zA-Z]).")
+  #gsub("([a-zA-Z]).")
   cnms = c(paste0("psi", seq_len(degree)))
   if(hasintercept)
     cnms = c("(intercept)", cnms)
@@ -916,23 +927,33 @@ qgcomp.multinomial.boot <- function(
   }
   qx <- qdata[, expnms]
   res <- .qgcomp_object(
-    qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit,
-    psi = estb[psiidx], var.psi = seb[psiidx] ^ 2, 
+    qx = qx, 
+    fit = msmfit$fit, 
+    msmfit = msmfit$msmfit,
+    labs = msmfit$labs,
+    nlevels = length(msmfit$labs)-1,
+    psi = estb[psiidx], 
+    var.psi = seb[psiidx] ^ 2, 
     covmat.psi=covmat[psiidx,psiidx, drop=FALSE], 
-    ci = ci[psiidx,],
-    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
+    ci.psi = ci[psiidx,],
+    #
+    coef = estb, 
+    var.coef = seb ^ 2, 
+    covmat.coef=covmat, 
+    ci.coef = ci,
+    zstat = tstat,
+    pval = pvalz,
+    #
     expnms=expnms, q=q, breaks=br, degree=degree,
-    bootstrap=TRUE,
-    y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
-    bootsamps = bootsamps,
-    cov.yhat=cov.yhat,
+    weights=NULL,
     alpha=alpha,
     call=origcall,
     hasintercept=hasintercept,
-    zstat = tstat,
-    pval = pvalz
+    bootstrap=TRUE,
+    y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
+    bootsamps = bootsamps,
+    cov.yhat=cov.yhat
   )
-  #attr(res, "class") <- c("qgcompmultfit", "qgcompfit", "list")
   class(res) <- c("qgcompmultfit", class(res))
   res
 }
