@@ -910,7 +910,6 @@ qgcomp.multinomial.boot <- function(
   cov.yhat = cov(hats)
   seb <- apply(tcoef, 2, sd)
   covmat <- cov(tcoef)
-  #gsub("([a-zA-Z]).")
   cnms = c(paste0("psi", seq_len(degree)))
   if(hasintercept)
     cnms = c("(intercept)", cnms)
@@ -930,8 +929,8 @@ qgcomp.multinomial.boot <- function(
     qx = qx, 
     fit = msmfit$fit, 
     msmfit = msmfit$msmfit,
-    labs = msmfit$labs,
-    nlevels = length(msmfit$labs)-1,
+    labs = msmfit$msmfit$lab,
+    nlevels = length(msmfit$msmfit$lab)-1,
     psi = estb[psiidx], 
     var.psi = seb[psiidx] ^ 2, 
     covmat.psi=covmat[psiidx,psiidx, drop=FALSE], 
