@@ -133,6 +133,7 @@ vc_comb <- function(aname="(Intercept)", expnms, covmat, grad=NULL){
   #'
   #' @return A covariance matrix
   #
+  #' @export
   #' @examples
   #' vcov = rbind(c(0.010051348, -0.0039332248, -0.0036965571),
   #'              c(-0.003933225,  0.0051807876,  0.0007706792),
