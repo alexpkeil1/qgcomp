@@ -124,6 +124,7 @@ rr = qgcomp.multinomial.boot(
  expnms = mixture,
  q=4, 
  data = smallmetals, 
+ B = 5, # set to higher values in real examples
  )
  
  ### 5: Create summary qgcomp object for nice printing ####

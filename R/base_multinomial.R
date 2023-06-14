@@ -233,6 +233,7 @@ summary.qgcompmultfit <- function(object, ..., tests=NULL){
   }
 }
 
+#' @export
 print.qgcompmulttest <- function(x,...){
   nullh = x$nullh
   cat(paste0(nullh, "\n"))
@@ -710,6 +711,7 @@ msm_multinomial_fit <- function(f,
 #'  expnms = mixture,
 #'  q=4, 
 #'  data = smallmetals, 
+#'  B = 5, # set to higher values in real examples
 #'  )
 #'  
 #'  ### 5: Create summary qgcomp object for nice printing ####
