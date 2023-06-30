@@ -315,8 +315,9 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
+  #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.glm.boot}}, 
   #'   and \code{\link[qgcomp]{qgcomp}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -485,8 +486,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
-  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-  #' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+  #' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+  #' standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
   #' @param weights "case weights" - passed to the "weight" argument of 
@@ -510,7 +511,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' @param parallel logical (default FALSE): use future package to speed up bootstrapping
   #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 

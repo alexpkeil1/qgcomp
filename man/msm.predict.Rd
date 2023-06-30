@@ -7,7 +7,7 @@
 msm.predict(object, newdata = NULL)
 }
 \arguments{
-\item{object}{"qgcompfit" object from \code{qgcomp.boot} function}
+\item{object}{"qgcompfit" object from \code{qgcomp.glm.boot} function}
 
 \item{newdata}{(optional) new set of data (data frame) with a variable
 called \code{psi} representing the joint exposure level of all exposures
@@ -15,26 +15,26 @@ under consideration}
 }
 \description{
 this is an internal function called by
-\code{\link[qgcomp]{qgcomp.boot}},
+\code{\link[qgcomp]{qgcomp.glm.boot}},
 but is documented here for clarity. Generally, users will not need to call
 this function directly.
 
 Get predicted values from a qgcompfit object from
-\code{\link[qgcomp]{qgcomp.boot}}.
+\code{\link[qgcomp]{qgcomp.glm.boot}}.
 }
 \details{
 (Not usually called by user) Makes predictions from the MSM
 (rather than the conditional g-computation
 fit) from a "qgcompfit" object. Generally, this should not be used in
 favor of the default \code{\link[qgcomp]{predict.qgcompfit}} function. This
-function can only be used following the \code{qgcomp.boot} function. For the
-\code{qgcomp.noboot} function, \code{\link[qgcomp]{predict.qgcompfit}} gives
+function can only be used following the \code{qgcomp.glm.boot} function. For the
+\code{qgcomp.glm.noboot} function, \code{\link[qgcomp]{predict.qgcompfit}} gives
 identical inference to predicting from an MSM.
 }
 \examples{
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
+obj <- qgcomp.glm.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
 dat2 <- data.frame(psi=seq(1,4, by=0.1))
 summary(msm.predict(obj))
 summary(msm.predict(obj, newdata=dat2))

@@ -44,8 +44,8 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -148,6 +148,18 @@ dat$w = runif(N)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.cox.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.noboot}()},
+\code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.boot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.boot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.boot}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
+\concept{qgcomp_methods}
 \concept{variance mixtures}

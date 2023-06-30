@@ -5,7 +5,7 @@
 \title{Simulate quantized exposures for testing methods}
 \usage{
 simdata_quantized(
-  outcometype = c("continuous", "logistic", "survival"),
+  outcometype = c("continuous", "logistic", "survival", "multinomial"),
   n = 100,
   corr = NULL,
   b0 = 0,
@@ -56,20 +56,27 @@ Simulate continuous (normally distributed errors), binary (logistic function), o
 \examples{
 set.seed(50)
 qdat = simdata_quantized(
-  outcomtype="continuous", 
+  outcometype="continuous", 
   n=10000, corr=c(.9,.3), coef=c(1,1,0,0), 
   q = 8
 )
 cor(qdat)
 qdat = simdata_quantized(
-  outcomtype="continuous", 
+  outcometype="continuous", 
   n=10000, corr=c(-.9,.3), coef=c(1,2,0,0), 
   q = 4
 )
 cor(qdat)
 table(qdat$x1)
-qgcomp.noboot(y~.,data=qdat)
+qgcomp.glm.noboot(y~.,data=qdat)
+
+qdat = simdata_quantized(
+  outcometype="multinomial", 
+  n=10000, corr=c(-.9), coef=cbind(c(1,-1,0,0), c(1,.2,0,0)), 
+  q = 4
+)
+
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}}
+\code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}}
 }

@@ -18,7 +18,7 @@ bootstrap procedure}
 in expnms to the final standard error. For a linear combination, this is equal
 to a vector of ones (and is set automatically). Or can be calculated via the
 grad.poly procedure, in the case of coming up with proper weights when the combination
-of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).}
+of expnms derives from a polynomial function (as in qgcomp.glm.boot with degree>1).}
 }
 \description{
 This function uses the Delta method to calculate standard errors of linear

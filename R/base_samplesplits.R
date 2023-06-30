@@ -1,7 +1,7 @@
 # functions that implement sample splitting for estimating partial effects and other purposes
 
 qgcomp.partials <- function(
-    fun = c("qgcomp.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
+    fun = c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
     traindata=NULL,
     validdata=NULL,
     expnms=NULL,
@@ -38,10 +38,10 @@ qgcomp.partials <- function(
   #' The positive/negative partial effects are necessarily exploratory, but sample splitting preserves
   #' the statistical properties at the expense of wider confidence intervals and larger variances. The
   #' two resulting mixture groups groups should be inspected for 
-  #' @param fun character variable in the set "qgcomp.noboot" (binary, count, continuous outcomes), 
+  #' @param fun character variable in the set "qgcomp.glm.noboot" (binary, count, continuous outcomes), 
   #' "qgcomp.cox.noboot" (survival outcomes), 
   #' "qgcomp.zi.noboot" (zero inflated outcomes). This describes which qgcomp package
-  #' function is used to fit the model. (default = "qgcomp.noboot")
+  #' function is used to fit the model. (default = "qgcomp.glm.noboot")
   #' @return A 'qgcompmultifit' object, which inherits from \code{\link[base]{list}}, which contains
   #' \describe{
   #' \item{posmix}{character vector of variable names with positive coefficients in the qgcomp model 
@@ -58,9 +58,10 @@ qgcomp.partials <- function(
   #' @param expnms Exposure mixture of interest
   #' @param .fixbreaks (logical, overridden by .globalbreaks) Use the same quantile cutpoints in the training and validation data (selected in the training data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.
   #' @param .globalbreaks (logical, if TRUE, overrides .fixbreaks) Use the same quantile cutpoints in the training and validation data (selected in combined training and validation data). As of version 2.8.11, the default is TRUE, whereas it was implicitly FALSE in prior verions. Setting to TRUE increases variance but greatly decreases bias in smaller samples.
-  #' @param ... Arguments to \code{\link[qgcomp]{qgcomp.noboot}}, 
+  #' @param ... Arguments to \code{\link[qgcomp]{qgcomp.glm.noboot}}, 
   #'    \code{\link[qgcomp]{qgcomp.cox.noboot}}, or 
   #'    \code{\link[qgcomp]{qgcomp.zi.noboot}}
+  #' @family qgcomp_methods
   #' @export
   #' @examples 
   #' set.seed(123223)
@@ -68,14 +69,14 @@ qgcomp.partials <- function(
   #'                                 b0=0, coef=c(0.25,-0.25,0,0), q=4)
   #' cor(dat)
   #' # overall fit (more or less null due to counteracting exposures)
-  #' (overall <- qgcomp.noboot(f=y~., q=NULL, expnms=c("x1", "x2", "x3", "x4"), data=dat))
+  #' (overall <- qgcomp.glm.noboot(f=y~., q=NULL, expnms=c("x1", "x2", "x3", "x4"), data=dat))
   #' 
   #' # partial effects using 40% training/60% validation split
   #' trainidx <- sample(1:nrow(dat), round(nrow(dat)*0.4))
   #' valididx <- setdiff(1:nrow(dat),trainidx)
   #' traindata = dat[trainidx,]
   #' validdata = dat[valididx,]
-  #' splitres <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
+  #' splitres <- qgcomp.partials(fun="qgcomp.glm.noboot", f=y~., q=NULL, 
   #'     traindata=traindata,validdata=validdata, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres
   #' \dontrun{
@@ -88,7 +89,7 @@ qgcomp.partials <- function(
   #' valididx2 <- setdiff(1:nrow(dat),trainidx2)
   #' traindata2 <- dat[trainidx2,]
   #' validdata2 <- dat[valididx2,]
-  #' splitres2 <- qgcomp.partials(fun="qgcomp.noboot", f=y~., 
+  #' splitres2 <- qgcomp.partials(fun="qgcomp.glm.noboot", f=y~., 
   #'    q=NULL, traindata=traindata2,validdata=validdata2, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres2
   #' 
@@ -97,7 +98,7 @@ qgcomp.partials <- function(
   #' valididx3 <- setdiff(1:nrow(dat),trainidx3)
   #' traindata3 <- dat[trainidx3,]
   #' validdata3 <- dat[valididx3,]
-  #' splitres3 <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=NULL, 
+  #' splitres3 <- qgcomp.partials(fun="qgcomp.glm.noboot", f=y~., q=NULL, 
   #'     traindata=traindata3,validdata=validdata3, expnms=c("x1", "x2", "x3", "x4"))
   #' splitres3
   #' 
@@ -299,21 +300,21 @@ split_data <- function(data,  cluster=NULL, prop.train=0.4){
   #' )
   #' dim(spl$traindata) # 181 observations = 40% of total
   #' dim(spl$validdata) # 271 observations = 60% of total
-  #' splitres <- qgcomp.partials(fun="qgcomp.noboot", f=y~., q=4, 
+  #' splitres <- qgcomp.partials(fun="qgcomp.glm.noboot", f=y~., q=4, 
   #'   traindata=spl$traindata,validdata=spl$validdata, expnms=Xnm)
   #' splitres
   #' 
   #' # also used to compare linear vs. non-linear fits (useful if you have enough data)
   #' set.seed(1231)
   #' spl = split_data(metals, prop.train=.5)
-  #' lin = qgcomp.boot(f=y~., q=4, expnms=Xnm, B=5, data=spl$traindata)
-  #' nlin1 = qgcomp.boot(f=y~. + I(manganese^2) + I(calcium^2), expnms=Xnm, deg=2, 
+  #' lin = qgcomp.glm.boot(f=y~., q=4, expnms=Xnm, B=5, data=spl$traindata)
+  #' nlin1 = qgcomp.glm.boot(f=y~. + I(manganese^2) + I(calcium^2), expnms=Xnm, deg=2, 
   #'   q=4, B=5, data=spl$traindata)
-  #' nlin2 = qgcomp.boot(f=y~. + I(arsenic^2) + I(cadmium^2), expnms=Xnm, deg=2, 
+  #' nlin2 = qgcomp.glm.boot(f=y~. + I(arsenic^2) + I(cadmium^2), expnms=Xnm, deg=2, 
   #'   q=4, B=5, data=spl$traindata)
   #' AIC(lin);AIC(nlin1);AIC(nlin2)
   #' # linear has lowest training AIC, so base final fit off that (and bootstrap not needed)
-  #' qgcomp.noboot(f=y~., q=4, expnms=Xnm, data=spl$validdata)
+  #' qgcomp.glm.noboot(f=y~., q=4, expnms=Xnm, data=spl$validdata)
   
   if(is.null(cluster[1])){
     ret = .split.iid.data(data, prop.train=prop.train)

@@ -238,8 +238,7 @@ qgcomp.zi.noboot <- function(f,
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes not yet implemented
   #' @param ... arguments to zeroinfl (e.g. dist)
-  #' @seealso \code{\link[qgcomp]{qgcomp.zi.boot}},\code{\link[qgcomp]{qgcomp.noboot}}, 
-  #' \code{\link[qgcomp]{qgcomp.cox.noboot}},  and \code{\link[pscl]{zeroinfl}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -486,8 +485,7 @@ qgcomp.zi.boot <- function(f,
   #' @param msmcontrol named list from \code{\link[qgcomp]{zimsm_fit.control}}
   #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.zi.noboot}},\code{\link[qgcomp]{qgcomp.boot}}, 
-  #' \code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{zeroinfl}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 

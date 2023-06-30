@@ -11,7 +11,7 @@ checknames(terms)
 }
 \description{
 This is an internal function called by \code{\link[qgcomp]{qgcomp}},
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+\code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}},
 but is documented here for clarity. Generally, users will not need to call
 this function directly. This function tries to determine whether there are
 non-linear terms in the underlying model, which helps infer whether the

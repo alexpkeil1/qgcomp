@@ -1,5 +1,5 @@
 # zero inflation
-hurdlemsm.fit.control <- function(
+hurdlemsm_fit.control <- function(
   predmethod=rev(c("components", "catprobs"))
 ){
   #' @title Control of fitting parameters for zero inflated MSMs
@@ -20,9 +20,9 @@ hurdlemsm.fit.control <- function(
   )
 }
 
+hurdlemsm.fit.control = hurdlemsm_fit.control
 
-
-hurdlemsm.fit <- function(
+hurdlemsm_fit <- function(
   f, 
   qdata, 
   intvals, 
@@ -35,7 +35,7 @@ hurdlemsm.fit <- function(
   containmix=list(count=TRUE, zero=TRUE),
   bayes=FALSE,
   x=FALSE,
-  msmcontrol=hurdlemsm.fit.control(),
+  msmcontrol=hurdlemsm_fit.control(),
   ...){
   #' @title Secondary prediction method for the (hurdle) qgcomp MSM.
   #' @description this is an internal function called by 
@@ -76,7 +76,7 @@ hurdlemsm.fit <- function(
   #' @param containmix named list of logical scalars with names "count" and "zero"
   #' @param bayes not used
   #' @param x keep design matrix? (logical)
-  #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}
+  #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm_fit.control}}
   #' @param ... arguments to hurdle (e.g. dist)
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, and \code{\link[qgcomp]{qgcomp.cox.noboot}}
   #' @concept variance mixtures
@@ -90,7 +90,7 @@ hurdlemsm.fit <- function(
   #' q = 4
   #' qdata = quantize(dat, q=q, expnms=expnms)$data
   #' f = y ~ x1 + x2 + z | 1
-  #' msmfit <- hurdlemsm.fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
+  #' msmfit <- hurdlemsm_fit(f, qdata, intvals=(1:q)-1, expnms, main=TRUE,
   #'   degree=1, id=NULL, MCsize=10000, containmix=list(count=TRUE, zero=FALSE),  
   #'   x=FALSE)
   #' msmfit$msmfit
@@ -183,7 +183,7 @@ hurdlemsm.fit <- function(
   res
 }
 
-
+hurdlemsm.fit = hurdlemsm_fit
 
 qgcomp.hurdle.noboot <- function(f, 
                              data, 
@@ -231,8 +231,9 @@ qgcomp.hurdle.noboot <- function(f,
   #' @param alpha alpha level for confidence limit calculation
   #' @param bayes not yet implemented
   #' @param ... arguments to hurdle (e.g. dist)
-  #' @seealso \code{\link[qgcomp]{qgcomp.hurdle.boot}},\code{\link[qgcomp]{qgcomp.noboot}}, 
+  #' @seealso \code{\link[qgcomp]{qgcomp.hurdle.boot}},\code{\link[qgcomp]{qgcomp.glm.noboot}}, 
   #' \code{\link[qgcomp]{qgcomp.cox.noboot}},  and \code{\link[pscl]{hurdle}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -415,7 +416,7 @@ qgcomp.hurdle.boot <- function(
  bayes=FALSE, 
  parallel=FALSE, 
  MCsize=10000, 
- msmcontrol=hurdlemsm.fit.control(),
+ msmcontrol=hurdlemsm_fit.control(),
  parplan = FALSE,
  ...
 ){
@@ -490,11 +491,10 @@ qgcomp.hurdle.boot <- function(
   #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for 
   #'  linear fits with qgcomp.hurdle.noboot to gain some intuition for the level of expected simulation 
   #'  error at a given value of MCsize)
-  #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}
+  #' @param msmcontrol named list from \code{\link[qgcomp]{hurdlemsm_fit.control}}
   #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.hurdle.noboot}},\code{\link[qgcomp]{qgcomp.boot}}, 
-  #' \code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{hurdle}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the 
@@ -631,7 +631,7 @@ qgcomp.hurdle.boot <- function(
     qdata$id__ <- seq_len(dim(qdata)[1])
   }
   ###
-  msmfit <- hurdlemsm.fit(newform, qdata, intvals, expnms, main=TRUE,
+  msmfit <- hurdlemsm_fit(newform, qdata, intvals, expnms, main=TRUE,
                       degree=degree, id=id,
                       weights=weights, 
                       MCsize=MCsize, containmix=containmix, 
@@ -654,7 +654,7 @@ qgcomp.hurdle.boot <- function(
     bootids <- data.frame(temp=sort(sample(unique(qdata[,id, drop=TRUE]), nids, replace = TRUE)))
     names(bootids) <- id
     qdata_ <- merge(qdata,bootids, by=id, all.x=FALSE, all.y=TRUE)
-    ft = hurdlemsm.fit(f, qdata_, intvals, expnms, main=FALSE,
+    ft = hurdlemsm_fit(f, qdata_, intvals, expnms, main=FALSE,
                    degree=degree, id=id,
                    weights=weights,
                    MCsize=MCsize, containmix=containmix, 

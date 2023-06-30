@@ -2,12 +2,12 @@
 % Please edit documentation in R/base_bounds.R
 \name{pointwisebound.noboot}
 \alias{pointwisebound.noboot}
-\title{Estimating pointwise comparisons for qgcomp.noboot objects}
+\title{Estimating pointwise comparisons for qgcomp.glm.noboot objects}
 \usage{
 pointwisebound.noboot(x, alpha = 0.05, pointwiseref = 1)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.noboot},}
+\item{x}{"qgcompfit" object from \code{qgcomp.glm.noboot},}
 
 \item{alpha}{alpha level for confidence intervals}
 
@@ -41,7 +41,7 @@ the value chosen via "pointwise ref" - e.g. for binomial variables this will equ
 prevalence difference at all values of S, with the referent category S=p-1. For the non-boostrapped
 version of quantile g-computation (under a linear model)
 
-Note that function only works with standard "qgcompfit" objects from \code{qgcomp.noboot} (so it doesn't work
+Note that function only works with standard "qgcompfit" objects from \code{qgcomp.glm.noboot} (so it doesn't work
 with zero inflated, hurdle, or Cox models)
 
 Variance for the overall effect estimate is given by:
@@ -68,9 +68,9 @@ dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)),
                   x3=(x3 <- runif(n)), z=(z <- runif(n)),
                   y=rnorm(n)+x1 + x2 - x3 +z)
 linear model for continuous outcome
-ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+ft <- qgcomp.glm.noboot(y ~ z + x1 + x2 + x3, 
        expnms=c('x1','x2','x3'), data=dat, q=10)
-ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, 
+ft2 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3, 
         expnms=c('x1','x2','x3'), data=dat, q=10)
 pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
@@ -78,18 +78,18 @@ dat <- data.frame(x1=(x1 <- runif(n)), x2=(x2 <- runif(n)),
                    x3=(x3 <- runif(n)), z=(z <- runif(n)),
                   y=rbinom(n, 1, 1/(1+exp(-(x1 + x2 - x3 +z)))))
 glms for binary outcome
-ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+ft <- qgcomp.glm.noboot(y ~ z + x1 + x2 + x3, 
         expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
-ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3, 
+ft2 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3, 
         expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 pointwisebound.noboot(ft, alpha=0.05, pointwiseref=3)
 pointwisebound.boot(ft2, alpha=0.05, pointwiseref=3)
 dat$z = as.factor(sample(1:3, n, replace=TRUE))
-ftf <- qgcomp.noboot(y ~ z + x1 + x2 + x3, 
+ftf <- qgcomp.glm.noboot(y ~ z + x1 + x2 + x3, 
        expnms=c('x1','x2','x3'), data=dat, q=10, family=binomial())
 pointwisebound.noboot(ftf, alpha=0.05, pointwiseref=3)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{pointwisebound.boot}}
+\code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{pointwisebound.boot}}
 }

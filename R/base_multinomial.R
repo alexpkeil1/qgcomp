@@ -23,6 +23,18 @@ psiest_qgcomp_multi <- function(
   psi
 }
 
+partialpsiest_qgcomp_multi <- function(
+    ufit, 
+    expnms
+){
+  ucoef = coef(ufit)
+  possum = function(x){sum(x[x>0])}
+  negsum = function(x){sum(x[x<0])}
+  pospsi = apply(ucoef[,expnms],1,possum)
+  negpsi = apply(ucoef[,expnms],1,negsum)
+  list(positive_psi=pospsi,negative_psi=negpsi)
+}
+
 
 vcov_qgcomp_multi <- function(
     ufit, 
@@ -179,9 +191,18 @@ confint.qgcompmultfit <- function(object, parm="psi", level = 0.95, ...){
 
 #' @export
 print.qgcompmultfit <- function(x, ...){
-  cat("Weights\n")
-  print(x$weights)
-  cat("\nCoefficients\n")
+  if(!x$bootstrap){
+    cat("Weights\n")
+    print(x$weights)
+    cat("Partial effects (positive)\n")
+    print(x$partial_psi$positive_psi)
+    cat("Partial effects (negative)\n")
+    print(x$partial_psi$negative_psi)
+  }
+  if(x$bootstrap)
+    cat("\nMixture slope parameters (Standard CI):\n")
+  if(x$bootstrap)
+    cat("\nMixture slope parameters (Bootstrap CI):\n")
   #print(qgcompobj$coeftable)
   coeftable = cbind(Estimate=x$coef, 
                     `Std. Error`=sqrt(x$var.coef), 
@@ -204,9 +225,19 @@ summary.qgcompmultfit <- function(object, ..., tests=NULL){
   # to do
   cat("Reference outcome levels:\n")
   cat(object$labs)
-  cat("\n\nQGComp Weights\n")
-  print(object$weights)
-  cat("\nCoefficients\n")
+  if(!object$bootstrap){
+    cat("\nWeights\n")
+    print(object$weights)
+    cat("\nSum of positive coefficients \n")
+    print(object$partial_psi$positive_psi)
+    cat("Sum of negative coefficients \n")
+    print(object$partial_psi$negative_psi)
+  }
+  
+  if(object$bootstrap)
+    cat("\nMixture slope parameters (Standard CI):\n")
+  if(object$bootstrap)
+    cat("\nMixture slope parameters (Bootstrap CI):\n")
   coeftable = cbind(Estimate=object$coef, 
                     `Std. Error`=sqrt(object$var.coef), 
                     `Lower CI`=(object$ci[,1]), 
@@ -240,6 +271,10 @@ print.qgcompmulttest <- function(x,...){
   cat(paste0("Chi^2 (df=", x$df, ") = ", signif(x$chisq), ", p = ", format.pval(x$pvalue),"\n"))
 }
 
+#----------------------------------------------------------------#
+# modeling functions ####
+#----------------------------------------------------------------#
+
 
 #' Quantile g-computation for multinomial outcomes
 #' 
@@ -256,9 +291,9 @@ print.qgcompmulttest <- function(x,...){
 #' to define cutpoints.
 #' @param id (optional) NULL, or variable name indexing individual units of
 #' observation (only needed if analyzing data with multiple observations per
-#' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-#' standard errors (this parameter is essentially ignored in qgcomp.noboot).
-#' Qgcomp.boot can be used for this, which will use bootstrap
+#' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+#' standard errors (this parameter is essentially ignored in qgcomp.glm.noboot).
+#' qgcomp.glm.boot can be used for this, which will use bootstrap
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
 #' @param weights "case weights" - passed to the "weight" argument of
@@ -266,7 +301,8 @@ print.qgcompmulttest <- function(x,...){
 #' @param alpha alpha level for confidence limit calculation
 #' @param bayes Logical, Not yet implemented (gives and error if set to TRUE)
 #' @param ... arguments to nnet::multinom
-#' @seealso \code{\link[qgcomp]{qgcomp.noboot}}
+#' @seealso \code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[nnet]{multinom}}
+#' @family qgcomp_methods
 #' @return a qgcompmultfit object, which contains information about the effect
 #'  measure of interest (psi) and associated variance (var.psi), as well
 #'  as information on the model fit (fit) and information on the
@@ -341,7 +377,7 @@ qgcomp.multinomial.noboot <- function(f,
     message("Including all model terms as exposures of interest\n")
   }
   lin = checknames(expnms)
-  if(!lin) stop("Model appears to be non-linear: use qgcomp.boot instead")
+  if(!lin) stop("Model appears to be non-linear: use qgcomp.glm.boot instead")
   if (!is.null(q) | !is.null(breaks)){
     ql <- quantize(data, expnms, q, breaks)
     qdata <- ql$data
@@ -379,6 +415,7 @@ qgcomp.multinomial.noboot <- function(f,
   #}
   
   psi = psiest_qgcomp_multi(fit, expnms)
+  partpsi = partialpsiest_qgcomp_multi(fit, expnms)
   #
   psi_vcov = vcov_qgcomp_multi(fit, expnms)
   #
@@ -394,8 +431,10 @@ qgcomp.multinomial.noboot <- function(f,
   ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
   #.qgcomp_object
   #qgcompobj = list(
+  qx <- qdata[, expnms]
+  names(qx) <- paste0(names(qx), "_q")
   qgcompobj = .qgcomp_object(
-    qx = qdata[, expnms],
+    qx = qx,
     fit = fit,
     labs = labs,
     nlevels = length(labs)-1,
@@ -411,20 +450,18 @@ qgcomp.multinomial.noboot <- function(f,
     zstat = Z,
     pval = pnorm(abs(Z), lower.tail=FALSE)*2,
     #
+    partial_psi = partpsi,
     expnms=expnms, q=q, breaks=br, degree=NULL,
     weights=qgcweights,
     alpha=alpha,
     call=origcall,
     hasintercept=hasintercept,
-    bootstrap=TRUE
+    bootstrap=FALSE
   )
   attr(qgcompobj, "class") <- c("qgcompmultfit", "qgcompfit", "list")
   qgcompobj
 }
 
-#----------------------------------------------------------------#
-# modeling functions ####
-#----------------------------------------------------------------#
 
 msm_multinomial_fit <- function(f,
                                 qdata,
@@ -483,7 +520,7 @@ msm_multinomial_fit <- function(f,
   #'  error at a given value of MCsize)
   #' @param hasintercept (logical) does the model have an intercept?
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
   #' @import stats arm
   #' @export
@@ -658,8 +695,8 @@ msm_multinomial_fit <- function(f,
 #' to define cutpoints.
 #' @param id (optional) NULL, or variable name indexing individual units of
 #' observation (only needed if analyzing data with multiple observations per
-#' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-#' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+#' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+#' standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
 #' @param weights "case weights" - passed to the "weight" argument of
@@ -667,7 +704,7 @@ msm_multinomial_fit <- function(f,
 #' @param alpha alpha level for confidence limit calculation
 #' @param B integer: number of bootstrap iterations (this should typically be >=200,
 #'  though it is set lower in examples to improve run-time).
-#' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+#' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
 #'   estimate risk ratio rather than odds ratio
 #' @param degree polynomial bases for marginal model (e.g. degree = 2
 #'  allows that the relationship between the whole exposure mixture and the outcome
@@ -680,13 +717,12 @@ msm_multinomial_fit <- function(f,
 #' @param MCsize integer: sample size for simulation to approximate marginal
 #'  zero inflated model parameters. This can be left small for testing, but should be as large
 #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-#'  linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation
+#'  linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
 #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
 #'  be important with binary or count outcomes.
 #' @param parallel use (safe) parallel processing from the future and future.apply packages
 #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
 #' @param ... arguments to glm (e.g. family)
-#' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
 #' @return a qgcompfit object, which contains information about the effect
 #'  measure of interest (psi) and associated variance (var.psi), as well
 #'  as information on the model fit (fit) and information on the
@@ -694,6 +730,7 @@ msm_multinomial_fit <- function(f,
 #'  estimates.
 #' @concept variance mixtures
 #' @import stats
+#' @family qgcomp_methods
 #' @export
 #' @examples
 #' data("metals") # from qgcomp package
@@ -704,14 +741,22 @@ msm_multinomial_fit <- function(f,
 #' 
 #' ### 1: Define mixture and underlying model ####
 #' mixture = c("arsenic", "lead", "cadmium")
-#' f = ycat ~ arsenic + lead + cadmium + mage35 # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
+#' f0 = ycat ~ arsenic + lead + cadmium # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
 #' 
 #' rr = qgcomp.multinomial.boot(
-#'  f, 
+#'  f0, 
 #'  expnms = mixture,
 #'  q=4, 
 #'  data = smallmetals, 
 #'  B = 5, # set to higher values in real examples
+#'  MCsize = 100,  # set to higher values in small samples
+#'  )
+#'
+#' rr2 = qgcomp.multinomial.noboot(
+#'  f0, 
+#'  expnms = mixture,
+#'  q=4, 
+#'  data = smallmetals
 #'  )
 #'  
 #'  ### 5: Create summary qgcomp object for nice printing ####
@@ -723,6 +768,29 @@ msm_multinomial_fit <- function(f,
 #'  #rr$breaks # quantile cutpoints for exposures
 #'  # homogeneity_test(rr)
 #'  #joint_test(rr)
+#'
+#' qdat = simdata_quantized(
+#'   outcometype="multinomial", 
+#'   n=10000, corr=c(-.9), coef=cbind(c(.2,-.2,0,0), c(.1,.1,.1,.1)), 
+#'   q = 4
+#' )
+#' 
+#'  rr_sim = qgcomp.multinomial.noboot(
+#'   y~x1+x2+x3+x4, 
+#'   expnms = c("x1", "x2", "x3", "x4"),
+#'   q=4, 
+#'   data = qdat
+#'  )
+#'  
+#'  rr_sim2 = qgcomp.multinomial.boot(
+#'   y~x1+x2+x3+x4, 
+#'   expnms = c("x1", "x2", "x3", "x4"),
+#'   q=4, 
+#'   data = qdat,
+#'   B=1
+#'  )
+
+#'
 qgcomp.multinomial.boot <- function(
     f,
     data,
@@ -927,6 +995,7 @@ qgcomp.multinomial.boot <- function(
     q = oldq
   }
   qx <- qdata[, expnms]
+  names(qx) <- paste0(names(qx), "_q")
   res <- .qgcomp_object(
     qx = qx, 
     fit = msmfit$fit, 

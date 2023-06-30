@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.12.4
-Date: 2023-06-14
+Version: 2.14.0
+Date: 2023-06-29
 Authors@R: 
     person("Alexander", "Keil", , "alex.keil@nih.gov", role = c("aut", "cre"))
 Description: G-computation for a set of time-fixed exposures with

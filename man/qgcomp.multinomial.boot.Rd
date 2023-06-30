@@ -43,8 +43,8 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -56,7 +56,7 @@ errors via bootstrapping.}
 \item{B}{integer: number of bootstrap iterations (this should typically be >=200,
 though it is set lower in examples to improve run-time).}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
 estimate risk ratio rather than odds ratio}
 
 \item{degree}{polynomial bases for marginal model (e.g. degree = 2
@@ -73,7 +73,7 @@ so results should be interpreted as frequentist.}
 \item{MCsize}{integer: sample size for simulation to approximate marginal
 zero inflated model parameters. This can be left small for testing, but should be as large
 as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation
+linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize). This likely won't matter much in linear models, but may
 be important with binary or count outcomes.}
 
@@ -117,14 +117,22 @@ smallmetals = metals[,c("ycat", "arsenic", "lead", "cadmium", "mage35")]
 
 ### 1: Define mixture and underlying model ####
 mixture = c("arsenic", "lead", "cadmium")
-f = ycat ~ arsenic + lead + cadmium + mage35 # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
+f0 = ycat ~ arsenic + lead + cadmium # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
 
 rr = qgcomp.multinomial.boot(
- f, 
+ f0, 
  expnms = mixture,
  q=4, 
  data = smallmetals, 
  B = 5, # set to higher values in real examples
+ MCsize = 100,  # set to higher values in small samples
+ )
+
+rr2 = qgcomp.multinomial.noboot(
+ f0, 
+ expnms = mixture,
+ q=4, 
+ data = smallmetals
  )
  
  ### 5: Create summary qgcomp object for nice printing ####
@@ -136,8 +144,42 @@ rr = qgcomp.multinomial.boot(
  #rr$breaks # quantile cutpoints for exposures
  # homogeneity_test(rr)
  #joint_test(rr)
+
+qdat = simdata_quantized(
+  outcometype="multinomial", 
+  n=10000, corr=c(-.9), coef=cbind(c(.2,-.2,0,0), c(.1,.1,.1,.1)), 
+  q = 4
+)
+
+ rr_sim = qgcomp.multinomial.noboot(
+  y~x1+x2+x3+x4, 
+  expnms = c("x1", "x2", "x3", "x4"),
+  q=4, 
+  data = qdat
+ )
+ 
+ rr_sim2 = qgcomp.multinomial.boot(
+  y~x1+x2+x3+x4, 
+  expnms = c("x1", "x2", "x3", "x4"),
+  q=4, 
+  data = qdat,
+  B=1
+ )
+
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.boot}()},
+\code{\link{qgcomp.cox.noboot}()},
+\code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.boot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.boot}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
+\concept{qgcomp_methods}
 \concept{variance mixtures}

@@ -54,27 +54,34 @@
 #' @param ncheck (logical, default=TRUE) adjust sample size if needed so that exposures are exactly evenly distributed (so that qgcomp::quantize(exposure) = exposure)
 #' @param ... unused
 #'
-#' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}}
+#' @seealso \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}}
 #' @return a data frame
 #' @export
 #' @examples
 #' set.seed(50)
 #' qdat = simdata_quantized(
-#'   outcomtype="continuous", 
+#'   outcometype="continuous", 
 #'   n=10000, corr=c(.9,.3), coef=c(1,1,0,0), 
 #'   q = 8
 #' )
 #' cor(qdat)
 #' qdat = simdata_quantized(
-#'   outcomtype="continuous", 
+#'   outcometype="continuous", 
 #'   n=10000, corr=c(-.9,.3), coef=c(1,2,0,0), 
 #'   q = 4
 #' )
 #' cor(qdat)
 #' table(qdat$x1)
-#' qgcomp.noboot(y~.,data=qdat)
+#' qgcomp.glm.noboot(y~.,data=qdat)
+#' 
+#' qdat = simdata_quantized(
+#'   outcometype="multinomial", 
+#'   n=10000, corr=c(-.9), coef=cbind(c(1,-1,0,0), c(1,.2,0,0)), 
+#'   q = 4
+#' )
+#'
 simdata_quantized <- function(
-  outcometype=c("continuous", "logistic", "survival"),
+  outcometype=c("continuous", "logistic", "survival", "multinomial"),
   n = 100,
   corr=NULL,
   b0=0,
@@ -97,7 +104,8 @@ simdata_quantized <- function(
   dat <- switch(otype,
                 conti = .dgm_quantized_linear(N = n,b0=b0,coef=coef,ncor=ncor,corr=corr,scale=yscale,q=q),  
                 logis = .dgm_quantized_logistic(N = n,b0=b0,coef=coef,ncor=ncor,corr=corr,q=q),
-                survi = .dgm_quantized_survival(N = n,b0=0,coef=coef,ncor=ncor,corr=corr,shape0=shape0,scale0=shape0,censtime=censtime,q=q)  
+                survi = .dgm_quantized_survival(N = n,b0=0,coef=coef,ncor=ncor,corr=corr,shape0=shape0,scale0=shape0,censtime=censtime,q=q),
+                multi = .dgm_quantized_multinomial(N = n,b0=0,coef=coef,ncor=ncor,corr=corr,q=q)  
   )
   dat
 }
@@ -112,9 +120,13 @@ simdata_quantized <- function(
   corr=0.75,                 # Pearson/spearman (the same here) correlation
   q = 4
 ){
-  p = length(coef)
+  if(is.null(dim(coef)))
+    p = length(coef)
+  if(!is.null(dim(coef)))
+    p = nrow(coef) 
+  
   #if(ncor >= p) ncor = p-1
-  corv = rep(0, length(coef))
+  corv = rep(0, p)
   corv[1] = 1.0
   if(is.null(corr)) corr = corv[-1]
   if(length(corr)>1) corv[1+(1:length(corr))] = corr
@@ -214,3 +226,28 @@ simdata_quantized <- function(
   attr(res, "truecoefs") = list(intercept=b0,coef=coef)
   res
 }
+
+.dgm_quantized_multinomial <- function(
+    N = 100,
+    b0=0,
+    coef=coef,
+    ncor=ncor,
+    corr=corr,
+    q=q
+    ){
+  if(is.null(dim(coef)))
+    stop("Coef must be a matrix for this type of simulated data")
+  lst <- .quantized_design(N=N,b0=b0,coef=coef,ncor=ncor,corr=corr,q=q)
+  # b0 is log-probability of being in the referent outcome category while being unexposed
+  rr <- cbind(exp(rep(b0, nrow(lst$mu))), exp(lst$mu-b0))
+  rrm <- apply(rr, 1, sum)
+  py <- sweep(rr, 1, rrm, "/")
+  pextreme = mean(py>.995) + mean(py<0.005)
+  if(pextreme > .10) warning("model implies > 10% of observations with very high/low (<0.5%) outcome probability, which may distort estimates")
+  ymat = t(apply(rr, 1, rmultinom, n = 1, size = 1))
+  y = apply(ymat, 1, which.max)
+  res = data.frame(lst$X, y=y)
+  attr(res, "truecoefs") = list(intercept=b0,coef=coef)
+  res
+}
+

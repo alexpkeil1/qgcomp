@@ -13,7 +13,7 @@ msm_fit <- function(f,
                     MCsize=nrow(qdata), hasintercept=TRUE, ...){
   #' @title Fitting marginal structural model (MSM) within quantile g-computation
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
-  #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+  #'  \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
   #'  this function directly.
   #' @details This function first computes expected outcomes under hypothetical
@@ -58,7 +58,7 @@ msm_fit <- function(f,
   #'  error at a given value of MCsize)
   #' @param hasintercept (logical) does the model have an intercept?
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
   #' @import stats arm
   #' @export
@@ -173,7 +173,7 @@ msm_fit <- function(f,
 msm.fit <- msm_fit
 
 
-qgcomp.noboot <- function(f,
+qgcomp.glm.noboot <- function(f,
                           data,
                           expnms=NULL,
                           q=4,
@@ -184,14 +184,15 @@ qgcomp.noboot <- function(f,
                           bayes=FALSE,
                           ...){
   #' @title Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
-  #'
+  #' @aliases gcomp.noboot
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This function is limited to linear and additive
   #' effects of individual components of the exposure. This model estimates the parameters of a marginal
   #' structural model (MSM) based on g-computation with quantized exposures. Note: this function is
   #' valid only under linear and additive effects of individual components of the exposure, but when
   #' these hold the model can be fit with very little computational burden.
-  #'
+  #' qgcomp.noboot is an equivalent function (slated for deprecation)
+  #' 
   #' @details For continuous outcomes, under a linear model with no
   #' interaction terms, this is equivalent to g-computation of the effect of
   #' increasing every exposure by 1 quantile. For binary/count outcomes
@@ -215,9 +216,9 @@ qgcomp.noboot <- function(f,
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of
   #' observation (only needed if analyzing data with multiple observations per
-  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-  #' standard errors (this parameter is essentially ignored in qgcomp.noboot).
-  #' Qgcomp.boot can be used for this, which will use bootstrap
+  #' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+  #' standard errors (this parameter is essentially ignored in qgcomp.glm.noboot).
+  #' qgcomp.glm.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
   #' @param weights "case weights" - passed to the "weight" argument of
@@ -228,7 +229,7 @@ qgcomp.noboot <- function(f,
   #' exposures. Note: this does not lead to fully Bayesian inference in general,
   #' so results should be interpreted as frequentist.
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the
@@ -241,21 +242,21 @@ qgcomp.noboot <- function(f,
   #' set.seed(50)
   #' # linear model
   #' dat <- data.frame(y=runif(50,-1,1), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+  #' qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
   #' # not intercept model
-  #' qgcomp.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+  #' qgcomp.glm.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
   #' # logistic model
   #' dat2 <- data.frame(y=rbinom(50, 1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
+  #' qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat2, q=2, family=binomial())
   #' # poisson model
   #' dat3 <- data.frame(y=rpois(50, .5), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
+  #' qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat3, q=2, family=poisson())
   #' # weighted model
   #' N=5000
   #' dat4 <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
   #' dat4$w=runif(N)*2
   #' qdata = quantize(dat4, expnms = c("x1", "x2"))$data
-  #' (qgcfit <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
+  #' (qgcfit <- qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
   #'                          family=gaussian(), weights=w))
   #' qgcfit$fit
   #' glm(y ~ z + x1 + x2, data = qdata, weights=w)
@@ -287,7 +288,7 @@ qgcomp.noboot <- function(f,
     message("Including all model terms as exposures of interest\n")
   }
   lin = checknames(expnms)
-  if(!lin) stop("Model appears to be non-linear: use qgcomp.boot instead")
+  if(!lin) stop("Model appears to be non-linear: use qgcomp.glm.boot instead")
   if (!is.null(q) | !is.null(breaks)){
       ql <- quantize(data, expnms, q, breaks)
       qdata <- ql$data
@@ -383,7 +384,7 @@ qgcomp.noboot <- function(f,
     res
 }
 
-qgcomp.boot <- function(
+qgcomp.glm.boot <- function(
   f,
   data,
   expnms=NULL,
@@ -404,6 +405,7 @@ qgcomp.boot <- function(
 ){
 
   #' @title Quantile g-computation for continuous and binary outcomes
+  #' @aliases gcomp.boot
   #'
   #' @description This function estimates a dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This model estimates the parameters of a marginal
@@ -411,6 +413,7 @@ qgcomp.boot <- function(
   #' allows non-linear and non-additive effects of individual components of the exposure, as well as
   #' non-linear joint effects of the mixture via polynomial basis functions, which increase the
   #' computational computational burden due to the need for non-parametric bootstrapping.
+  #' qgcomp.boot is an equivalent function (slated for deprecation)
   #'
   #' @details Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures
@@ -434,8 +437,8 @@ qgcomp.boot <- function(
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of
   #' observation (only needed if analyzing data with multiple observations per
-  #' id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-  #' standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+  #' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+  #' standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
   #' @param weights "case weights" - passed to the "weight" argument of
@@ -443,7 +446,7 @@ qgcomp.boot <- function(
   #' @param alpha alpha level for confidence limit calculation
   #' @param B integer: number of bootstrap iterations (this should typically be >=200,
   #'  though it is set lower in examples to improve run-time).
-  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
   #'   estimate risk ratio rather than odds ratio
   #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
@@ -456,13 +459,13 @@ qgcomp.boot <- function(
   #' @param MCsize integer: sample size for simulation to approximate marginal
   #'  zero inflated model parameters. This can be left small for testing, but should be as large
   #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-  #'  linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation
+  #'  linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
   #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
   #'  be important with binary or count outcomes.
   #' @param parallel use (safe) parallel processing from the future and future.apply packages
   #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
   #' @param ... arguments to glm (e.g. family)
-  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and information on the
@@ -476,14 +479,14 @@ qgcomp.boot <- function(
   #' # continuous outcome
   #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
   #' # Conditional linear slope
-  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
+  #' qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear,
   #' #  additive model this will equal the conditional)
   #'  \dontrun{
-  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  #' qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #' # no intercept model
-  #' qgcomp.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  #' qgcomp.glm.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #'
   #'  # Note that these give different answers! In the first, the estimate is conditional on Z,
@@ -493,47 +496,47 @@ qgcomp.boot <- function(
   #'  dat$z = dat$z - mean(dat$z)
   #'
   #' # Conditional linear slope
-  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
+  #' qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear,
   #' #  additive model this will equal the conditional)
   #'
-  #' qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  #' qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian(), B=200) # B should be at least 200 in actual examples
   #'
   #' # Population average mixture slope which accounts for non-linearity and interactions
-  #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
+  #' qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
   #'  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
   #'
   #' # generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
-  #' qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
+  #' qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
   #'  expnms = c('x1', 'x2'), data=dat, q=4, B=200, deg=2)
   #'
   #' # binary outcome
   #' dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
   #'
   #' # Conditional mixture OR
-  #' qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+  #' qgcomp.glm.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   #'   data=dat, q=2)
   #'
   #' #Marginal mixture OR (population average OR - in general, this will not equal the
   #' # conditional mixture OR due to non-collapsibility of the OR)
-  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+  #' qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   #'   data=dat, q=2, B=3, rr=FALSE)
   #'
   #' # Population average mixture RR
-  #' qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+  #' qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   #'   data=dat, q=2, rr=TRUE, B=3)
   #'
   #' # Population average mixture RR, indicator variable representation of x2
   #' # note that I(x==...) operates on the quantile-based category of x,
   #' # rather than the raw value
-  #' res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
+  #' res = qgcomp.glm.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200)
   #' res$fit
   #' plot(res)
   #'
   #' # now add in a non-linear MSM
-  #' res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
+  #' res2 = qgcomp.glm.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   #'   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200,
   #'   degree=2)
   #' res2$fit
@@ -545,13 +548,13 @@ qgcomp.boot <- function(
   #' dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
   #' # note that I(x>...) now operates on the untransformed value of x,
   #' # rather than the quantized value
-  #' res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+  #' res2 = qgcomp.glm.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
   #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   #'   degree=2)
   #' res2
   #' # using parallel processing
   #'
-  #' qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+  #' qgcomp.glm.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
   #'   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   #'   degree=2, parallel=TRUE, parplan=TRUE)
   #'
@@ -563,18 +566,18 @@ qgcomp.boot <- function(
   #' dat4$w=runif(N) + dat4$z*5
   #' qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
   #' # first equivalent models with no covariates
-  #' qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
-  #' qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+  #' qgcomp.glm.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
+  #' qgcomp.glm.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
   #'               weights=w)
   #'
   #' set.seed(13)
-  #' qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+  #' qgcomp.glm.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
   #'             weights=w)
   #' # using the correct model
   #' set.seed(13)
-  #' qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+  #' qgcomp.glm.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
   #'             weights=w, id="id")
-  #' (qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
+  #' (qgcfit <- qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
   #'                        family=gaussian(), weights=w))
   #' qgcfit$fit
   #' summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))
@@ -736,6 +739,7 @@ qgcomp.boot <- function(
     }
     psiidx = seq_len(degree)+ifelse(hasintercept,1,0)
     qx <- qdata[, expnms]
+    names(qx) <- paste0(names(qx), "_q")
     res <- .qgcomp_object(
       qx = qx, fit = msmfit$fit, msmfit = msmfit$msmfit,
       psi = estb[psiidx], var.psi = seb[psiidx] ^ 2, 
@@ -767,33 +771,35 @@ qgcomp.boot <- function(
 qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' @title Quantile g-computation for continuous, binary, count, and censored survival outcomes
   #'
-  #' @description This function automatically selects between qgcomp.noboot, qgcomp.boot,
+  #' @description This function automatically selects between qgcomp.glm.noboot, qgcomp.glm.boot,
   #'  qgcomp.cox.noboot, and qgcomp.cox.boot
   #'  for the most efficient approach to estimate the average expected
   #'  change in the (log) outcome per quantile increase in the joint
   #'  exposure to all exposures in `expnms', given the underlying model. For example,
   #'  if the underlying model (specified by the formula `f`) is a linear model with all
-  #'  linear terms for exposure, then `qgcomp.noboot`` will be called to fit the model. Non-linear
-  #'  terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.boot`
+  #'  linear terms for exposure, then `qgcomp.glm.noboot`` will be called to fit the model. Non-linear
+  #'  terms or requesting the risk ratio for binomial outcomes will result in the `qgcomp.glm.boot`
   #'  function being called. For a given linear model, boot and noboot versions will give identical
   #'  inference, though when using survival outcomes, the `boot` version uses simulation based
   #'  inference, which can vary from the `noboot` version due to simulation error (which can
   #'  be minimized via setting the MCsize parameter very large - see
   #'  \code{\link[qgcomp]{qgcomp.cox.boot}} for details).
+  #'    
+  #'  
   #'
   #' @param f R style formula (may include survival outcome via \code{\link[survival]{Surv}})
   #' @param data data frame
   #' @param family \code{gaussian()}, \code{binomial()}, \code{cox()}, \code{poisson()} (works as
   #' argument to 'family' parameter in \code{\link[stats]{glm}}` or 'dist' parameter in
   #' \code{\link[pscl]{zeroinfl}})
-  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+  #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
   #' estimate risk ratio rather than odds ratio. Note, to get population average
   #' effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
   #' of interest as population average effects, so if rr=FALSE then a conditional
   #' OR will be estimated, which cannot be interpreted as a population average
   #' effect
-  #' @param ... arguments to qgcomp.noboot or qgcomp.boot (e.g. q) or glm
-  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}},
+  #' @param ... arguments to qgcomp.glm.noboot or qgcomp.glm.boot (e.g. q) or glm
+  #' @seealso \code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{qgcomp.glm.boot}},
   #'  \code{\link[qgcomp]{qgcomp.cox.noboot}}, \code{\link[qgcomp]{qgcomp.cox.boot}}
   #'  \code{\link[qgcomp]{qgcomp.zi.noboot}} and \code{\link[qgcomp]{qgcomp.zi.boot}}
   #'  (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)
@@ -801,7 +807,7 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #'  measure of interest (psi) and associated variance (var.psi), as well
   #'  as information on the model fit (fit) and possibly information on the
   #'  marginal structural model (msmfit) used to estimate the final effect
-  #'  estimates (qgcomp.boot, qgcomp.cox.boot only).
+  #'  estimates (qgcomp.glm.boot, qgcomp.cox.boot only).
   #'  If appropriate, weights are also reported, which represent the proportion
   #'  of a directional (positive/negative) effect that is accounted for by
   #'  each exposure.
@@ -811,16 +817,16 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
+  #' qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' # automatically selects appropriate method
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
   #' # note for binary outcome this will choose the risk ratio (and bootstrap methods) by default
   #' dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
   #' \dontrun{
-  #' qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #' qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' set.seed(1231)
-  #' qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+  #' qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #' set.seed(1231)
   #' qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
   #'
@@ -873,16 +879,16 @@ qgcomp <- function(f,data=data,family=gaussian(),rr=TRUE,...){
   } else if(issurv & !doboot ){
     res <- qgcomp.cox.noboot(f=f,data=data,...)
   } else if(!iszip & (rr | doboot)){
-    res <- qgcomp.boot(f=f,data=data,family=family,rr=rr,...)
+    res <- qgcomp.glm.boot(f=f,data=data,family=family,rr=rr,...)
   }else if(!iszip){
-    res <- qgcomp.noboot(f=f,data=data,family=family,...)
+    res <- qgcomp.glm.noboot(f=f,data=data,family=family,...)
   }else if(iszip & doboot){
     res <- qgcomp.zi.boot(f=f,data=data,dist=family$family,rr=rr,...)
   }else if(iszip & !doboot){
     res <- qgcomp.zi.noboot(f=f,data=data,dist=family$family,...)
   } else{
     stop('Unable to parse the model type: try one of the specific functions in the qgcomp package
-           e.g. qgcomp.noboot, qgcomp.boot, qgcomp.cox.noboot, qgcomp.cox.boot, qgcomp.zi.noboot,
+           e.g. qgcomp.glm.noboot, qgcomp.glm.boot, qgcomp.cox.noboot, qgcomp.cox.boot, qgcomp.zi.noboot,
          qgcomp.zi.boot, ')
   }
   res
@@ -897,22 +903,22 @@ msm.predict <- function(object, newdata=NULL){
   #' @title Secondary prediction method for the (non-survival) qgcomp MSM.
   #'
   #' @description this is an internal function called by
-  #'  \code{\link[qgcomp]{qgcomp.boot}},
+  #'  \code{\link[qgcomp]{qgcomp.glm.boot}},
   #'  but is documented here for clarity. Generally, users will not need to call
   #'  this function directly.
   #' @description Get predicted values from a qgcompfit object from
-  #' \code{\link[qgcomp]{qgcomp.boot}}.
+  #' \code{\link[qgcomp]{qgcomp.glm.boot}}.
   #'
   #' @details (Not usually called by user) Makes predictions from the MSM
   #' (rather than the conditional g-computation
   #' fit) from a "qgcompfit" object. Generally, this should not be used in
   #' favor of the default \code{\link[qgcomp]{predict.qgcompfit}} function. This
-  #' function can only be used following the `qgcomp.boot` function. For the
-  #' `qgcomp.noboot` function, \code{\link[qgcomp]{predict.qgcompfit}} gives
+  #' function can only be used following the `qgcomp.glm.boot` function. For the
+  #' `qgcomp.glm.noboot` function, \code{\link[qgcomp]{predict.qgcompfit}} gives
   #' identical inference to predicting from an MSM.
   #'
   #'
-  #' @param object "qgcompfit" object from `qgcomp.boot` function
+  #' @param object "qgcompfit" object from `qgcomp.glm.boot` function
   #' @param newdata (optional) new set of data (data frame) with a variable
   #' called `psi` representing the joint exposure level of all exposures
   #' under consideration
@@ -920,11 +926,11 @@ msm.predict <- function(object, newdata=NULL){
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' obj <- qgcomp.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
+  #' obj <- qgcomp.glm.boot(y ~ z + x1 + x2 + I(z*x1), expnms = c('x1', 'x2'), data=dat, q=4, B=10, seed=125)
   #' dat2 <- data.frame(psi=seq(1,4, by=0.1))
   #' summary(msm.predict(obj))
   #' summary(msm.predict(obj, newdata=dat2))
- if(!object$bootstrap) stop("only valid for results from qgcomp.boot function")
+ if(!object$bootstrap) stop("only valid for results from qgcomp.glm.boot function")
  if(is.null(newdata)){
    pred <- predict(object$msmfit, type='response')
   }
@@ -934,3 +940,10 @@ msm.predict <- function(object, newdata=NULL){
   return(pred)
 }
 
+#' @export
+#' @inherit qgcomp.glm.boot
+qgcomp.boot <- qgcomp.glm.boot
+
+#' @export
+#' @inherit qgcomp.glm.boot
+qgcomp.noboot <- qgcomp.glm.noboot

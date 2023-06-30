@@ -94,7 +94,21 @@ survival::coxph(f, data = qdata$data, weight=w)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}},
+\code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.glm.boot}},
 and \code{\link[qgcomp]{qgcomp}}
+
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.boot}()},
+\code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.boot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.boot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.boot}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
+\concept{qgcomp_methods}
 \concept{variance mixtures}

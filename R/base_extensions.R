@@ -120,8 +120,8 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' @details While this function has utility far beyond qgcomp,
   #' it is included in the qgcomp package because it will be useful for a variety of
   #' settings in which qgcomp is useful. Note that LOD problems where the LOD is small,
-  #' and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.noboot}} or
-  #' \code{\link[qgcomp]{qgcomp.boot}} is not large, the LOD may be below the lowest
+  #' and the \code{q} parameter from \code{\link[qgcomp]{qgcomp.glm.noboot}} or
+  #' \code{\link[qgcomp]{qgcomp.glm.boot}} is not large, the LOD may be below the lowest
   #' quantile cutpoint which will yield identical datasets from the MICE procedure in terms
   #' of quantized exposure data. If only exposures are missing, and they have low LODs, then
   #' there will be no benefit in qgcomp from using MICE rather than imputing some small value
@@ -142,12 +142,12 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #' N = 100
   #' set.seed(123)
   #' dat <- data.frame(y=runif(N), x1=runif(N), x2=runif(N), z=runif(N))
-  #' true = qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
+  #' true = qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
   #'         data=dat, q=2, family=gaussian())
   #' mdat <- dat
   #' mdat$x1 = ifelse(mdat$x1>0.5, mdat$x1, NA)
   #' mdat$x2 = ifelse(mdat$x2>0.75, mdat$x2, NA)
-  #' cc <- qgcomp.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
+  #' cc <- qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'),
   #'        data=mdat[complete.cases(mdat),], q=2, family=gaussian())
   #'
   #' \dontrun{
@@ -160,10 +160,10 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=c(NA, 0.5, 0.75, NA), debug=FALSE, m=10)
   #' qc.fit.imp <- list(
-  #'   call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
+  #'   call = call("qgcomp.glm.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
   #'   call1 = impdat$call,
   #'   nmis = impdat$nmis,
-  #'   analyses = lapply(1:10, function(x) qgcomp.noboot(y~., expnms = c("x1", "x2"),
+  #'   analyses = lapply(1:10, function(x) qgcomp.glm.noboot(y~., expnms = c("x1", "x2"),
   #'     data=complete(impdat, x), family=gaussian(), bayes=TRUE))
   #'  )
   #' #alternative way to specify limits of detection (useful if not all observations have same limit)
@@ -174,10 +174,10 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   #'   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   #'   lod=lodlist, debug=FALSE, m=10)
   #' qc.fit.imp_alt <- list(
-  #'   call = call("qgcomp.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
+  #'   call = call("qgcomp.glm.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
   #'   call1 = impdat_alt$call,
   #'   nmis = impdat_alt$nmis,
-  #'   analyses = lapply(1:10, function(x) qgcomp.noboot(y~., expnms = c("x1", "x2"),
+  #'   analyses = lapply(1:10, function(x) qgcomp.glm.noboot(y~., expnms = c("x1", "x2"),
   #'     data=complete(impdat_alt, x), family=gaussian(), bayes=TRUE))
   #' )
   #' obj = pool(as.mira(qc.fit.imp))

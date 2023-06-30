@@ -123,7 +123,46 @@
 
 
 ######## Main plot functions ##########
-.plot.noboot.base <- function(x, nms, theme_butterfly_r, theme_butterfly_l){
+.plot_noboot_multi_base <- function(r, x, nms, theme_butterfly_r, theme_butterfly_l){
+  v <- w <- NULL
+  pospsi = x$partial_psi$positive_psi[r]
+  negpsi = x$partial_psi$negative_psi[r]
+  nms = colnames(x$weights)
+  weights = x$weights[r,]
+  pos.weights = weights[weights>=0]
+  neg.weights = -weights[weights<0]
+  varnm = names(pospsi)
+  
+  poscolwt = 1-pospsi/(pospsi - negpsi)
+  pright <- ggplot() + 
+    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                  data=data.frame(w=pos.weights, v=names(pos.weights)),
+                  fill=gray(poscolwt)) + 
+    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
+    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
+    geom_hline(aes(yintercept=0)) + 
+    coord_flip(ylim=c(0,1)) + 
+    theme_butterfly_r
+  pleft <- ggplot() + 
+    stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
+                  data=data.frame(w=neg.weights, v=names(neg.weights)),
+                  fill=gray(1-poscolwt)) + 
+    scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()) +
+    scale_x_discrete(name=varnm, limits=nms, breaks=nms, labels=nms, drop=FALSE) +
+    geom_hline(aes(yintercept=0)) + 
+    #coord_flip(ylim=c(0,1), expand = FALSE) + 
+    coord_flip() + 
+    theme_butterfly_l
+  if((length(neg.weights)>0 || length(pos.weights)>0)){
+    #maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
+    maxstr = max(nchar(c(names(neg.weights), names(pos.weights))))
+    lw = 1+maxstr/20
+    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+  }
+  return(p1)
+}
+
+.plot_noboot_base <- function(x, nms, theme_butterfly_r, theme_butterfly_l){
   v <- w <- NULL
   # glm
   poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
@@ -159,7 +198,7 @@
 
 
 
-.plot.noboot.zi <- function(x, theme_butterfly_r, theme_butterfly_l){
+.plot_noboot_zi <- function(x, theme_butterfly_r, theme_butterfly_l){
   v <- w <- NULL
   # zero inflated
   p1 = list()
@@ -199,7 +238,9 @@
   p1
 }
 
-.plot.boot.gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+
+
+.plot_boot_gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
   p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
   #
@@ -211,7 +252,7 @@
 }
 
 
-.plot.boot.binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot_boot_binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
   #
   p <- p + scale_y_log10()
@@ -232,7 +273,7 @@
 }
 
 
-.plot.boot.poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot_boot_poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
   p <- p + scale_y_log10()
   if(x$msmfit$family$link == "log"){
@@ -245,7 +286,7 @@
   p
 }
 
-.plot.boot.cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot_boot_cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   # : make the plot more configurable
   surv <- NULL
   scl = qgcomp.survcurve.boot(x)
@@ -268,7 +309,7 @@
 }
 
 
-.plot.boot.zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+.plot_boot_zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   # zero inflated
   p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
   if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha)
@@ -278,19 +319,54 @@
   p
 }
 
+.butterfly_themes <- function(){
+  theme_butterfly_l <- list(theme(
+    legend.position = c(0,0), 
+    legend.justification = c(0,0),
+    legend.background = element_blank(), 
+    panel.background = element_blank(), 
+    panel.grid.major.x = element_blank(), 
+    panel.grid.major.y = element_blank(), 
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.line = element_line(colour = "black"), 
+    axis.text = element_text(colour="black", face="bold", size=14), 
+    axis.title = element_text(size=16, face="bold"), 
+    legend.key = element_blank(),
+    plot.margin = unit(c(t=1, r=0, b=.75, l=0.5), "cm"),
+    panel.border = element_blank()))
+  
+  theme_butterfly_r <- list(theme(
+    panel.background = element_blank(), 
+    panel.grid.major.x = element_blank(), 
+    panel.grid.major.y = element_blank(), 
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.line = element_line(colour = "black"), 
+    axis.text.x = element_text(colour="black", face="bold", size=14), 
+    axis.title.x = element_text(size=16, face="bold"), 
+    axis.ticks.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.title.y = element_blank(), 
+    legend.key = element_blank(),
+    plot.margin = unit(c(t=1, r=0.5, b=.75, l=0.0), "cm"),
+    panel.border = element_blank()))
+  list(theme_butterfly_l, theme_butterfly_r)
+}
+
 
 
 ######## User facing functions ##########
 #' @title Default plotting method for a qgcompfit object
 #'
-#' @description Plot a quantile g-computation object. For qgcomp.noboot, this function will
-#' create a butterfly plot of weights. For qgcomp.boot, this function will create
+#' @description Plot a quantile g-computation object. For qgcomp.glm.noboot, this function will
+#' create a butterfly plot of weights. For qgcomp.glm.boot, this function will create
 #' a box plot with smoothed line overlaying that represents a non-parametric
 #' fit of a model to the expected outcomes in the population at each quantile
 #' of the joint exposures (e.g. '1' represents 'at the first quantile for
 #' every exposure')
 #' 
-#' @param x "qgcompfit" object from `qgcomp.noboot`,  `qgcomp.boot`, 
+#' @param x "qgcompfit" object from `qgcomp.glm.noboot`,  `qgcomp.glm.boot`, 
 #'   `qgcomp.cox.noboot`,  `qgcomp.cox.boot`, `qgcomp.zi.noboot` or `qgcomp.zi.boot` functions
 #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
 #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
@@ -306,7 +382,7 @@
 #' @param pointwiseref (boot.gcomp only) integer: which category of exposure (from 1 to q) 
 #' should serve as the referent category for pointwise comparisons? (default=1)
 #' @param ... unused
-#' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+#' @seealso \code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
 #' @import ggplot2 grid gridExtra
 #' @importFrom grDevices gray
 #' @export
@@ -314,7 +390,7 @@
 #' set.seed(12)
 #' dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
 #'                   y=runif(100)+x1+x1^2)
-#' ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
+#' ft <- qgcomp.glm.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 #' ft
 #' # display weights
 #' plot(ft)
@@ -323,7 +399,7 @@
 #' \dontrun{
 #' 
 #' # using non-linear outcome model
-#' ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+#' ft2 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
 #' data=dat, q=4, B=10)
 #' ft2
 #' plot(ft2$fit, which=1) # much better looking fit diagnostics suggests
@@ -332,7 +408,7 @@
 #' # of the expected outcome, so we should consider a non-linear MSM
 #'
 #' # using non-linear marginal structural model
-#' ft3 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+#' ft3 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
 #' data=dat, q=4, B=10, degree=2)
 #' # plot(ft3$fit, which=1) - not run - this is identical to ft2 fit
 #' plot(ft3) # the MSM estimates look much closer to the smoothed estimates
@@ -342,9 +418,9 @@
 #' # binary outcomes, logistic model with or without a log-binomial marginal 
 #' structural model
 #' dat <- data.frame(y=rbinom(100,1,0.5), x1=runif(100), x2=runif(100), z=runif(100))
-#' fit1 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+#' fit1 <- qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
 #'          data=dat, q=9, B=100, rr=FALSE)
-#' fit2 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+#' fit2 <- qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
 #'          data=dat, q=9, B=100, rr=TRUE)
 #' plot(fit1)
 #' plot(fit2)
@@ -388,52 +464,23 @@ plot.qgcompfit <- function(x,
   requireNamespace("grid")
   requireNamespace("gridExtra")
   ymin <- ymax <- w <- v <- NULL # appease R CMD check
-  theme_butterfly_l <- list(theme(
-    legend.position = c(0,0), 
-    legend.justification = c(0,0),
-    legend.background = element_blank(), 
-    panel.background = element_blank(), 
-    panel.grid.major.x = element_blank(), 
-    panel.grid.major.y = element_blank(), 
-    panel.grid.minor.x = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.line = element_line(colour = "black"), 
-    axis.text = element_text(colour="black", face="bold", size=14), 
-    axis.title = element_text(size=16, face="bold"), 
-    legend.key = element_blank(),
-    plot.margin = unit(c(t=1, r=0, b=.75, l=0.5), "cm"),
-    panel.border = element_blank()))
-  
-  theme_butterfly_r <- list(theme(
-    panel.background = element_blank(), 
-    panel.grid.major.x = element_blank(), 
-    panel.grid.major.y = element_blank(), 
-    panel.grid.minor.x = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.line = element_line(colour = "black"), 
-    axis.text.x = element_text(colour="black", face="bold", size=14), 
-    axis.title.x = element_text(size=16, face="bold"), 
-    axis.ticks.y = element_blank(), 
-    axis.text.y = element_blank(), 
-    axis.title.y = element_blank(), 
-    legend.key = element_blank(),
-    plot.margin = unit(c(t=1, r=0.5, b=.75, l=0.0), "cm"),
-    panel.border = element_blank()))
-  
-  alpha = x$alpha
-  if(!is.null(x$fit$family)) nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
   
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!x$bootstrap){
+    if(!is.null(x$fit$family)) nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
+    themes = .butterfly_themes()
+    theme_butterfly_l = themes[[1]]
+    theme_butterfly_r = themes[[2]]
+    # zero inflated
     if(is.null(x$fit$family)){
-      p1 <- .plot.noboot.zi(x, theme_butterfly_r, theme_butterfly_l)
+      p1 <- .plot_noboot_zi(x, theme_butterfly_r, theme_butterfly_l)
       if(!suppressprint) {
         lapply(p1, .plfun)
       }
     }
     if(!is.null(x$fit$family)){
-      p1 <- .plot.noboot.base(x, nms, theme_butterfly_r, theme_butterfly_l)
+      p1 <- .plot_noboot_base(x, nms, theme_butterfly_r, theme_butterfly_l)
       if(!suppressprint) {
         .plfun(p1)
       }
@@ -447,17 +494,17 @@ plot.qgcompfit <- function(x,
     p <- ggplot() 
     if(is.null(x$msmfit$family)) {
       # ZI model
-      p <- .plot.boot.zi(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+      p <- .plot_boot_zi(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
     } else{
       # Cox model or standard GLM
       if(x$msmfit$family$family=='cox') p <- 
-          .plot.boot.cox(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+          .plot_boot_cox(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
       if(x$msmfit$family$family=='gaussian') p <-  
-          .plot.boot.gaussian(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+          .plot_boot_gaussian(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
       if(x$msmfit$family$family=='binomial') p <- 
-          .plot.boot.binomial(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+          .plot_boot_binomial(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
       if(x$msmfit$family$family=='poisson') p <- 
-          .plot.boot.poisson(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+          .plot_boot_poisson(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
     }
 
     p <- p + scale_fill_grey(name="", start=.9) + 
@@ -466,4 +513,32 @@ plot.qgcompfit <- function(x,
     if(!suppressprint) print(p)
   }
   if(suppressprint) return(p)
+}
+
+
+plot.qgcompmultfit <- function(
+    x
+){
+  if(x$bootstrap){
+    warning("The default plot function is only functional for qgcomp.multinomial.noboot currently")
+  } else{
+    nms = list()
+    for (r in 1:nrow(x$weights)){
+      nms[[r]] = names(sort(-abs(x$weights[r,])))
+    }
+    themes = .butterfly_themes()
+    theme_butterfly_l = themes[[1]]
+    theme_butterfly_r = themes[[2]]
+    plist <- list()
+    for(r in 1:nrow(x$weights)){
+      plist[[r]] <- .plot_noboot_multi_base(r, x, nms, theme_butterfly_r, theme_butterfly_l)
+    }
+
+    p1 <- gridExtra::arrangeGrob(grobs=plist)
+    
+    if(!suppressprint) {
+      .plfun(p1)
+    }
+    
+  }
 }

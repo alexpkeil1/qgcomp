@@ -15,32 +15,32 @@ qgcomp(f, data = data, family = gaussian(), rr = TRUE, ...)
 argument to 'family' parameter in \code{\link[stats]{glm}}` or 'dist' parameter in
 \code{\link[pscl]{zeroinfl}})}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
 estimate risk ratio rather than odds ratio. Note, to get population average
 effect estimates for a binary outcome, set rr=TRUE (default: ORs are generally not
 of interest as population average effects, so if rr=FALSE then a conditional
 OR will be estimated, which cannot be interpreted as a population average
 effect}
 
-\item{...}{arguments to qgcomp.noboot or qgcomp.boot (e.g. q) or glm}
+\item{...}{arguments to qgcomp.glm.noboot or qgcomp.glm.boot (e.g. q) or glm}
 }
 \value{
 a qgcompfit object, which contains information about the effect
 measure of interest (psi) and associated variance (var.psi), as well
 as information on the model fit (fit) and possibly information on the
 marginal structural model (msmfit) used to estimate the final effect
-estimates (qgcomp.boot, qgcomp.cox.boot only).
+estimates (qgcomp.glm.boot, qgcomp.cox.boot only).
 If appropriate, weights are also reported, which represent the proportion
 of a directional (positive/negative) effect that is accounted for by
 each exposure.
 }
 \description{
-This function automatically selects between qgcomp.noboot, qgcomp.boot,
+This function automatically selects between qgcomp.glm.noboot, qgcomp.glm.boot,
 qgcomp.cox.noboot, and qgcomp.cox.boot
 for the most efficient approach to estimate the average expected
 change in the (log) outcome per quantile increase in the joint
-exposure to all exposures in \verb{expnms', given the underlying model. For example, if the underlying model (specified by the formula }f\verb{) is a linear model with all linear terms for exposure, then }qgcomp.noboot`` will be called to fit the model. Non-linear
-terms or requesting the risk ratio for binomial outcomes will result in the \code{qgcomp.boot}
+exposure to all exposures in \verb{expnms', given the underlying model. For example, if the underlying model (specified by the formula }f\verb{) is a linear model with all linear terms for exposure, then }qgcomp.glm.noboot`` will be called to fit the model. Non-linear
+terms or requesting the risk ratio for binomial outcomes will result in the \code{qgcomp.glm.boot}
 function being called. For a given linear model, boot and noboot versions will give identical
 inference, though when using survival outcomes, the `boot` version uses simulation based
 inference, which can vary from the `noboot` version due to simulation error (which can
@@ -50,16 +50,16 @@ be minimized via setting the MCsize parameter very large - see
 \examples{
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
+qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
 # automatically selects appropriate method
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 # note for binary outcome this will choose the risk ratio (and bootstrap methods) by default
 dat <- data.frame(y=rbinom(100, 1, 0.5), x1=runif(100), x2=runif(100), z=runif(100))
 \dontrun{
-qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 set.seed(1231)
-qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
+qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 set.seed(1231)
 qgcomp(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=binomial())
 
@@ -87,7 +87,7 @@ qgcomp(f, expnms = expnms, data = dat, B=10, MCsize=100)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}},
+\code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{qgcomp.glm.boot}},
 \code{\link[qgcomp]{qgcomp.cox.noboot}}, \code{\link[qgcomp]{qgcomp.cox.boot}}
 \code{\link[qgcomp]{qgcomp.zi.noboot}} and \code{\link[qgcomp]{qgcomp.zi.boot}}
 (\code{\link[qgcomp]{qgcomp}} is just a wrapper for these functions)

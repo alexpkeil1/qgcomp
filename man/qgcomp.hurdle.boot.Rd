@@ -19,7 +19,7 @@ qgcomp.hurdle.boot(
   bayes = FALSE,
   parallel = FALSE,
   MCsize = 10000,
-  msmcontrol = hurdlemsm.fit.control(),
+  msmcontrol = hurdlemsm_fit.control(),
   parplan = FALSE,
   ...
 )
@@ -69,7 +69,7 @@ as needed to reduce simulation error to an acceptable magnitude (can compare psi
 linear fits with qgcomp.hurdle.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize)}
 
-\item{msmcontrol}{named list from \code{\link[qgcomp]{hurdlemsm.fit.control}}}
+\item{msmcontrol}{named list from \code{\link[qgcomp]{hurdlemsm_fit.control}}}
 
 \item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)}
 
@@ -169,7 +169,18 @@ res2
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.hurdle.noboot}},\code{\link[qgcomp]{qgcomp.boot}},
-\code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{hurdle}}
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.boot}()},
+\code{\link{qgcomp.cox.noboot}()},
+\code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.boot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.boot}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
+\concept{qgcomp_methods}
 \concept{variance mixtures}

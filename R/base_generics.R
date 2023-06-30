@@ -57,26 +57,26 @@ confint.qgcompfit <- function(object, ...){
 print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' @title Default printing method for a qgcompfit object
   #' 
-  #' @description Gives variable output depending on whether `qgcomp.noboot` or `qgcomp.boot`
-  #' is called. For `qgcomp.noboot` will output final estimate of joint exposure
+  #' @description Gives variable output depending on whether `qgcomp.glm.noboot` or `qgcomp.glm.boot`
+  #' is called. For `qgcomp.glm.noboot` will output final estimate of joint exposure
   #' effect (similar to the 'index' effect in weighted quantile sums), as well
-  #' as estimates of the 'weights' (standardized coefficients). For `qgcomp.boot`,
+  #' as estimates of the 'weights' (standardized coefficients). For `qgcomp.glm.boot`,
   #' the marginal effect is given, but no weights are reported since this approach
   #' generally incorporates non-linear models with interaction terms among exposures,
   #' which preclude weights with any useful interpretation.
   #' 
-  #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.noboot` or `qgcomp.boot` 
+  #' @param x "qgcompfit" object from `qgcomp`, `qgcomp.glm.noboot` or `qgcomp.glm.boot` 
   #' function
   #' @param showweights logical: should weights be printed, if estimated?
   #' @param ... unused
-  #' @seealso \code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+  #' @seealso \code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
   #' @export
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
+  #' obj1 <- qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' obj2 <- qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' # does not need to be explicitly called, but included here for clarity
   #' print(obj1)
   #' print(obj2)
@@ -201,13 +201,13 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #'
   #' @description get predicted values from a qgcompfit object, or make predictions
   #' in a new set of data based on the qgcompfit object. Note that when making predictions
-  #' from an object from qgcomp.boot, the predictions are made from the (conditional) g-computation
+  #' from an object from qgcomp.glm.boot, the predictions are made from the (conditional) g-computation
   #' model rather than the marginal structural model. Predictions from the marginal
   #' structural model can be obtained via \code{\link[qgcomp]{msm.predict}}. Note
   #' that this function accepts non-quantized exposures in "newdata" and automatically
   #' quantizes them according to the quantile cutpoints in the original fit.
   #' 
-  #' @param object "qgcompfit" object from `qgcomp.noboot`, `qgcomp.boot`, `qgcomp.zi.noboot`, 
+  #' @param object "qgcompfit" object from `qgcomp.glm.noboot`, `qgcomp.glm.boot`, `qgcomp.zi.noboot`, 
   #' or `qgcomp.zi.boot`functions
   #' @param expnms character vector of exposures of interest
   #' @param newdata (optional) new set of data with all predictors from "qgcompfit" object
@@ -223,8 +223,8 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   #' @examples
   #' set.seed(50)
   #' dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-  #' obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-  #' obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
+  #' obj1 <- qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+  #' obj2 <- qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
   #' set.seed(52)
   #' dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
   #' summary(predict(obj1, expnms = c('x1', 'x2'), newdata=dat2))

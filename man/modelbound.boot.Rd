@@ -7,7 +7,7 @@
 modelbound.boot(x, alpha = 0.05, pwonly = FALSE)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.boot},}
+\item{x}{"qgcompfit" object from \code{qgcomp.glm.boot},}
 
 \item{alpha}{alpha level for confidence intervals}
 
@@ -52,10 +52,10 @@ set.seed(12)
 \dontrun{
 dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
                   y=runif(50)+x1+x1^2)
-ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
+ft <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
 modelbound.boot(ft, 0.05)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}
+\code{\link[qgcomp]{qgcomp.glm.boot}}
 }

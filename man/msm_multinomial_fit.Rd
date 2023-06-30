@@ -95,6 +95,6 @@ summary(mod$fit) # outcome regression model
 summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
 \concept{variance mixtures}

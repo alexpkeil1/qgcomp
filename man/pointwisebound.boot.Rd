@@ -2,12 +2,12 @@
 % Please edit documentation in R/base_bounds.R
 \name{pointwisebound.boot}
 \alias{pointwisebound.boot}
-\title{Estimating pointwise comparisons for qgcomp.boot objects}
+\title{Estimating pointwise comparisons for qgcomp.glm.boot objects}
 \usage{
 pointwisebound.boot(x, pointwiseref = 1, alpha = 0.05)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.boot},}
+\item{x}{"qgcompfit" object from \code{qgcomp.glm.boot},}
 
 \item{pointwiseref}{referent quantile (e.g. 1 uses the lowest joint-exposure category as
 the referent category for calculating all mean differences/standard deviations)}
@@ -56,10 +56,10 @@ n=100
 # non-linear model for continuous outcome
 dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
                   y=runif(100)+x1+x1^2)
-ft <- qgcomp.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
+ft <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=10)
 pointwisebound.boot(ft, alpha=0.05, pointwiseref=3)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
+\code{\link[qgcomp]{qgcomp.glm.boot}}, \code{\link[qgcomp]{pointwisebound.noboot}}
 }

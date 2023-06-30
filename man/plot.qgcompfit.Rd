@@ -16,7 +16,7 @@
 )
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{qgcomp.noboot},  \code{qgcomp.boot},
+\item{x}{"qgcompfit" object from \code{qgcomp.glm.noboot},  \code{qgcomp.glm.boot},
 \code{qgcomp.cox.noboot},  \code{qgcomp.cox.boot}, \code{qgcomp.zi.noboot} or \code{qgcomp.zi.boot} functions}
 
 \item{suppressprint}{If TRUE, suppresses the plot, rather than printing it
@@ -41,8 +41,8 @@ should serve as the referent category for pointwise comparisons? (default=1)}
 \item{...}{unused}
 }
 \description{
-Plot a quantile g-computation object. For qgcomp.noboot, this function will
-create a butterfly plot of weights. For qgcomp.boot, this function will create
+Plot a quantile g-computation object. For qgcomp.glm.noboot, this function will
+create a butterfly plot of weights. For qgcomp.glm.boot, this function will create
 a box plot with smoothed line overlaying that represents a non-parametric
 fit of a model to the expected outcomes in the population at each quantile
 of the joint exposures (e.g. '1' represents 'at the first quantile for
@@ -52,7 +52,7 @@ every exposure')
 set.seed(12)
 dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),
                   y=runif(100)+x1+x1^2)
-ft <- qgcomp.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
+ft <- qgcomp.glm.noboot(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=4)
 ft
 # display weights
 plot(ft)
@@ -61,7 +61,7 @@ plot(ft$fit, which=1) # residual vs. fitted is not straight line!
 \dontrun{
 
 # using non-linear outcome model
-ft2 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+ft2 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
 data=dat, q=4, B=10)
 ft2
 plot(ft2$fit, which=1) # much better looking fit diagnostics suggests
@@ -70,7 +70,7 @@ plot(ft2) # the msm predictions don't match up with a smooth estimate
 # of the expected outcome, so we should consider a non-linear MSM
 
 # using non-linear marginal structural model
-ft3 <- qgcomp.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
+ft3 <- qgcomp.glm.boot(y ~ z + x1 + x2 + x3 + I(x1*x1), expnms=c('x1','x2','x3'), 
 data=dat, q=4, B=10, degree=2)
 # plot(ft3$fit, which=1) - not run - this is identical to ft2 fit
 plot(ft3) # the MSM estimates look much closer to the smoothed estimates
@@ -80,9 +80,9 @@ plot(ft3) # the MSM estimates look much closer to the smoothed estimates
 # binary outcomes, logistic model with or without a log-binomial marginal 
 structural model
 dat <- data.frame(y=rbinom(100,1,0.5), x1=runif(100), x2=runif(100), z=runif(100))
-fit1 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+fit1 <- qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
          data=dat, q=9, B=100, rr=FALSE)
-fit2 <- qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
+fit2 <- qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'), 
          data=dat, q=9, B=100, rr=TRUE)
 plot(fit1)
 plot(fit2)
@@ -115,5 +115,5 @@ plot(obj2)
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.glm.noboot}}, \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }

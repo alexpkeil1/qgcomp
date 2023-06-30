@@ -168,7 +168,18 @@ res2
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.zi.noboot}},\code{\link[qgcomp]{qgcomp.boot}},
-\code{\link[qgcomp]{qgcomp.cox.boot}},  and \code{\link[pscl]{zeroinfl}}
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.boot}()},
+\code{\link{qgcomp.cox.noboot}()},
+\code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.boot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.boot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
+\concept{qgcomp_methods}
 \concept{variance mixtures}

@@ -43,8 +43,8 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.noboot will not produce cluster-appropriate
-standard errors. Qgcomp.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
+standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -56,7 +56,7 @@ errors via bootstrapping.}
 \item{B}{integer: number of bootstrap iterations (this should typically be >=200,
 though it is set lower in examples to improve run-time).}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.boot will
+\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
 estimate risk ratio rather than odds ratio}
 
 \item{degree}{polynomial bases for marginal model (e.g. degree = 2
@@ -73,7 +73,7 @@ so results should be interpreted as frequentist.}
 \item{MCsize}{integer: sample size for simulation to approximate marginal
 zero inflated model parameters. This can be left small for testing, but should be as large
 as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-linear fits with qgcomp.noboot to gain some intuition for the level of expected simulation
+linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize). This likely won't matter much in linear models, but may
 be important with binary or count outcomes.}
 
@@ -97,6 +97,7 @@ structural model (MSM) based on g-computation with quantized exposures. Note: th
 allows non-linear and non-additive effects of individual components of the exposure, as well as
 non-linear joint effects of the mixture via polynomial basis functions, which increase the
 computational computational burden due to the need for non-parametric bootstrapping.
+qgcomp.boot is an equivalent function (slated for deprecation)
 }
 \details{
 Estimates correspond to the average expected change in the
@@ -113,14 +114,14 @@ set.seed(30)
 # continuous outcome
 dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
 # Conditional linear slope
-qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
+qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 # Marginal linear slope (population average slope, for a purely linear,
 #  additive model this will equal the conditional)
  \dontrun{
-qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
 # no intercept model
-qgcomp.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+qgcomp.glm.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
 
  # Note that these give different answers! In the first, the estimate is conditional on Z,
@@ -130,47 +131,47 @@ qgcomp.boot(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
  dat$z = dat$z - mean(dat$z)
 
 # Conditional linear slope
-qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
+qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 # Marginal linear slope (population average slope, for a purely linear,
 #  additive model this will equal the conditional)
 
-qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian(), B=200) # B should be at least 200 in actual examples
 
 # Population average mixture slope which accounts for non-linearity and interactions
-qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
+qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, B=200)
 
 # generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
-qgcomp.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
+qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, B=200, deg=2)
 
 # binary outcome
 dat <- data.frame(y=rbinom(50,1,0.5), x1=runif(50), x2=runif(50), z=runif(50))
 
 # Conditional mixture OR
-qgcomp.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+qgcomp.glm.noboot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2)
 
 #Marginal mixture OR (population average OR - in general, this will not equal the
 # conditional mixture OR due to non-collapsibility of the OR)
-qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2, B=3, rr=FALSE)
 
 # Population average mixture RR
-qgcomp.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
+qgcomp.glm.boot(y ~ z + x1 + x2, family="binomial", expnms = c('x1', 'x2'),
   data=dat, q=2, rr=TRUE, B=3)
 
 # Population average mixture RR, indicator variable representation of x2
 # note that I(x==...) operates on the quantile-based category of x,
 # rather than the raw value
-res = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
+res = qgcomp.glm.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200)
 res$fit
 plot(res)
 
 # now add in a non-linear MSM
-res2 = qgcomp.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
+res2 = qgcomp.glm.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE, B=200,
   degree=2)
 res2$fit
@@ -182,13 +183,13 @@ dat$x1iqr <- dat$x1/with(dat, diff(quantile(x1, c(.25, .75))))
 dat$x2iqr <- dat$x2/with(dat, diff(quantile(x2, c(.25, .75))))
 # note that I(x>...) now operates on the untransformed value of x,
 # rather than the quantized value
-res2 = qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+res2 = qgcomp.glm.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   degree=2)
 res2
 # using parallel processing
 
-qgcomp.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
+qgcomp.glm.boot(y ~ z + x1iqr + I(x2iqr>0.1) + I(x2>0.4) + I(x2>0.9),
   family="binomial", expnms = c('x1iqr', 'x2iqr'), data=dat, q=NULL, rr=TRUE, B=200,
   degree=2, parallel=TRUE, parplan=TRUE)
 
@@ -200,24 +201,34 @@ dat4$y <- with(dat4, rnorm(N, x1*z + z, 1))
 dat4$w=runif(N) + dat4$z*5
 qdata = quantize(dat4, expnms = c("x1", "x2"), q=4)$data
 # first equivalent models with no covariates
-qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
-qgcomp.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+qgcomp.glm.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian())
+qgcomp.glm.noboot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
               weights=w)
 
 set.seed(13)
-qgcomp.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+qgcomp.glm.boot(f=y ~ x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
             weights=w)
 # using the correct model
 set.seed(13)
-qgcomp.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
+qgcomp.glm.boot(f=y ~ x1*z + x2, expnms = c('x1', 'x2'), data=dat4, q=4, family=gaussian(),
             weights=w, id="id")
-(qgcfit <- qgcomp.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
+(qgcfit <- qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat4, q=4,
                        family=gaussian(), weights=w))
 qgcfit$fit
 summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))
 }
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.noboot}}, and \code{\link[qgcomp]{qgcomp}}
+Other qgcomp_methods: 
+\code{\link{qgcomp.cch.noboot}()},
+\code{\link{qgcomp.cox.boot}()},
+\code{\link{qgcomp.cox.noboot}()},
+\code{\link{qgcomp.glm.noboot}()},
+\code{\link{qgcomp.hurdle.boot}()},
+\code{\link{qgcomp.hurdle.noboot}()},
+\code{\link{qgcomp.multinomial.boot}()},
+\code{\link{qgcomp.multinomial.noboot}()},
+\code{\link{qgcomp.partials}()},
+\code{\link{qgcomp.zi.boot}()},
+\code{\link{qgcomp.zi.noboot}()}
 }
-\concept{variance mixtures}

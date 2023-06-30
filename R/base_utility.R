@@ -75,7 +75,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #' in expnms to the final standard error. For a linear combination, this is equal
   #' to a vector of ones (and is set automatically). Or can be calculated via the
   #' grad.poly procedure, in the case of coming up with proper weights when the combination
-  #' of expnms derives from a polynomial function (as in qgcomp.boot with degree>1).
+  #' of expnms derives from a polynomial function (as in qgcomp.glm.boot with degree>1).
   #'
   #' @export
   #' @examples
@@ -263,7 +263,7 @@ quantize <- function (data, expnms, q=4, breaks=NULL) {
 checknames <- function(terms){
   #' @title Check for valid model terms in a qgcomp fit
   #' @description This is an internal function called by \code{\link[qgcomp]{qgcomp}},
-  #'  \code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+  #'  \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}},
   #'  but is documented here for clarity. Generally, users will not need to call
   #'  this function directly. This function tries to determine whether there are
   #'  non-linear terms in the underlying model, which helps infer whether the
@@ -292,6 +292,7 @@ checknames <- function(terms){
   if(is.na(match("pos.size", nms))) res$pos.size = NULL
   if(is.na(match("neg.size", nms))) res$neg.size = NULL
   if(is.na(match("df", nms))) res$df = NULL
+  if(is.na(match("qx", nms))) res$qx = NULL
   attr(res, "class") <- c("qgcompfit", "list")
   res
 }

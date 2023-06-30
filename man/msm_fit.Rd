@@ -67,7 +67,7 @@ error at a given value of MCsize)}
 }
 \description{
 This is an internal function called by \code{\link[qgcomp]{qgcomp}},
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp.noboot}},
+\code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp.glm.noboot}},
 but is documented here for clarity. Generally, users will not need to call
 this function directly.
 }
@@ -95,6 +95,6 @@ summary(mod$fit) # outcome regression model
 summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
 }
 \seealso{
-\code{\link[qgcomp]{qgcomp.boot}}, and \code{\link[qgcomp]{qgcomp}}
+\code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
 }
 \concept{variance mixtures}

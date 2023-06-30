@@ -8,7 +8,7 @@ outcomes only)}
 \method{predict}{qgcompfit}(object, expnms = NULL, newdata = NULL, type = "response", ...)
 }
 \arguments{
-\item{object}{"qgcompfit" object from \code{qgcomp.noboot}, \code{qgcomp.boot}, \code{qgcomp.zi.noboot},
+\item{object}{"qgcompfit" object from \code{qgcomp.glm.noboot}, \code{qgcomp.glm.boot}, \code{qgcomp.zi.noboot},
 or \code{qgcomp.zi.boot}functions}
 
 \item{expnms}{character vector of exposures of interest}
@@ -28,7 +28,7 @@ on the linear predictor scale.}
 \description{
 get predicted values from a qgcompfit object, or make predictions
 in a new set of data based on the qgcompfit object. Note that when making predictions
-from an object from qgcomp.boot, the predictions are made from the (conditional) g-computation
+from an object from qgcomp.glm.boot, the predictions are made from the (conditional) g-computation
 model rather than the marginal structural model. Predictions from the marginal
 structural model can be obtained via \code{\link[qgcomp]{msm.predict}}. Note
 that this function accepts non-quantized exposures in "newdata" and automatically
@@ -37,8 +37,8 @@ quantizes them according to the quantile cutpoints in the original fit.
 \examples{
 set.seed(50)
 dat <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
-obj1 <- qgcomp.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
-obj2 <- qgcomp.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
+obj1 <- qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
+obj2 <- qgcomp.glm.boot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, B=10, seed=125)
 set.seed(52)
 dat2 <- data.frame(y=runif(50), x1=runif(50), x2=runif(50), z=runif(50))
 summary(predict(obj1, expnms = c('x1', 'x2'), newdata=dat2))

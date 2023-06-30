@@ -99,7 +99,7 @@
 
 .qgcomp_xfitpartials <- function(
     data,
-    fun = c("qgcomp.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
+    fun = c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
     V=10,
     expnms=NULL,
     .fixbreaks=TRUE,
@@ -187,8 +187,7 @@ print.qgcompmultixfit <- function(x,...){
 #' @param cluster not yet implemented
 #' @param alpha alpha level for confidence limit calculation
 #' @param ... arguments to glm (e.g. family)
-#' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.boot}}, 
-#'   and \code{\link[qgcomp]{qgcomp}}
+#' @family qgcomp_methods
 #' @return a qgcompfit object, which contains information about the effect
 #'  measure of interest (psi) and associated variance (var.psi), as well
 #'  as information on the model fit (fit) and information on the 
@@ -287,5 +286,20 @@ qgcomp.cch.noboot <- function(f, data, subcoh=NULL, id=NULL, cohort.size=NULL, e
                                  alpha = alpha, call = origcall, hasintercept = FALSE)
   attr(res, "class") <- c("survqgcompfit", attr(res, "class"))
   res
+}
+
+# in progress plotting function
+.plot_boot_multinomial_base <- function(r, p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
+  #
+  x$fit
+  x$msmfit
+  stop("Not yet implemented")
+  p <- p #+ #scale_y_log10()
+    p <- p + labs(x = "Joint exposure quantile", y = "P(Y=y)") + lims(x=c(0,1))
+    if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
+    if(flexfit)   p <- p + .plot.or.smooth.line(x)
+    if(modelfitline) p <- p + .plot.logitlin.line(x)
+    if(pointwisebars) p <- p + .plot.or.pw.boot(x,alpha,pointwiseref)
+  p
 }
 
