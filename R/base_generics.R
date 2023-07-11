@@ -125,6 +125,8 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     testtype = "Z"
   }
   if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
+    testtype = "Z"
+    rnm = c(paste0('psi',1:max(1, length(coef(object)))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
@@ -173,6 +175,9 @@ summary.qgcompfit <- function(object, ...){
     rnm = c(paste0('psi',1:max(1, length(coef(object)))))
   }
   if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
+    # in development: quasipoisson, Gamma, quasi, quasibinomial, inverse.gaussian
+    testtype = "Z"
+    rnm = c(paste0('psi',1:max(1, length(coef(object)))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }

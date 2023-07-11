@@ -23,6 +23,9 @@ res = qgcomp.noboot(deaths~x2 + offset(logtime), expnms="x2", data = dat, family
 res = qgcomp.noboot(deaths~x2+x1 + offset(logtime), expnms=c('x1', "x2"), data = dat, family=poisson(), q=4)
 summary(res)
 
+res = qgcomp.noboot(deaths~x2+x1 + offset(logtime), expnms=c('x1', "x2"), data = dat, family=quasipoisson(), q=4)
+
+
 # error by scoping for using the offset parameter
 #qgcomp.noboot(deaths~x2, expnms="x2", data = dat, family=poisson(), q=4, offset = logtime)
 
