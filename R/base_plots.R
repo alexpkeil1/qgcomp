@@ -517,7 +517,7 @@ plot.qgcompfit <- function(x,
 
 
 #' @export
-#' @describeIn plot.qgcompfit
+#' @describeIn plot.qgcompfit Plot method for qgcomp multinomial fits
 plot.qgcompmultfit <- function(
     x,                           
     suppressprint=FALSE, 

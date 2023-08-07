@@ -2,9 +2,21 @@
 % Please edit documentation in R/base_plots.R
 \name{plot.qgcompfit}
 \alias{plot.qgcompfit}
+\alias{plot.qgcompmultfit}
 \title{Default plotting method for a qgcompfit object}
 \usage{
 \method{plot}{qgcompfit}(
+  x,
+  suppressprint = FALSE,
+  pointwisebars = TRUE,
+  modelfitline = TRUE,
+  modelband = TRUE,
+  flexfit = TRUE,
+  pointwiseref = ceiling(x$q/2),
+  ...
+)
+
+\method{plot}{qgcompmultfit}(
   x,
   suppressprint = FALSE,
   pointwisebars = TRUE,
@@ -48,6 +60,11 @@ fit of a model to the expected outcomes in the population at each quantile
 of the joint exposures (e.g. '1' represents 'at the first quantile for
 every exposure')
 }
+\section{Functions}{
+\itemize{
+\item \code{plot(qgcompmultfit)}: Plot method for qgcomp multinomial fits
+
+}}
 \examples{
 set.seed(12)
 dat <- data.frame(x1=(x1 <- runif(100)), x2=runif(100), x3=runif(100), z=runif(100),

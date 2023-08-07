@@ -754,7 +754,7 @@ As shown from these results, the essential metals and minerals demonstrate an ov
 
 - The `qgcomp` package utilizes `multinom` from the `nnet` package in an analogous fashion to how `glm` is used. The joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category. Some (but not all) of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more  functionality will be available in the future.
   
-```{r multinomial, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+```{r multinomial, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 data("metals") # from qgcomp package
 # create categorical outcome from the existing continuous outcome (usually, one will already exist)
 metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "3"), labels=c("cct", "ccg", "aat", "aag")) 
@@ -784,7 +784,7 @@ rr2 = qgcomp.multinomial.boot(
  )
 
 summary(rr)
-summary(rr2)
+summary(rr2) # differs from `rr` primarily due to low `MCSize` value
 
 plot(rr)
 #plot(rr2) # not yet functional
@@ -874,7 +874,7 @@ No. You can turn off "quantization" by setting `q=NULL` or you can supply your o
 Probably not in a scientific manuscript. If you find an idea here that is not published anywhere else and wish to develop it into a full manuscript, feel free! (But probably check with akeil@unc.edu to ask if a paper is already in development.)
 
 ## References
-Alexander P. Keil, Jessie P. Buckley, Katie M. O’Brien, Kelly K. Ferguson, Shanshan Zhao,
+Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shanshan Zhao,
 Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://doi.org/10.1289/EHP5838> 
 
 ## Acknowledgments

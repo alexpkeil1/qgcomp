@@ -83,11 +83,15 @@ change in the expected outcome given a joint intervention on all exposures.
 \examples{
 data("metals") # from qgcomp package
 # create categorical outcome from the existing continuous outcome (usually, one will already exist)
-metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "3"), labels=c("cct", "ccg", "aat", "aag")) 
+metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "3"), 
+                     labels=c("cct", "ccg", "aat", "aag")) 
 # restrict to smaller dataset for simplicity
 smallmetals = metals[,c("ycat", "arsenic", "lead", "cadmium", "mage35")]
+
+### 1: Define mixture and underlying model ####
 mixture = c("arsenic", "lead", "cadmium")
-f = ycat ~ arsenic + lead + cadmium + mage35 # the multinomial model (be sure that factor variables are properly coded ahead of time in the dataset)
+f0 = ycat ~ arsenic + lead + cadmium # the multinomial model 
+# (be sure that factor variables are properly coded ahead of time in the dataset)
 qdat <- quantize(smallmetals, mixture, q=4)$data
 mod <- msm_multinomial_fit(f,
         expnms = mixture, qdata=qdat, intvals=1:4, bayes=FALSE)
