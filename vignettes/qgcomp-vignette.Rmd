@@ -786,7 +786,7 @@ rr2 = qgcomp.multinomial.boot(
 summary(rr)
 summary(rr2) # differs from `rr` primarily due to low `MCSize` value
 
-plot(rr)
+# plot(rr) # This works, but it causes an issue in Windows with vignette building for this document
 #plot(rr2) # not yet functional
 ```
 
