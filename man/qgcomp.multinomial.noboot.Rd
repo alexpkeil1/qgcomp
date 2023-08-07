@@ -75,7 +75,7 @@ f0 = ycat ~ arsenic + lead + cadmium # the multinomial model
 # (be sure that factor variables are properly coded ahead of time in the dataset)
 
 rr = qgcomp.multinomial.noboot(
- f, 
+ f0, 
  expnms = mixture,
  q=4, 
  data = smallmetals, 

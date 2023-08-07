@@ -325,7 +325,7 @@ print.qgcompmulttest <- function(x,...){
 #' # (be sure that factor variables are properly coded ahead of time in the dataset)
 #' 
 #' rr = qgcomp.multinomial.noboot(
-#'  f, 
+#'  f0, 
 #'  expnms = mixture,
 #'  q=4, 
 #'  data = smallmetals, 
@@ -538,7 +538,7 @@ msm_multinomial_fit <- function(f,
   #' f0 = ycat ~ arsenic + lead + cadmium # the multinomial model 
   #' # (be sure that factor variables are properly coded ahead of time in the dataset)
   #' qdat <- quantize(smallmetals, mixture, q=4)$data
-  #' mod <- msm_multinomial_fit(f,
+  #' mod <- msm_multinomial_fit(f0,
   #'         expnms = mixture, qdata=qdat, intvals=1:4, bayes=FALSE)
   #' summary(mod$fit) # outcome regression model
   #' summary(mod$msmfit) # msm fit (variance not valid - must be obtained via bootstrap)
