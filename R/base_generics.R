@@ -126,7 +126,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   }
   if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
     testtype = "Z"
-    rnm = c(paste0('psi',1:max(1, length(coef(object)))))
+    rnm = c(paste0('psi',1:max(1, length(coef(x)))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }

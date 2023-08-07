@@ -516,8 +516,17 @@ plot.qgcompfit <- function(x,
 }
 
 
+#' @export
+#' @describeIn plot.qgcompfit
 plot.qgcompmultfit <- function(
-    x
+    x,                           
+    suppressprint=FALSE, 
+    pointwisebars=TRUE, 
+    modelfitline=TRUE, 
+    modelband=TRUE, 
+    flexfit=TRUE, 
+    pointwiseref = ceiling(x$q/2),
+    ...
 ){
   if(x$bootstrap){
     warning("The default plot function is only functional for qgcomp.multinomial.noboot currently")
