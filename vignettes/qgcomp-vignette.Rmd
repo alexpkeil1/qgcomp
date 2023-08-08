@@ -751,7 +751,6 @@ Here are results for the non-essential metals:
 As shown from these results, the essential metals and minerals demonstrate an overall positive joint association with the outcome (controlling for non-essentials), whereas the partial effect of non-essential metals and minerals is close to null. This is close to the interpretation of the data adaptive selection of partial effects demonstrated above, but is much more interpretable in terms of how we might intervene (e.g. increase consumption of foods that are higher in essential metals and minerals).
 
 ### Example 10: multinomial outcomes
-For outcomes modeled as 3+ discrete categories, qgcomp joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category.
 
 First, we'll bring in data and create a multinomial outcome.
 
