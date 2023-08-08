@@ -39,9 +39,11 @@ Suggests:
     knitr,
     markdown,
     MASS,
-    mice
+    mice,
+    rmarkdown
 VignetteBuilder: 
-    knitr
+    knitr,
+    rmarkdown
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
