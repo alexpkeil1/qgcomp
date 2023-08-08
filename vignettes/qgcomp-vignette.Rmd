@@ -752,7 +752,6 @@ As shown from these results, the essential metals and minerals demonstrate an ov
 
 ### Example 10: multinomial outcomes
 
-The `qgcomp` package utilizes `multinom` from the `nnet` package in an analogous fashion to how `glm` is used. The joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category. Some (but not all) of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more functionality will be available in the future.
   
 ```{r mnom, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 data("metals") # from qgcomp package
