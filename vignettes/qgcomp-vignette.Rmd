@@ -752,8 +752,8 @@ As shown from these results, the essential metals and minerals demonstrate an ov
 
 ### Example 10: multinomial outcomes
 
-  
-```{r mnom, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
+To model multinomial outcomes, `qgcomp` package utilizes `multinom` from the `nnet` package. The joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category. Some of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more functionality will be available in the future.
+```{r multinomial, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 data("metals") # from qgcomp package
 # create categorical outcome from the existing continuous outcome (usually, one will already exist)
 metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "3"), labels=c("cct", "ccg", "aat", "aag")) 
