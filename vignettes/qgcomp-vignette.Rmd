@@ -751,22 +751,25 @@ Here are results for the non-essential metals:
 As shown from these results, the essential metals and minerals demonstrate an overall positive joint association with the outcome (controlling for non-essentials), whereas the partial effect of non-essential metals and minerals is close to null. This is close to the interpretation of the data adaptive selection of partial effects demonstrated above, but is much more interpretable in terms of how we might intervene (e.g. increase consumption of foods that are higher in essential metals and minerals).
 
 ### Example 10: multinomial outcomes
+First, we'll bring in data and create a multinomial outcome.
 
-To model multinomial outcomes, `qgcomp` package utilizes `multinom` from the `nnet` package. The joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category. Some of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more functionality will be available in the future.
 ```{r multinomial, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 data("metals") # from qgcomp package
 # create categorical outcome from the existing continuous outcome (usually, one will already exist)
 metals$ycat = factor(quantize(metals, "y",q=4)$data$y, levels=c("0", "1", "2", "3"), labels=c("cct", "ccg", "aat", "aag")) 
 # restrict to smaller dataset for simplicity
 smallmetals = metals[,c("ycat", "arsenic", "lead", "cadmium", "mage35")]
+```
+
+To model multinomial outcomes, `qgcomp` package utilizes `multinom` from the `nnet` package. The joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category. 
+```{r multinomial-2, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 
 ### 1: Define mixture and underlying model ####
 mixture = c("arsenic", "lead", "cadmium")
-f1 = ycat ~ arsenic + lead + cadmium 
 f2 = ycat ~ arsenic + lead + cadmium + mage35
 
 rr = qgcomp.multinomial.noboot(
- f1, 
+ f2, 
  expnms = mixture,
  q=4, 
  data = smallmetals, 
@@ -774,7 +777,7 @@ rr = qgcomp.multinomial.noboot(
 
 
 rr2 = qgcomp.multinomial.boot(
- f1, 
+ f2, 
  expnms = mixture,
  q=4, 
  data = smallmetals, 
@@ -788,6 +791,7 @@ summary(rr2) # differs from `rr` primarily due to low `MCSize` value
  plot(rr) 
 #plot(rr2) # not yet functional
 ```
+Some of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more functionality will be available in the future.
 
 ## Missing data, limits of detection and multiple imputation
 When carrying out data analysis using quantile g-computation, on can address missing data in much the same way as in standard regression analyses. A common approach is complete case analysis. While regression functions in R will automatically carry out complete case analyses when variables take on the value `NA` (denoting missingness in R), when using quantile g-computation it is encouraged that one explicitly create the complete case dataset explicitly and use that complete case dataset. Using the pre-installed R packages, this can be accomplished with the `complete.cases` function. 
