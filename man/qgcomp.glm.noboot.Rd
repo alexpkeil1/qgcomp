@@ -3,9 +3,23 @@
 \name{qgcomp.glm.noboot}
 \alias{qgcomp.glm.noboot}
 \alias{gcomp.noboot}
+\alias{qgcomp.noboot}
 \title{Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
 \usage{
 qgcomp.glm.noboot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  weights,
+  alpha = 0.05,
+  bayes = FALSE,
+  ...
+)
+
+qgcomp.noboot(
   f,
   data,
   expnms = NULL,

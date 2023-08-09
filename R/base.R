@@ -941,10 +941,10 @@ msm.predict <- function(object, newdata=NULL){
   return(pred)
 }
 
+#' @rdname qgcomp.glm.boot
 #' @export
-#' @inherit qgcomp.glm.boot
 qgcomp.boot <- qgcomp.glm.boot
 
+#' @rdname qgcomp.glm.noboot
 #' @export
-#' @inherit qgcomp.glm.boot
 qgcomp.noboot <- qgcomp.glm.noboot

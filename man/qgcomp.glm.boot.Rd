@@ -3,9 +3,30 @@
 \name{qgcomp.glm.boot}
 \alias{qgcomp.glm.boot}
 \alias{gcomp.boot}
+\alias{qgcomp.boot}
 \title{Quantile g-computation for continuous and binary outcomes}
 \usage{
 qgcomp.glm.boot(
+  f,
+  data,
+  expnms = NULL,
+  q = 4,
+  breaks = NULL,
+  id = NULL,
+  weights,
+  alpha = 0.05,
+  B = 200,
+  rr = TRUE,
+  degree = 1,
+  seed = NULL,
+  bayes = FALSE,
+  MCsize = nrow(data),
+  parallel = FALSE,
+  parplan = FALSE,
+  ...
+)
+
+qgcomp.boot(
   f,
   data,
   expnms = NULL,
