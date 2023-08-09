@@ -49,7 +49,7 @@ anova.qgcompfit <- function(object, ...){
   anova(object$fit)
 }
 
-confint.qgcompfit <- function(object, level=0.95, ...){
+confint.qgcompfit <- function(object, parm, level=0.95, ...){
   #' @importFrom stats confint
   #' @export
   est = coef(object)
