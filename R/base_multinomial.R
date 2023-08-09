@@ -230,27 +230,19 @@ joint_test.qgcompmultfit <- function(x,...){
 # generic printing/summary functions ####
 #----------------------------------------------------------------#
 
-#' @importFrom stats coef
-#' @export
-coef.qgcompmultfit <- function(object,...){
-  object$coef
+anova.qgcompmultfit <- function(object, ...){
+  #' @importFrom stats anova
+  #' @export
+  warning("anova not implemented for this model")
 }
 
-#' @importFrom stats vcov
-#' @export
-vcov.qgcompmultfit  <- function(object,...){
-  object$covmat.coef
+df.residual.qgcompfit <- function(object, ...){
+  #' @importFrom stats df.residual
+  #' @export
+  warning("df.residual not implemented for this model")
 }
 
-#' @importFrom stats confint
-#' @export
-confint.qgcompmultfit <- function(object, parm="psi", level = 0.95, ...){
-  if(parm != "psi") stop("Only psi is supported by this function, try confint(object$fit)")
-  est = object$psi
-  se = sqrt(diag(object$covmat.psi))
-  zcrit = qnorm(c((1-level)/2, 1-(1-level)/2))
-  list(lower=est + zcrit[1]*se, upper=est + zcrit[2]*se)
-}
+
 
 #' @export
 print.qgcompmultfit <- function(x, ...){
@@ -269,8 +261,8 @@ print.qgcompmultfit <- function(x, ...){
   #print(qgcompobj$coeftable)
   coeftable = cbind(Estimate=x$coef, 
                     `Std. Error`=sqrt(x$var.coef), 
-                    `Lower CI`=x$ci[,1], 
-                    `Upper CI`=x$ci[,2], 
+                    `Lower CI`=x$ci.coef[,1], 
+                    `Upper CI`=x$ci.coef[,2], 
                     `Z value`=x$Z, 
                     `Pr(>|Z|)` = x$pvalues) 
   printCoefmat(coeftable)

@@ -6,6 +6,13 @@ coef.qgcompfit <- function(object, ...){
   object$coef
 }
 
+deviance.qgcompfit <- function(object, ...){
+  #' @importFrom stats deviance
+  #' @export
+  object$fit$deviance
+}
+
+
 df.residual.qgcompfit <- function(object, ...){
   #' @importFrom stats df.residual
   #' @export
@@ -37,20 +44,18 @@ logLik.qgcompfit <- function(object, ...){
 }
 
 anova.qgcompfit <- function(object, ...){
-  #' @importFrom stats confint
-  #' @export
-  anova(object$fit)
-}
-
-confint.qgcompfit <- function(object, ...){
   #' @importFrom stats anova
   #' @export
-  message("not yet implemented")
   anova(object$fit)
 }
 
-
-
+confint.qgcompfit <- function(object, level=0.95, ...){
+  #' @importFrom stats confint
+  #' @export
+  est = coef(object)
+  se = sqrt(diag(vcov(object)))
+  cbind(lower = est+se*qnorm((1-level)/2), upper = est+se*qnorm(1-(1-level)/2))
+}
 
 print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' @title Default printing method for a qgcompfit object
