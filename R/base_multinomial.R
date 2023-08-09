@@ -2,7 +2,16 @@
 # Helper functions for qgcomp with multinomial outcome ####
 #----------------------------------------------------------------#
 
-flatten <- function(xm, nm="value"){
+
+.get_baseline_prob_multinom <- function(x){
+  cf = coef(x)
+  ints = grep("[Ii]ntercept", names(cf))
+  baseprob = 1/(sum(exp(cf[ints]))-1)
+  baseprob
+}
+
+
+.flatten <- function(xm, nm="value"){
   xx = dimnames(xm)
   stodf = expand.grid(xx[[1]],xx[[2]])
   rownames(stodf) = paste(stodf$Var1, stodf$Var2, sep =".")
@@ -14,7 +23,7 @@ flatten <- function(xm, nm="value"){
 }
 
 
-psiest_qgcomp_multi <- function(
+.psiest_qgcomp_multi <- function(
     ufit, 
     expnms
 ){
@@ -23,7 +32,7 @@ psiest_qgcomp_multi <- function(
   psi
 }
 
-partialpsiest_qgcomp_multi <- function(
+.partialpsiest_qgcomp_multi <- function(
     ufit, 
     expnms
 ){
@@ -36,7 +45,7 @@ partialpsiest_qgcomp_multi <- function(
 }
 
 
-vcov_qgcomp_multi <- function(
+.vcov_qgcomp_multi <- function(
     ufit, 
     expnms
 ){
@@ -62,7 +71,10 @@ vcov_qgcomp_multi <- function(
   psi_vcov
 }
 
-calc_qgcomp_weights <- function(
+
+
+
+.calc_qgcomp_weights <- function(
     ufit, 
     expnms
 ){
@@ -170,16 +182,19 @@ joint_test.qgcompmultfit <- function(x,...){
 # generic printing/summary functions ####
 #----------------------------------------------------------------#
 
+#' @importFrom stats coef
 #' @export
 coef.qgcompmultfit <- function(object,...){
-  object$psi
+  object$coef
 }
 
+#' @importFrom stats vcov
 #' @export
 vcov.qgcompmultfit  <- function(object,...){
-  object$covmat.psi
+  object$covmat.coef
 }
 
+#' @importFrom stats confint
 #' @export
 confint.qgcompmultfit <- function(object, parm="psi", level = 0.95, ...){
   if(parm != "psi") stop("Only psi is supported by this function, try confint(object$fit)")
@@ -199,7 +214,7 @@ print.qgcompmultfit <- function(x, ...){
     cat("Partial effects (negative)\n")
     print(x$partial_psi$negative_psi)
   }
-  if(x$bootstrap)
+  if(!x$bootstrap)
     cat("\nMixture slope parameters (Standard CI):\n")
   if(x$bootstrap)
     cat("\nMixture slope parameters (Bootstrap CI):\n")
@@ -234,7 +249,7 @@ summary.qgcompmultfit <- function(object, ..., tests=NULL){
     print(object$partial_psi$negative_psi)
   }
   
-  if(object$bootstrap)
+  if(!object$bootstrap)
     cat("\nMixture slope parameters (Standard CI):\n")
   if(object$bootstrap)
     cat("\nMixture slope parameters (Bootstrap CI):\n")
@@ -415,18 +430,19 @@ qgcomp.multinomial.noboot <- function(f,
   #         ")
   #}
   
-  psi = psiest_qgcomp_multi(fit, expnms)
-  partpsi = partialpsiest_qgcomp_multi(fit, expnms)
+  psi = .psiest_qgcomp_multi(fit, expnms)
+  partpsi = .partialpsiest_qgcomp_multi(fit, expnms)
   #
-  psi_vcov = vcov_qgcomp_multi(fit, expnms)
+  psi_vcov = .vcov_qgcomp_multi(fit, expnms)
+  coef_vcov = .vcov_qgcomp_multi_coef(fit, expnms)
   #
-  qgcweights <- calc_qgcomp_weights(fit,expnms)
+  qgcweights <- .calc_qgcomp_weights(fit,expnms)
   coeftable = cbind(`(Intercept)`=coef(fit)[,1], psi=psi)
   labs = fit$lab
   reflabs = labs[2:length(fit$lab)]
   stderrs = sqrt(cbind(`(Intercept)`=as.numeric(diag(vcov(fit)[paste0(reflabs, ":(Intercept)"),paste0(reflabs, ":(Intercept)")])), psi=diag(psi_vcov)))
-  estb = flatten(coeftable)
-  seb = flatten(stderrs)
+  estb = .flatten(coeftable)
+  seb = .flatten(stderrs)
   Z = estb / seb
   psiidx = which(!grepl("[Ii]ntercept", names(estb)))
   ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
@@ -434,7 +450,8 @@ qgcomp.multinomial.noboot <- function(f,
   #qgcompobj = list(
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
-  qgcompobj = .qgcomp_object(
+  fit$family = multinom_family()
+  qgcompobj = .qgcompmult_object(
     qx = qx,
     fit = fit,
     labs = labs,
@@ -446,7 +463,7 @@ qgcomp.multinomial.noboot <- function(f,
     #
     coef = estb,
     var.coef=seb^2,
-    # covmat.coef
+    covmat.coef = coef_vcov,
     ci.coef = ci,
     zstat = Z,
     pval = pnorm(abs(Z), lower.tail=FALSE)*2,
@@ -459,7 +476,6 @@ qgcomp.multinomial.noboot <- function(f,
     hasintercept=hasintercept,
     bootstrap=FALSE
   )
-  attr(qgcompobj, "class") <- c("qgcompmultfit", "qgcompfit", "list")
   qgcompobj
 }
 
@@ -978,10 +994,10 @@ qgcomp.multinomial.boot <- function(
                         ...)
   }
   # bootstrap samples of marginal class probabilities
-  hats = do.call("rbind", lapply(bootsamps, function(x) flatten(x$margpreds, "pred")))
+  hats = do.call("rbind", lapply(bootsamps, function(x) .flatten(x$margpreds, "pred")))
   # bootstrap samples of coefficients
-  tcoef = do.call("rbind", lapply(bootsamps, function(x) flatten(x$cf, "coef")))
-  estb = flatten(estb, "coef")
+  tcoef = do.call("rbind", lapply(bootsamps, function(x) .flatten(x$cf, "coef")))
+  estb = .flatten(estb, "coef")
   psiidx = which(!grepl("[Ii]ntercept", names(estb)))
   cov.yhat = cov(hats)
   seb <- apply(tcoef, 2, sd)

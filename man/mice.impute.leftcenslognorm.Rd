@@ -2,6 +2,7 @@
 % Please edit documentation in R/base_extensions.R
 \name{mice.impute.leftcenslognorm}
 \alias{mice.impute.leftcenslognorm}
+\alias{mice.impute.tobit}
 \title{Imputation for limits of detection problems}
 \usage{
 mice.impute.leftcenslognorm(
@@ -13,6 +14,8 @@ mice.impute.leftcenslognorm(
   debug = FALSE,
   ...
 )
+
+mice.impute.tobit(y, ry, x, wy = NULL, lod = NULL, debug = FALSE, ...)
 }
 \arguments{
 \item{y}{Vector to be imputed}
@@ -34,7 +37,7 @@ Vector with imputed data, same type as y, and of length sum(wy)
 }
 \description{
 This function integrates with \code{\link[mice]{mice}} to impute values below the LOD using a left
-censored log-normal distribution.
+censored log-normal distribution. Note that "tobit" is an alias that uses a familiar term for this model.
 }
 \details{
 While this function has utility far beyond qgcomp,
@@ -110,11 +113,26 @@ library(ggplot2)
 ggplot(data=expwts)+ theme_classic() +
   geom_point(aes(x=Exposure, y=Weight)) +
   geom_hline(aes(yintercept=0))
+  
+# this function can be used to impute from an intercept only model
+# but you need to "trick" mice to bypass checks for collinearity by including
+# a variable that does not need to have values imputed (here, y).
+# The internal collinearity checks by the mice package remove collinear variables
+# and then throws an error if no predictor variabls are retained. Here, the 
+# trick is to use the "predictorMatrix" parameter to "impute" the non-missing
+# variable y using x1 (which does nothing), and remove all predictors from the model for x1.
+# This function only imputes x1 from a log normal distribution.
 
+impdat2 = mice(data = mdat[,c("y","x1")],
+  method = c("", "tobit"), remove.collinear=FALSE,
+  lod=c(NA, 0.5), debug=FALSE, m=1, 
+  maxit=1, # maxit=1 because there is only 1 variable to impute
+  predictorMatrix = as.matrix(rbind(c(0,1), c(0,0))))
+plot(density(complete(impdat2, 1)$x1))
 
 # now with survival data (very similar)
 impdat = mice(data = mdat,
-  method = c("", "leftcenslognorm", "leftcenslognorm", ""),
+  method = c("", "tobit", "tobit", ""),
   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
 qc.fit.imp <- list(
   call = call("qgcomp.cox.noboot(Surv(y)~., expnms = c('x1', 'x2'))"),

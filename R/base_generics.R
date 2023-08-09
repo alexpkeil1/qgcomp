@@ -6,13 +6,11 @@ coef.qgcompfit <- function(object, ...){
   object$coef
 }
 
-
 df.residual.qgcompfit <- function(object, ...){
   #' @importFrom stats df.residual
   #' @export
   object$fit$df.residual
 }
-
 
 vcov.qgcompfit <- function(object, ...){
   #' @importFrom stats vcov

@@ -42,6 +42,12 @@ zi <- function(){
   obj
 }
 
+# fake multinomial family function
+multinom_family <- function(){
+  obj = binomial(link="log")
+  obj$family="multinomial"
+  obj
+}
 
 
 se_comb <- function(expnms, covmat, grad=NULL){
@@ -297,3 +303,8 @@ checknames <- function(terms){
   res
 }
 
+.qgcompmult_object <- function(...){
+  res = .qgcomp_object(...)
+  attr(res, "class") <- c("qgcompmultfit", attr(res, "class"))
+  res
+}

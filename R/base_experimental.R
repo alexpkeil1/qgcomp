@@ -1,3 +1,57 @@
+.vcov_qgcomp_multi_coef <- function(
+    ufit, 
+    expnms
+){
+  
+  labs = ufit$lab
+  reflabs = labs[2:length(labs)]
+  intlabs = paste0(reflabs,":(Intercept)")
+  psilabs = paste0(reflabs,":psi")
+  matlabs = c(intlabs, psilabs)
+  nlevels = length(reflabs)
+  nentries = length(matlabs)
+  uvcov = vcov(ufit)
+  coef_vcov = matrix(NA, nentries, nentries, dimnames=list(matlabs, matlabs))
+  psi_vcov = matrix(NA, nlevels, nlevels, dimnames=list(reflabs, reflabs))
+  #psi_vcov = 
+  inames = paste0(reflabs,":(Intercept)")
+  psinames = paste0(reflabs,":psi")
+  for(i in 1:(nlevels)){
+    xnames = paste0(reflabs[i],":", expnms)
+    iname = inames[i]
+    psiname = psinames[i]
+    weightvec <- rep(0, dim(uvcov)[1])
+    weightvec[which(colnames(as.matrix(uvcov)) %in% xnames)] <- 1
+    
+    coef_vcov[c(iname, psiname),c(iname, psiname)] = vc_comb(aname=iname, xnames, uvcov, grad=weightvec) 
+    #psi_vcov[i, i] <- weightvec %*% uvcov %*% weightvec
+    j = 1
+    while(j<i){
+      jname = inames[j]
+      # intercepts
+      coef_vcov[iname,jname] <- coef_vcov[jname,iname] <- uvcov[iname,jname]
+      xjnames = paste0(reflabs[j],":", expnms)
+      psinamej = psinames[j]
+      weightvec <- rep(0, dim(uvcov)[1])
+      weightvec[which(colnames(as.matrix(uvcov)) %in% xjnames)] <- 1
+      # psi coefficient covariance with intercepts
+      coef_vcov[c(iname, psinamej),c(iname, psinamej)] = vc_comb(aname=iname, xjnames, uvcov, grad=weightvec) 
+      coef_vcov[c(jname, psiname),c(jname, psiname)] = vc_comb(aname=jname, xnames, uvcov, grad=weightvec) 
+      # psi coefficient covariance
+      acol = which(colnames(as.matrix(uvcov)) %in% xnames)
+      bcol = which(colnames(as.matrix(uvcov)) %in% xjnames)
+      coef_vcov[psiname, psinamej] <- coef_vcov[psinamej, psiname] <- sum(uvcov[acol, bcol])
+      j = j+1
+    }
+  }
+  coef_vcov
+}
+
+
+
+
+
+
 .devinstall <- function(...){
   .qgc.require("devtools")
   devtools::install_github("alexpkeil1/qgcomp",...)
@@ -304,85 +358,8 @@ qgcomp.cch.noboot <- function(f, data, subcoh=NULL, id=NULL, cohort.size=NULL, e
 }
 
 
-# candidate for replacing original function
-mice.impute.leftcenslognorm2 <- function(y, ry, x, wy = NULL, lod = NULL, debug=FALSE, ...){
-  whichvar = eval(as.name("j"), parent.frame(n = 2))
-  nms = names(eval(as.name("data"), parent.frame(n = 3)))
-  j = which(nms == whichvar)
-  islist = is.list(lod)
-  if (islist){
-    lens = do.call("c", lapply(lod, length))
-    alleqs = length(unique( c(lens, length(y))))==1
-    if (!alleqs) stop("Length of LOD vectors do not match each other or do not match the length of y")
-  }
-  # start
-  N = length(y)
-  if(is.null(lod)) {
-    jlod = min(y[ry])
-  } else{
-    jlod = lod[j]
-  }
-  
-  if (is.null(wy))
-    wy <- !ry
-  nmiss = sum(wy)
-  x <- cbind(rep(1, length(y)), as.matrix(x))
-  if(dim(x)[1]>1) 
-    x = x[,-1, drop=FALSE]
-  if (!islist) 
-    LOD = rep(jlod, N)
-  if (islist){
-    jlod = lod[[j]]
-    LOD = jlod
-  }
-  ylod = y
-  ylod[wy] = LOD[wy]
-  fit <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal',
-    control=survreg.control(), #introduced for mice v3.7.0
-    ...
-  )
-  # take a draw from the coefficients
-  draw = .rmvnorm(1, c(fit$coefficients, `Log(Scale)`=log(fit$scale)), fit$var)
-  #  get predictions under new draws
-  fit2 <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal', init=draw, control=survreg.control(maxiter=0)
-  )
-  fit2$linear.predictors[wy] = ifelse(is.na(fit2$linear.predictors[wy]), -20, fit2$linear.predictors[wy])
-  fub = plnorm(LOD[wy], fit2$linear.predictors[wy], fit2$scale)
-  # note plnorm(mu,0,1) = pnorm(log(mu), 0, 1)
-  u <- runif(nmiss)*fub # random draw from cdf
-  #convert cdf back to normal (need to fix with highly negative predictions)
-  returny <- qlnorm(u, fit2$linear.predictors[wy], fit2$scale)
-  if(debug) {
-    dlist <- c(
-      j = j,
-      nmissing = nmiss,
-      totalN = N,
-      min_imp = min(returny),
-      max_imp = max(returny),
-      lod = jlod
-    )
-    cat("\n")
-    print(dlist)
-  }
-  if(any(is.na(returny))){
-    warning("Something happened with mice.impute.leftcenslognorm, missing values present
-            (set debug=TRUE to see intermediate values)")
-    if(debug) {
-      print(c("j"=j))
-      print(c("nms"=nms))
-      print(c("fub"=fub))
-      print(c("lod"=lod))
-      print(c("jlod"=jlod))
-      ck = data.frame(returny=returny,
-                      u=u,
-                      linear.predictors=fit2$linear.predictors[wy],
-                      scale = rep(fit2$scale, length(u)))
-      print(ck[which(is.na(returny)),])
-    }
-  }
-  returny
-}
+
+
+
+
+
