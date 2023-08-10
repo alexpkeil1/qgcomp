@@ -3,9 +3,10 @@
 
 [![R-CMD-check](https://github.com/alexpkeil1/qgcomp/workflows/R-CMD-check/badge.svg)](https://github.com/alexpkeil1/qgcomp/actions) [![](https://www.r-pkg.org:443/badges/version/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp) [![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp) [![codecov](https://codecov.io/gh/alexpkeil1/qgcomp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/alexpkeil1/qgcomp) [![CodeFactor](https://www.codefactor.io/repository/github/alexpkeil1/qgcomp/badge)](https://www.codefactor.io/repository/github/alexpkeil1/qgcomp)
 
-#### QGcomp (quantile g-computation): estimating the effects of exposure mixtures. Works for continuous, binary, and right-censored survival outcomes.
+#### QGcomp (quantile g-computation): estimating the effects of exposure mixtures. Works for continuous, binary, multinomial, and right-censored survival outcomes.
 
 #### Flexible, unconstrained, fast and guided by modern causal inference principles
+<center><img src="inst/fig/fighex.png" alt="" width="100"/></center>
 
 ### Quick start
     # install developers version (requires devtools)
@@ -177,4 +178,6 @@
 See the vignette which is included with the `qgcomp` R package, and is accessible in 
 R via `vignette("qgcomp-vignette", package="qgcomp")`
 
-<center><img src="inst/fig/fighex.png" alt="" width="100"/></center>
+Read the original paper: [Keil et al. A quantile-based g-computation approach to
+    addressing the effects of exposure mixtures. Env Health Persp. 2019; 128(4)](https://doi.org/10.1289/EHP5838)
+
