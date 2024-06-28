@@ -80,7 +80,7 @@ se_comb <- function(expnms, covmat, grad=NULL){
   #' @param grad the "weight" vector for calculating the contribution of each variable
   #' in expnms to the final standard error. For a linear combination, this is equal
   #' to a vector of ones (and is set automatically). Or can be calculated via the
-  #' grad.poly procedure, in the case of coming up with proper weights when the combination
+  #' grad_poly procedure, in the case of coming up with proper weights when the combination
   #' of expnms derives from a polynomial function (as in qgcomp.glm.boot with degree>1).
   #'
   #' @export
@@ -178,7 +178,8 @@ vc_comb <- function(aname="(Intercept)", expnms, covmat, grad=NULL){
 }
 
 
-grad.poly <- function(intvals, degree){
+grad_poly <- function(intvals, degree){
+  #' @import stats
   # returns matrix with each column referring
   if(degree==1){
     mat <- matrix(1, nrow=length(intvals), ncol=1)

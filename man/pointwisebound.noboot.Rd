@@ -45,7 +45,8 @@ then it is advisable to set the referent levels of W to meaningful values. This
 can be done by, e.g. centering continuous age so that the predictions are made
 at the population mean age, rather than age 0.
 
-Note that function only works with standard "qgcompfit" objects from \code{qgcomp.glm.noboot} (so it doesn't work
+Note that function only works with standard "qgcompfit" objects from \code{qgcomp.glm.noboot}
+or \code{qgcomp.glm.ee} (so it doesn't work
 with zero inflated, hurdle, or Cox models)
 
 Variance for the overall effect estimate is given by:

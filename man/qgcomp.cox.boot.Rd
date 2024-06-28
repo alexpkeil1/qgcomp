@@ -44,8 +44,8 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.cox.noboot will not produce cluster-appropriate
+standard errors. qgcomp.cox.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -78,7 +78,7 @@ is quadratic.}
 
 \item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)}
 
-\item{...}{arguments to glm (e.g. family)}
+\item{...}{arguments to coxph}
 }
 \value{
 a qgcompfit object, which contains information about the effect
@@ -152,6 +152,7 @@ Other qgcomp_methods:
 \code{\link{qgcomp.cch.noboot}()},
 \code{\link{qgcomp.cox.noboot}()},
 \code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.ee}()},
 \code{\link{qgcomp.glm.noboot}()},
 \code{\link{qgcomp.hurdle.boot}()},
 \code{\link{qgcomp.hurdle.noboot}()},

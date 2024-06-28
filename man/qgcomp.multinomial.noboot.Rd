@@ -36,9 +36,9 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-standard errors (this parameter is essentially ignored in qgcomp.glm.noboot).
-qgcomp.glm.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.multinomial.noboot will not produce cluster-appropriate
+standard errors (this parameter is essentially ignored in qgcomp.multinomial.noboot).
+qgcomp.qgcomp.multinomial.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
@@ -100,6 +100,7 @@ Other qgcomp_methods:
 \code{\link{qgcomp.cox.boot}()},
 \code{\link{qgcomp.cox.noboot}()},
 \code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.ee}()},
 \code{\link{qgcomp.glm.noboot}()},
 \code{\link{qgcomp.hurdle.boot}()},
 \code{\link{qgcomp.hurdle.noboot}()},

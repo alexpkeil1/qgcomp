@@ -6,6 +6,12 @@ coef.qgcompfit <- function(object, ...){
   object$coef
 }
 
+coef.eefit <- function(object, ...){
+  #' @importFrom stats coef
+  #' @export
+  object$est
+}
+
 deviance.qgcompfit <- function(object, ...){
   #' @importFrom stats deviance
   #' @export
@@ -28,24 +34,28 @@ vcov.qgcompfit <- function(object, ...){
 AIC.qgcompfit <- function(object, ...){
   #' @importFrom stats AIC
   #' @export
+  if(!is.null(object$bread)) stop("Calculation not available for estimating equation methods")
   AIC(object$fit)
 }
 
 BIC.qgcompfit <- function(object, ...){
   #' @importFrom stats BIC
   #' @export
+  if(!is.null(object$bread)) stop("Calculation not available for estimating equation methods")
   BIC(object$fit)
 }
 
 logLik.qgcompfit <- function(object, ...){
   #' @importFrom stats logLik
   #' @export
+  if(!is.null(object$bread)) stop("Calculation not available for estimating equation methods")
   logLik(object$fit)
 }
 
 anova.qgcompfit <- function(object, ...){
   #' @importFrom stats anova
   #' @export
+  if(!is.null(object$bread)) stop("Calculation not available for estimating equation methods")
   anova(object$fit)
 }
 
@@ -106,28 +116,28 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     } else cat("None\n")
     cat("\n")
   }
-  if (fam == "binomial"){
+  if (fam %in% c("binomial", "quasibinomial")){
     estimand <- 'OR'
     if(x$bootstrap && x$msmfit$family$link=='log') estimand = 'RR'
-    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
   }
-  if (fam == "poisson"){
+  if (fam %in% c("poisson", "quasipoisson")){
     #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
-    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
   }
-  if (fam == "gaussian"){
-    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+  if (fam %in% c("gaussian", "inverse.gaussian")){
+    cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "t"
     x$zstat = x$tstat
   }
   if (fam %in% c("cox", "cch")){
-    cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
   }
-  if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
+  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian"))){
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(x)))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
@@ -153,31 +163,31 @@ summary.qgcompfit <- function(object, ...){
     res = summaryZI(object)
     return(res)
   }
-  if (fam == "binomial"){
+  if (fam %in% c("binomial", "quasibinomial")){
     estimand <- 'OR'
     if(object$bootstrap && object$msmfit$family$link=='log') estimand = 'RR'
-    cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
   }
-  if (fam == "poisson"){
+  if (fam %in% c("poisson", "quasipoisson")){
     #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
-    cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
   }
-  if (fam == "gaussian"){
-    cat(paste0("Mixture slope parameters", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+  if (fam %in% c("gaussian", "inverse.gaussian")){
+    cat(paste0("Mixture slope parameters", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "t"
     rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
   }
   if (fam %in% c("cox", "cch")){
-    cat(paste0("Mixture log(hazard ratio)", ifelse(object$bootstrap, " (bootstrap CI)", " (Delta method CI)"), ":\n\n"))
+    cat(paste0("Mixture log(hazard ratio)", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(object)))))
   }
-  if (!(fam %in% c("poisson", "binomial", "cox", "cch", "gaussian"))){
+  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian"))){
     # in development: quasipoisson, Gamma, quasi, quasibinomial, inverse.gaussian
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(object)))))
@@ -248,5 +258,70 @@ predict.qgcompfit <- function(object, expnms=NULL, newdata=NULL, type="response"
   return(pred)
 }
 
+predict.eefit <- function(object, expnms=NULL, newdata=NULL, type=c("response", "link"), ...){
+  #' @export
+  if(is.null(object$X)){
+    stop("IncludeX must be TRUE in the call to qgcomp.glm.ee")
+  }
+  if(type[1]=="response"){
+    afun = object$family$linkinv
+  } else{
+    afun = function(a) a
+  }
+  if(is.null(newdata)){
+    pred <- afun(object$X %*% object$est)
+  }
+  if(!is.null(newdata)){
+    if(is.null(expnms[1])) expnms = object$expnms # testing
+    newqdata <- quantize(newdata, expnms, q=NULL, object$breaks)$data
+    X = model.matrix(object$formula, newqdata)
+    pred <- afun(object$X %*% object$est)
+  }
+  return(pred)
+}
 
+vcov.eefit <- function(object,...){
+  #' @export
+  object$vcov
+}
+
+coef.eefit <- function(object,...){
+  #' @export
+  object$est
+}
+
+confint.eefit <- function(object, parm, level=0.95, ...){
+  #' @export
+  est = coef(object)
+  std = sqrt(diag(vcov(object)))
+  critval = qnorm(c((1-level)/2, 1-(1-level)/2))
+  res = cbind(est + critval[1]*std, est + critval[2]*std)
+  colnames(res) <- paste(100*c((1-level)/2, 1-(1-level)/2), "%")
+  res
+}
+
+ztest.eefit <- function(object, parm, level=0.95, ...){
+  est = coef(object)
+  std = sqrt(diag(vcov(object)))
+  critval = qnorm(1-(1-level)/2)
+  z = (est/std)
+  p = 2*(1-pnorm(abs(z), lower.tail = TRUE))
+  res = cbind(z,p)
+  colnames(res) <- c("Z", "p(>Z)")
+  res
+}
+
+print.eefit <- function(x, ...){
+  #' @export
+  ci = confint(x, ...)
+  zp = ztest.eefit(x, ...)
+  pdat <- cbind(Estimate=coef(x), "Std. Error"=sqrt(diag(vcov(x))), "Lower CI"=ci[,1], "Upper CI"=ci[,2], "test"=zp[,1], "pval"=zp[,2])
+  testtype = "Z"
+  plab = ifelse(testtype=="Z", "Pr(>|z|)", "Pr(>|t|)")
+  colnames(pdat)[which(colnames(pdat)=="test")] = eval(paste(testtype, "value"))
+  colnames(pdat)[which(colnames(pdat)=="pval")] = eval(paste(plab))
+  rownames(pdat) <- names(coef(x))
+  printCoefmat(pdat,has.Pvalue=TRUE,tst.ind=5L,signif.stars=FALSE, cs.ind=1L:2)
+  invisible(x)
+}
 

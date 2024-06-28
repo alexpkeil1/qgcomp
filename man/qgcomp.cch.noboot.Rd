@@ -101,6 +101,7 @@ Other qgcomp_methods:
 \code{\link{qgcomp.cox.boot}()},
 \code{\link{qgcomp.cox.noboot}()},
 \code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.ee}()},
 \code{\link{qgcomp.glm.noboot}()},
 \code{\link{qgcomp.hurdle.boot}()},
 \code{\link{qgcomp.hurdle.noboot}()},

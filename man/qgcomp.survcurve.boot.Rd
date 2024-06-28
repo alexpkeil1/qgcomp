@@ -13,16 +13,11 @@ qgcomp.survcurve.boot(x, ...)
 }
 \value{
 a list of data.frames:
-#'  \itemize{
-\item{'mdfpop': }{Average Survival curve (survival, time) based on
-marginal structural model, averaged over the population at every quantile
-of exposure}
-\item{'cdfpop': }{Population average survival curve (survival, time) based on
-the underlying conditional model}
-\item{'mdfq': }{Survival curves (survival, time) for each quantile
-based on marginal structural model}
-\item{'cdfq': }{Survival curves (survival, time) for each quantile
-based on underlying conditional model}
+\itemize{
+\item \strong{mdfpop}: Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure
+\item \strong{cdfpop}: Population average survival curve (survival, time) based on the underlying conditional model
+\item \strong{mdfq}: Survival curves (survival, time) for each quantile based on marginal structural model
+\item \strong{cdfq}: Survival curves (survival, time) for each quantile based on underlying conditional model
 }
 }
 \description{
@@ -42,7 +37,6 @@ expnms=paste0("x", 1:2)
 f = survival::Surv(time, d)~x1 + x2
 (fit1 <- survival::coxph(f, data = dat))
 (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-## Not run: 
 \dontrun{
 (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
 curves = cox.survcurve.boot(obj2)

@@ -45,7 +45,7 @@ observation (only needed if analyzing data with multiple observations per
 id/cluster)}
 
 \item{weights}{"case weights" - passed to the "weight" argument of
-\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
+\code{\link[nnet]{multinom}}}
 
 \item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results
 in penalized parameter estimation that can help with very highly correlated
@@ -60,7 +60,7 @@ error at a given value of MCsize)}
 
 \item{hasintercept}{(logical) does the model have an intercept?}
 
-\item{...}{arguments to glm (e.g. family)}
+\item{...}{arguments to nnet::multinom}
 }
 \description{
 This is an internal function called by \code{\link[qgcomp]{qgcomp.multinomial.boot}},

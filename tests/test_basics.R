@@ -11,9 +11,9 @@ colnames(COV)[1] <- c("(Intercept)")
 stopifnot(COV==qgcomp:::vc_comb(aname="(Intercept)", c("x2"), covmat=COV, grad=1.0))
 
 
-# grad.poly # anything better here?
+# grad_poly # anything better here?
 for(deg in 1:3){
-  stopifnot(all(!is.na(qgcomp:::grad.poly(intvals=c(1,2,3), degree=deg))))
+  stopifnot(all(!is.na(qgcomp:::grad_poly(intvals=c(1,2,3), degree=deg))))
 }
 
 

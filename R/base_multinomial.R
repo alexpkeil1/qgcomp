@@ -346,9 +346,9 @@ print.qgcompmulttest <- function(x,...){
 #' to define cutpoints.
 #' @param id (optional) NULL, or variable name indexing individual units of
 #' observation (only needed if analyzing data with multiple observations per
-#' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-#' standard errors (this parameter is essentially ignored in qgcomp.glm.noboot).
-#' qgcomp.glm.boot can be used for this, which will use bootstrap
+#' id/cluster). Note that qgcomp.multinomial.noboot will not produce cluster-appropriate
+#' standard errors (this parameter is essentially ignored in qgcomp.multinomial.noboot).
+#' qgcomp.qgcomp.multinomial.boot can be used for this, which will use bootstrap
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
 #' @param weights "case weights" - passed to the "weight" argument of
@@ -433,7 +433,7 @@ qgcomp.multinomial.noboot <- function(f,
     message("Including all model terms as exposures of interest\n")
   }
   lin = checknames(expnms)
-  if(!lin) stop("Model appears to be non-linear: use qgcomp.glm.boot instead")
+  if(!lin) stop("Model appears to be non-linear: use qgcomp.multinomial.boot instead")
   if (!is.null(q) | !is.null(breaks)){
     ql <- quantize(data, expnms, q, breaks)
     qdata <- ql$data
@@ -565,7 +565,7 @@ msm_multinomial_fit <- function(f,
   #' observation (only needed if analyzing data with multiple observations per
   #' id/cluster)
   #' @param weights "case weights" - passed to the "weight" argument of
-  #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
+  #' \code{\link[nnet]{multinom}}
   #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
   #' in penalized parameter estimation that can help with very highly correlated
   #' exposures. Note: this does not lead to fully Bayesian inference in general,
@@ -576,7 +576,7 @@ msm_multinomial_fit <- function(f,
   #'  linear fits with qgcomp.zi.noboot to gain some intuition for the level of expected simulation
   #'  error at a given value of MCsize)
   #' @param hasintercept (logical) does the model have an intercept?
-  #' @param ... arguments to glm (e.g. family)
+  #' @param ... arguments to nnet::multinom
   #' @seealso \code{\link[qgcomp]{qgcomp.glm.boot}}, and \code{\link[qgcomp]{qgcomp}}
   #' @concept variance mixtures
   #' @import stats arm
@@ -756,17 +756,16 @@ msm_multinomial_fit <- function(f,
 #' to define cutpoints.
 #' @param id (optional) NULL, or variable name indexing individual units of
 #' observation (only needed if analyzing data with multiple observations per
-#' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-#' standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
+#' id/cluster). Note that qgcomp.multinomial.noboot will not produce cluster-appropriate
+#' standard errors. qgcomp.multinomial.boot can be used for this, which will use bootstrap
 #' sampling of clusters/individuals to estimate cluster-appropriate standard
 #' errors via bootstrapping.
 #' @param weights "case weights" - passed to the "weight" argument of
-#' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
+#' \code{\link[nnet]{multinom}}
 #' @param alpha alpha level for confidence limit calculation
 #' @param B integer: number of bootstrap iterations (this should typically be >=200,
 #'  though it is set lower in examples to improve run-time).
-#' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
-#'   estimate risk ratio rather than odds ratio
+#' @param rr (not used)
 #' @param degree polynomial bases for marginal model (e.g. degree = 2
 #'  allows that the relationship between the whole exposure mixture and the outcome
 #'  is quadratic (default = 1).
@@ -778,12 +777,12 @@ msm_multinomial_fit <- function(f,
 #' @param MCsize integer: sample size for simulation to approximate marginal
 #'  zero inflated model parameters. This can be left small for testing, but should be as large
 #'  as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-#'  linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
+#'  linear fits with qgcomp.multinomial.noboot to gain some intuition for the level of expected simulation
 #'  error at a given value of MCsize). This likely won't matter much in linear models, but may
 #'  be important with binary or count outcomes.
 #' @param parallel use (safe) parallel processing from the future and future.apply packages
 #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
-#' @param ... arguments to glm (e.g. family)
+#' @param ... arguments to nnet::multinom
 #' @return a qgcompfit object, which contains information about the effect
 #'  measure of interest (psi) and associated variance (var.psi), as well
 #'  as information on the model fit (fit) and information on the

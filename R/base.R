@@ -405,7 +405,7 @@ qgcomp.glm.boot <- function(
 ){
 
   #' @title Quantile g-computation for continuous and binary outcomes
-  #' @aliases gcomp.boot
+  #' @aliases qgcomp.boot
   #'
   #' @description This function estimates a dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This model estimates the parameters of a marginal

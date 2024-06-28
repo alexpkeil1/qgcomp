@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.15.2
-Date: 2023-08-10
+Version: 2.16.0
+Date: 2024-06-28
 Authors@R: 
     person("Alexander", "Keil", , "alex.keil@nih.gov", role = c("aut", "cre"))
 Description: G-computation for a set of time-fixed exposures with
@@ -29,7 +29,9 @@ Imports:
     grid,
     gridExtra,
     nnet,
+    numDeriv,
     pscl,
+    rootSolve,
     stats,
     survival,
     tibble
@@ -45,4 +47,4 @@ VignetteBuilder:
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

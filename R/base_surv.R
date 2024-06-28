@@ -14,17 +14,14 @@
 #' @param ... not used
 #'
 #' @return a list of data.frames:
-#' #'  \itemize{
-#'  \item{'mdfpop': }{Average Survival curve (survival, time) based on 
-#'  marginal structural model, averaged over the population at every quantile
-#'  of exposure}
-#'  \item{'cdfpop': }{Population average survival curve (survival, time) based on 
-#'  the underlying conditional model}
-#'  \item{'mdfq': }{Survival curves (survival, time) for each quantile 
-#'  based on marginal structural model}
-#'  \item{'cdfq': }{Survival curves (survival, time) for each quantile 
-#'  based on underlying conditional model}
-#' }
+#' 
+#' 
+#'  - **mdfpop**: Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure
+#'  - **cdfpop**: Population average survival curve (survival, time) based on the underlying conditional model
+#'  - **mdfq**: Survival curves (survival, time) for each quantile based on marginal structural model
+#'  - **cdfq**: Survival curves (survival, time) for each quantile based on underlying conditional model
+#' 
+#' @md
 #' @import survival
 #' @export
 #' @examples
@@ -36,7 +33,6 @@
 #' f = survival::Surv(time, d)~x1 + x2
 #' (fit1 <- survival::coxph(f, data = dat))
 #' (obj <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
-#' ## Not run: 
 #' \dontrun{
 #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=10, MCsize=20000))
 #' curves = cox.survcurve.boot(obj2)
@@ -314,7 +310,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' \code{\link[survival]{coxph}}
   #' @param cluster not yet implemented
   #' @param alpha alpha level for confidence limit calculation
-  #' @param ... arguments to glm (e.g. family)
+  #' @param ... arguments to coxph
   #' @seealso \code{\link[qgcomp]{qgcomp.cox.boot}}, \code{\link[qgcomp]{qgcomp.glm.boot}}, 
   #'   and \code{\link[qgcomp]{qgcomp}}
   #' @family qgcomp_methods
@@ -486,8 +482,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' to define cutpoints.
   #' @param id (optional) NULL, or variable name indexing individual units of 
   #' observation (only needed if analyzing data with multiple observations per 
-  #' id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-  #' standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
+  #' id/cluster). Note that qgcomp.cox.noboot will not produce cluster-appropriate
+  #' standard errors. qgcomp.cox.boot can be used for this, which will use bootstrap
   #' sampling of clusters/individuals to estimate cluster-appropriate standard
   #' errors via bootstrapping.
   #' @param weights "case weights" - passed to the "weight" argument of 
@@ -510,7 +506,7 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
   #' @param parallel logical (default FALSE): use future package to speed up bootstrapping
   #' @param parplan (logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)
-  #' @param ... arguments to glm (e.g. family)
+  #' @param ... arguments to coxph
   #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
   #'  measure of interest (psi) and associated variance (var.psi), as well

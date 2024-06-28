@@ -22,7 +22,7 @@
 # confidence intervals for pointwise comparisons #
 .pointwise.lin <- function(q, py, se.diff, alpha, pwr){
   # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1,
+  pw = data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py,
              mean.diff = py - py[pwr],
@@ -30,13 +30,16 @@
              ll.diff =  py - py[pwr] + qnorm(alpha/2) * se.diff,
              ul.diff =  py - py[pwr] + qnorm(1-alpha/2) * se.diff
   )
+  pw$ll.linpred = pw$hx - pw$mean.diff + pw$ll.diff
+  pw$ul.linpred = pw$hx - pw$mean.diff + pw$ul.diff
+  pw
 }
 
 
 
 .pointwise.log <- function(q, py, se.diff, alpha, pwr){
   # risk, risk ratios / prevalence ratios
-  data.frame(quantile= (seq_len(q)) - 1,
+  pw = data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py,
              rr = exp(py - py[pwr]),
@@ -44,13 +47,16 @@
              ll.rr = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
              ul.rr = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
   )
+  pw$ll.linpred = pw$hx - log(pw$rr) + log(pw$ll.rr)
+  pw$ul.linpred = pw$hx - log(pw$rr) + log(pw$ul.rr)
+  pw
 }
 
 
 
 .pointwise.logit <- function(q, py, se.diff, alpha, pwr){
   # odds, odds ratios
-  data.frame(quantile= (seq_len(q)) - 1,
+  pw = data.frame(quantile= (seq_len(q)) - 1,
              quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
              hx = py, # log odds
              or = exp(py - py[pwr]),
@@ -58,6 +64,9 @@
              ll.or = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
              ul.or = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
   )
+  pw$ll.linpred = pw$hx - log(pw$or) + log(pw$ll.or)
+  pw$ul.linpred = pw$hx - log(pw$or) + log(pw$ul.or)
+  pw
 }
 
 
@@ -284,7 +293,8 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
 #' can be done by, e.g. centering continuous age so that the predictions are made
 #' at the population mean age, rather than age 0.
 #'
-#' Note that function only works with standard "qgcompfit" objects from `qgcomp.glm.noboot` (so it doesn't work
+#' Note that function only works with standard "qgcompfit" objects from `qgcomp.glm.noboot`
+#' or `qgcomp.glm.ee` (so it doesn't work
 #' with zero inflated, hurdle, or Cox models)
 #'
 #' Variance for the overall effect estimate is given by:
@@ -352,7 +362,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   if(x$bootstrap || inherits(x, "ziqgcompfit") || inherits(x, "survqgcompfit")){
     stop("This function is only for qgcomp.glm.noboot objects")
   }
-  #sediff <- function(qdiffj){
+    #sediff <- function(qdiffj){
   #  # gives standard deviation of pointwise difference on log scale (conditional)
   #  se_comb(x$expnms, vcov(x$fit), grad = qdiffj)
   #}
@@ -361,6 +371,9 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
     se_comb(paste0(labcolon,x$expnms), vcov(x$fit), grad = qdiffj)
   }
   q = x$q
+  if(is.null(q))    
+    stop("This function only works if q is not NULL")
+
   link = x$fit$family$link
   #link = x$msmfit$family$link
   #coefs = x$fit$coefficients
@@ -371,6 +384,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   
   if(inherits(x, "qgcompmultfit")){
     stop("Not yet implemented")
+    # sketch of code for multfits
     zvars = coefs[-which(colnames(coefs) %in% c("(Intercept)", x$expnms)),]
     msmdesign = cbind(rep(2:(x$nlevels+1), each=q), 0:(q-1))
     labs = x$labs
@@ -391,7 +405,15 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
     
   } else{
     zvars = coefs[-which(names(coefs) %in% c("(Intercept)", x$expnms))]
-    py = cbind(rep(1, q), 0:(q-1)) %*% c(coef(x))
+    xtest = 0:(q-1)
+    if(x$hasintercept){
+      xtest = cbind(rep(1, q), xtest)
+    }
+    if(!is.null(x$degree) && x$degree>1){
+      extra = do.call(cbind,lapply(2:x$degree, function(x) (0:(q-1))^x))
+      xtest = cbind(xtest, extra)
+    }
+    py = xtest %*% c(coef(x))
     se.diff = vapply(qdiff, sediff, 0)
   }
   res = switch(link,
@@ -399,6 +421,8 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
                log = .pointwise.log(q, py, se.diff, alpha, pointwiseref),
                logit = .pointwise.logit(q, py, se.diff, alpha, pointwiseref)
   )
+  fix = which(names(res)=="hx")
+  names(res)[fix] = "linpred"
   attr(res, "link") = link
   res
 }

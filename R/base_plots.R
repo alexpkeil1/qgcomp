@@ -113,6 +113,43 @@
 }
 
 
+.plot.md.pw.noboot <- function(x, alpha, pointwiseref){
+  ymin <- ymax <- v <- w <- y <- NULL
+  # plot actual risk or odds bounds
+  pwbdat = pointwisebound.noboot(x, alpha=alpha, pointwiseref=pointwiseref)
+  py = pwbdat$linpred
+  ll = pwbdat$ll.linpred
+  ul = pwbdat$ul.linpred
+  list(
+    geom_point(aes(x=x,y=y, 
+                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+  )
+}
+
+.plot.rr.pw.noboot <- function(x, alpha, pointwiseref){
+  ymin <- ymax <- v <- w <- y <- NULL
+  # plot actual risk or odds bounds
+  pwbdat = pointwisebound.noboot(x, alpha=alpha, pointwiseref=pointwiseref)
+  py = exp(pwbdat$linpred)
+  ll = exp(pwbdat$ll.linpred)
+  ul = exp(pwbdat$ul.linpred)
+  list(
+    geom_point(aes(x=x,y=y, 
+                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+  )
+}
+
+.plot.or.pw.noboot <- .plot.rr.pw.noboot
+
+
 
 
 .plfun <- function(plt){ 
@@ -251,6 +288,17 @@
   p
 }
 
+.plot_ee_gaussian <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=TRUE, pointwiseref=1, alpha=0.05){
+  if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
+  p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
+  #
+  #if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # : add alpha to main function
+  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
+  if(modelfitline)  p <- p + .plot.linear.line(x)
+  if(pointwisebars) p <- p + .plot.md.pw.noboot(x,alpha,pointwiseref)
+  p
+}
+
 
 .plot_boot_binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
@@ -272,6 +320,26 @@
   p
 }
 
+.plot_ee_binomial <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=TRUE, pointwiseref=1, alpha=0.05){
+  if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
+  #
+  p <- p + scale_y_log10()
+  if(x$msmfit$family$link == "logit"){
+    p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
+    #if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
+    if(flexfit)   p <- p + .plot.or.smooth.line(x)
+    if(modelfitline) p <- p + .plot.logitlin.line(x)
+    if(pointwisebars) p <- p + .plot.or.pw.noboot(x,alpha,pointwiseref)
+  } else if(x$msmfit$family$link=="log"){
+    p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
+    #if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
+    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
+    if(modelfitline) p <- p + .plot.loglin.line(x)
+    if(pointwisebars) p <- p + .plot.rr.pw.noboot(x,alpha,pointwiseref)
+  }
+  p
+}
+
 
 .plot_boot_poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
@@ -285,6 +353,20 @@
   }
   p
 }
+
+.plot_ee_poisson <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=FALSE, pointwiseref=1, alpha=0.05){
+  if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
+  p <- p + scale_y_log10()
+  if(x$msmfit$family$link == "log"){
+    p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
+    #if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
+    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
+    if(modelfitline) p <- p + .plot.loglin.line(x)
+    if(pointwisebars) p <- p + .plot.rr.pw.noboot(x,alpha,pointwiseref)
+  }
+  p
+}
+
 
 .plot_boot_cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   # : make the plot more configurable
@@ -467,7 +549,7 @@ plot.qgcompfit <- function(x,
   
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
-  if(!x$bootstrap){
+  if(!x$bootstrap & !inherits(x, "eeqgcompfit")){
     if(!is.null(x$fit$family)) nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
     themes = .butterfly_themes()
     theme_butterfly_l = themes[[1]]
@@ -487,7 +569,22 @@ plot.qgcompfit <- function(x,
     }
     if(suppressprint) return(p1)
   }
-  if(x$bootstrap){
+  if(inherits(x, "eeqgcompfit")){
+    p <- ggplot() 
+    if(x$msmfit$family$family=='gaussian') p <-  
+        .plot_ee_gaussian(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    if(x$msmfit$family$family=='binomial') p <- 
+        .plot_ee_binomial(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    if(x$msmfit$family$family=='poisson') p <- 
+        .plot_ee_poisson(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    if(suppressprint) return(p)
+    p <- p + scale_fill_grey(name="", start=.9) + 
+      scale_colour_grey(name="", start=0.0, end=0.6) + 
+      theme_classic()
+    if(!suppressprint) print(p)
+  }
+  
+  if(x$bootstrap & !inherits(x, "eeqgcompfit")){
     # variance based on delta method and knowledge that non-linear
     #functions will always be polynomials in qgcomp
     # default plot for bootstrap results (no weights obtained)

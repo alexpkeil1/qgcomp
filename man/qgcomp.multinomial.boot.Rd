@@ -43,21 +43,20 @@ to define cutpoints.}
 
 \item{id}{(optional) NULL, or variable name indexing individual units of
 observation (only needed if analyzing data with multiple observations per
-id/cluster). Note that qgcomp.glm.noboot will not produce cluster-appropriate
-standard errors. qgcomp.glm.boot can be used for this, which will use bootstrap
+id/cluster). Note that qgcomp.multinomial.noboot will not produce cluster-appropriate
+standard errors. qgcomp.multinomial.boot can be used for this, which will use bootstrap
 sampling of clusters/individuals to estimate cluster-appropriate standard
 errors via bootstrapping.}
 
 \item{weights}{"case weights" - passed to the "weight" argument of
-\code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}}
+\code{\link[nnet]{multinom}}}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
 \item{B}{integer: number of bootstrap iterations (this should typically be >=200,
 though it is set lower in examples to improve run-time).}
 
-\item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.glm.boot will
-estimate risk ratio rather than odds ratio}
+\item{rr}{(not used)}
 
 \item{degree}{polynomial bases for marginal model (e.g. degree = 2
 allows that the relationship between the whole exposure mixture and the outcome
@@ -73,7 +72,7 @@ so results should be interpreted as frequentist.}
 \item{MCsize}{integer: sample size for simulation to approximate marginal
 zero inflated model parameters. This can be left small for testing, but should be as large
 as needed to reduce simulation error to an acceptable magnitude (can compare psi coefficients for
-linear fits with qgcomp.glm.noboot to gain some intuition for the level of expected simulation
+linear fits with qgcomp.multinomial.noboot to gain some intuition for the level of expected simulation
 error at a given value of MCsize). This likely won't matter much in linear models, but may
 be important with binary or count outcomes.}
 
@@ -81,7 +80,7 @@ be important with binary or count outcomes.}
 
 \item{parplan}{(logical, default=FALSE) automatically set future::plan to plan(multisession) (and set to existing plan, if any, after bootstrapping)}
 
-\item{...}{arguments to glm (e.g. family)}
+\item{...}{arguments to nnet::multinom}
 }
 \value{
 a qgcompfit object, which contains information about the effect
@@ -174,6 +173,7 @@ Other qgcomp_methods:
 \code{\link{qgcomp.cox.boot}()},
 \code{\link{qgcomp.cox.noboot}()},
 \code{\link{qgcomp.glm.boot}()},
+\code{\link{qgcomp.glm.ee}()},
 \code{\link{qgcomp.glm.noboot}()},
 \code{\link{qgcomp.hurdle.boot}()},
 \code{\link{qgcomp.hurdle.noboot}()},
