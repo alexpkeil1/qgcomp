@@ -1,5 +1,6 @@
 cat("# ee test\n")
 library("qgcomp")
+library("tibble")
 
 # grouped survival data
 N = 250
@@ -21,6 +22,10 @@ dat <- within(dat, {
 #.qgcomp_object = qgcomp:::.qgcomp_object
 
 res = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = dat, family=poisson(), q=7) # offset not working
+res = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = as_tibble(dat), family=poisson(), q=7) # offset not working
+
+
+
 pointwisebound.noboot(res)
 plot(res, modelband = FALSE, pointwisebars = FALSE, flexfit = TRUE)
 print(res)

@@ -197,6 +197,7 @@ qgcomp.glm.ee <- function(
     seed=NULL,
     bayes=FALSE,
     includeX=TRUE,
+    verbose=TRUE,
     ...
 ){
   
@@ -263,6 +264,7 @@ qgcomp.glm.ee <- function(
   #' exposures. Note: this does not lead to fully Bayesian inference in general,
   #' so results should be interpreted as frequentist.
   #' @param includeX (logical) should the design/predictor matrix be included in the output via the fit and msmfit parameters?
+  #' @param verbose (logical) give extra messages about fits
   #' @param ... arguments to glm (e.g. family)
   #' @family qgcomp_methods
   #' @return a qgcompfit object, which contains information about the effect
@@ -463,14 +465,14 @@ qgcomp.glm.ee <- function(
     # : allow user specification of this
     nvals = length(table(unlist(data[,expnms])))
     if(nvals < 10){
-      message("\nNote: using all possible values of exposure as the
+      if(verbose) message("\nNote: using all possible values of exposure as the
               intervention values\n")
       p = length(expnms)
       intvals <- as.numeric(names(table(unlist(data[,expnms]))))
       
       br <- lapply(seq_len(p), function(x) c(-1e16, intvals[2:nvals]-1e-16, 1e16))
     }else{
-      message("\nNote: using quantiles of all exposures combined in order to set
+      if(verbose) message("\nNote: using quantiles of all exposures combined in order to set
           proposed intervention values for overall effect (25th, 50th, 75th %ile)
         You can ensure this is valid by scaling all variables in expnms to have similar ranges.")
       intvals = as.numeric(quantile(unlist(data[,expnms]), c(.25, .5, .75)))
@@ -505,7 +507,7 @@ qgcomp.glm.ee <- function(
   np = ncol(X)
   npmsm = ncol(Xmsm)
   
-  starvals <- function(family,Y,X,np,npmsm,offset=0){
+  startvals <- function(family,Y,X,np,npmsm,offset=0){
     fam = family$family
     res = switch(fam,
            binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
@@ -514,15 +516,17 @@ qgcomp.glm.ee <- function(
     )
     res
   }
-  parminits = starvals(family,Y,X,np,npmsm)
+  parminits = startvals(family,Y,X,np,npmsm)
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
   eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__)
   #
   A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__)
   #
-  uid =   unique(qdata[,id])
+  
+  
+  uid =   unique(qdata[,id,drop=TRUE])
   psii = lapply(uid, function(x){
-    selidx = which(qdata[,id] == x);
+    selidx = which(qdata[,id,drop=TRUE] == x);
     .esteq_qgcdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx]) 
     } )
   Bi = lapply(psii, function(x) x%*%t(x))

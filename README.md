@@ -1,4 +1,4 @@
-`qgcomp` v2.16.0
+`qgcomp` v2.16.1
 
 
 [![R-CMD-check](https://github.com/alexpkeil1/qgcomp/workflows/R-CMD-check/badge.svg)](https://github.com/alexpkeil1/qgcomp/actions) [![](https://www.r-pkg.org:443/badges/version/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp) [![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/qgcomp)](https://www.r-pkg.org:443/pkg/qgcomp) [![codecov](https://codecov.io/gh/alexpkeil1/qgcomp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/alexpkeil1/qgcomp) [![CodeFactor](https://www.codefactor.io/repository/github/alexpkeil1/qgcomp/badge)](https://www.codefactor.io/repository/github/alexpkeil1/qgcomp)

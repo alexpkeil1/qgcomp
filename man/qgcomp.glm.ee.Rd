@@ -21,6 +21,7 @@ qgcomp.glm.ee(
   seed = NULL,
   bayes = FALSE,
   includeX = TRUE,
+  verbose = TRUE,
   ...
 )
 
@@ -40,6 +41,7 @@ qgcomp.ee(
   seed = NULL,
   bayes = FALSE,
   includeX = TRUE,
+  verbose = TRUE,
   ...
 )
 }
@@ -92,6 +94,8 @@ exposures. Note: this does not lead to fully Bayesian inference in general,
 so results should be interpreted as frequentist.}
 
 \item{includeX}{(logical) should the design/predictor matrix be included in the output via the fit and msmfit parameters?}
+
+\item{verbose}{(logical) give extra messages about fits}
 
 \item{...}{arguments to glm (e.g. family)}
 }
