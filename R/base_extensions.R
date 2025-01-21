@@ -265,19 +265,42 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   }
   ylod = y
   ylod[wy] = LOD[wy]
-  fit <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal',
-    control=survreg.control(), #introduced for mice v3.7.0
-    ...
-  )
+  if(all(x == 1)){
+    # introduced for mice v3.16.0
+    fit <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ 1,
+      dist='lognormal',
+      control=survreg.control(), #introduced for mice v3.7.0
+      ...
+    )
+    
+  } else{
+    # introduced for mice v3.16.0
+    fit <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ x,
+      dist='lognormal',
+      control=survreg.control(), #introduced for mice v3.7.0
+      ...
+    )
+    
+  }
   # take a draw from the coefficients
   draw = .rmvnorm(1, c(fit$coefficients, `Log(Scale)`=log(fit$scale)), fit$var)
   #  get predictions under new draws
-  fit2 <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal', init=draw, control=survreg.control(maxiter=0)
-  )
+  if(all(x == 1)){
+    # introduced for mice v3.16.0
+    fit2 <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ 1,
+      dist='lognormal', init=draw, control=survreg.control(maxiter=0)
+    )
+  } else{
+    # introduced for mice v3.16.0
+    fit2 <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ x,
+      dist='lognormal', init=draw, control=survreg.control(maxiter=0)
+    )
+    }
+  
   fit2$linear.predictors[wy] = ifelse(is.na(fit2$linear.predictors[wy]), -20, fit2$linear.predictors[wy])
   fub = plnorm(LOD[wy], fit2$linear.predictors[wy], fit2$scale)
   # note plnorm(mu,0,1) = pnorm(log(mu), 0, 1)

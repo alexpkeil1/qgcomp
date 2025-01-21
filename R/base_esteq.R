@@ -1,4 +1,4 @@
-.esteq_qgc <- function(theta, family, Y, X, Xint, Xmsm, weights,rr=FALSE, offset=0){
+.esteq_qgc <- function(theta, family, Y, X, Xint, Xmsm, weights,rr=FALSE, offset=0, delta=-Inf, ...){
   # family specific estimating equation based on input matrixes
   # used for "A" part of sandwich variance: V = solve(A) %*% B %&% t(solve(A))
   fam = family$family
@@ -6,6 +6,7 @@
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam, 
                 gaussian = .esteq_qgclin,
+                tobit = .esteq_qgctobit,
                 poisson = .esteq_qgcpoisson,
                 #binomial = .esteq_qgclogit(theta, Y, X, Xint, Xmsm, weights),
                 binomial = switch(binlink,
@@ -14,10 +15,10 @@
                 ),
                 .esteq_error
   )
-  FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset)
+  FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset, delta=-Inf, ...)
 }
 
-.esteq_qgcdf <- function(f, data, theta, family, intvals, expnms, hasintercept, weights, degree=1,rr=FALSE,offset=0){
+.esteq_qgcdf <- function(f, data, theta, family, intvals, expnms, hasintercept, weights, degree=1,rr=FALSE,offset=0, delta=-Inf, ...){
   # family specific estimating equation based on input dataframes
   # used for "B" part of sandwich variance: V = solve(A) %*% B %&% t(solve(A)) because it facilitates
   # individual level calculations. 
@@ -33,6 +34,7 @@
   binlink = ifelse(rr, "logitlog", "logit")
   FUN <- switch(fam, 
                 gaussian = .esteq_qgclin,
+                tobit = .esteq_qgctobit,
                 poisson = .esteq_qgcpoisson,
                 #binomial = .esteq_qgclogit(theta, Y, X, Xint, Xmsm, weights),
                 binomial = switch(binlink,
@@ -41,7 +43,7 @@
                 ),
                 .esteq_error
   )
-  FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset=offset)
+  FUN(theta=theta, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=weights, offset=offset, delta=-Inf, ...)
 }
 
 
@@ -49,7 +51,37 @@
   stop(paste0("Family (distribution) not (yet) supported"))
 }
 
-.esteq_qgclin <- function(theta, Y, X, Xint, Xmsm, weights,offset=0){
+.esteq_qgctobit <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf,offset=0){
+  stop("Tobit not yet functioning")
+  # linear model gradient-based estimating equations
+  npmsm = ncol(Xmsm)
+  np = ncol(X)
+  intweights = rep(weights, times=nrow(Xmsm)/nrow(X))
+  stopifnot(length(theta)==np+npmsm+1)
+  # estimating functions
+  fun1 = do.call(c,lapply(1:np, function(x){
+    mu = X %*% theta[1:np]
+    eps = delta - mu
+    sigma = theta[np+npmsm+1]
+    t(weights * (Y - mu)* (Y>delta)) %*% X[,x]  + 
+      t(weights * (Y<=delta) * dnorm(eps, 0, sigma)/pnorm(eps, 0, sigma)) %*% X[,x]
+  } ))
+  fun2 = do.call(c,lapply(1:npmsm, function(x) {
+    mu = Xmsm %*% theta[(np+1):(np+npmsm)]
+    t(intweights * (Xint %*% theta[1:np] - mu)) %*% Xmsm[,x]
+  }))
+  fun3 = do.call(c,lapply(1:np, function(x){
+    mu = X %*% theta[1:np]
+    eps = delta - mu
+    sigma = theta[np+npmsm+1]
+    t(weights * (Y - mu)* (Y>delta)) %*% X[,x]
+  } ))
+  c(
+    fun1,fun2
+  )
+}
+
+.esteq_qgclin <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf,offset=0){
   # linear model gradient-based estimating equations
   npmsm = ncol(Xmsm)
   np = ncol(X)
@@ -69,8 +101,8 @@
   )
 }
 
-.esteq_qgcpoisson <- function(theta, Y, X, Xint, Xmsm, weights, offset=0){
-  # logistic model gradient-based estimating equations
+.esteq_qgcpoisson <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf, offset=0){
+  # Poisson model gradient-based estimating equations
   npmsm = ncol(Xmsm)
   np = ncol(X)
   intweights = rep(weights, times=nrow(Xmsm)/nrow(X))
@@ -78,14 +110,11 @@
   # estimating functions
   fun1 = do.call(c,lapply(1:np, function(x){
     mu = X %*% theta[1:np]
-    #t(weights * (exp(-mu) * Y - 1 + Y)/(1+exp(-mu))) %*% X[,x]
     t(weights * (Y - exp(mu))) %*% X[,x]
-    #sum((exp(-mu) * Y - 1 + Y)/(1+exp(-mu)) * X[,x])
   }))
   fun2 = do.call(c,lapply(1:npmsm, function(x){
     ypred = exp(Xint %*% theta[1:np])
     mu = Xmsm %*% theta[(np+1):(np+npmsm)] 
-    #t(intweights * (exp(-mu) * ypred - 1 + ypred)/(1+exp(-mu))) %*% Xmsm[,x]
     t(intweights * (ypred  - exp(mu))) %*% Xmsm[,x]
   } ))
   c(
@@ -93,7 +122,7 @@
   )
 }
 
-.esteq_qgclogit <- function(theta, Y, X, Xint, Xmsm, weights, offset=0){
+.esteq_qgclogit <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf, offset=0){
   # logistic model gradient-based estimating equations
   if(length(offset==0)) offset = 0
   npmsm = ncol(Xmsm)
@@ -103,14 +132,11 @@
   # estimating functions
   fun1 = do.call(c,lapply(1:np, function(x){
     mu = X %*% theta[1:np] 
-    #t(weights * (exp(-mu) * Y - 1 + Y)/(1+exp(-mu))) %*% X[,x]
     t(weights * (Y - .expit(mu))) %*% X[,x]
-    #sum((exp(-mu) * Y - 1 + Y)/(1+exp(-mu)) * X[,x])
   }))
   fun2 = do.call(c,lapply(1:npmsm, function(x){
     ypred = .expit(Xint %*% theta[1:np])
     mu = Xmsm %*% theta[(np+1):(np+npmsm)]
-    #t(intweights * (exp(-mu) * ypred - 1 + ypred)/(1+exp(-mu))) %*% Xmsm[,x]
     t(intweights * (ypred  - .expit(mu))) %*% Xmsm[,x]
   } ))
   c(
@@ -118,7 +144,7 @@
   )
 }
 
-.esteq_qgclogitlog <- function(theta, Y, X, Xint, Xmsm, weights, offset=0){
+.esteq_qgclogitlog <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf, offset=0){
   # logistic model gradient-based estimating equations with log-linear MSM
   npmsm = ncol(Xmsm)
   np = ncol(X)
@@ -140,7 +166,7 @@
   )
 }
 
-.esteq_qgclog <- function(theta, Y, X, Xint, Xmsm, weights, offset=0){
+.esteq_qgclog <- function(theta, Y, X, Xint, Xmsm, weights, delta=-Inf, offset=0){
   # logistic model gradient-based estimating equations with log-linear MSM
   npmsm = ncol(Xmsm)
   np = ncol(X)
@@ -153,7 +179,7 @@
     #sum((exp(-mu) * Y - 1 + Y)/(1+exp(-mu)) * X[,x])
   }))
   fun2 = do.call(c,lapply(1:npmsm, function(x){
-    ypred = .expit(Xint %*% theta[1:np])
+    ypred = exp(Xint %*% theta[1:np])
     mu = Xmsm %*% theta[(np+1):(np+npmsm)]
     t(intweights * (ypred - exp(mu))/(1-exp(mu))) %*% Xmsm[,x]
   } ))
@@ -178,6 +204,13 @@
 #   }
 # }
 
+
+#' @importFrom stats gaussian
+tobit <- function(){
+  dist = stats::gaussian()
+  dist$family = "tobit"
+  dist
+  }
 
 
 
@@ -408,8 +441,25 @@ qgcomp.glm.ee <- function(
   hasintercept = as.logical(attr(newform, "intercept"))
   class(newform) <- "formula"
   
-  testfit <- glm(y~., data=data.frame(y=c(0,1)), ...)
-  family = testfit$family
+  cc = match.call(expand.dots = TRUE)
+  
+  if(is.null(cc$delta)){
+    delta=-Inf
+  } else{
+    delta = eval(cc$delta)
+  }
+  
+  if(!is.null(cc$family) && eval(cc$family)$family != "tobit"){
+    testfit <- glm(y~., data=data.frame(y=c(0,1)), eval(cc$family))
+    family = testfit$family
+  } 
+  if(!is.null(eval(cc$family)$family) && eval(cc$family)$family == "tobit"){
+    family  = tobit()
+  } 
+  if(is.null(cc$family)){
+    family=gaussian()
+  }
+  #family = testfit$family
   
 #  famlist = c("binomial", "gaussian", "poisson")
 #  if(!(family$family %in% famlist))
@@ -512,22 +562,23 @@ qgcomp.glm.ee <- function(
     res = switch(fam,
            binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
            poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
+           tobit = c(rep(0, np+npmsm),1),
            rep(0, np+npmsm)
     )
     res
   }
   parminits = startvals(family,Y,X,np,npmsm)
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
-  eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__)
+  eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
   #
-  A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__)
+  A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__, delta=delta)
   #
   
   
   uid =   unique(qdata[,id,drop=TRUE])
   psii = lapply(uid, function(x){
     selidx = which(qdata[,id,drop=TRUE] == x);
-    .esteq_qgcdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx]) 
+    .esteq_qgcdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx], delta=delta) 
     } )
   Bi = lapply(psii, function(x) x%*%t(x))
   n = length(Y)
