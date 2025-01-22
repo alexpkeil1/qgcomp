@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 #output: rmarkdown::pdf_document 
 output: rmarkdown::html_vignette  
 vignette: >
-  %\VignetteIndexEntry{The qgcomp package: basic usage}
+  %\VignetteIndexEntry{The qgcomp package: list of vignettes}
   %\VignetteEngine{knitr::knitr}
   \usepackage[utf8]{inputenc}
 ---
@@ -15,8 +15,21 @@ library("knitr")
 #library("gWQS")
 ```
 
+# Table of Contents
+1. [Introduction](#intro)
+2. [How to use the `qgcomp` package](#howto)
+3. [Example 1: linear model](#ex-linear)
+4. [Example 2: conditional odds ratio, marginal odds ratio in a logistic model](#ex-logistic)
+5. [Example 3: adjusting for covariates, plotting estimates](#ex-logistic)
 
-## Introduction
+6. [Example 4: non-linearity (and non-homogeneity)](#ex-nonlin)
+7. [Example 5: comparing model fits and further exploring non-linearity](#ex-nonlin2)
+8. [Example 6: miscellaneous other ways to allow non-linearity](#ex-nonlin3)
+9. [FAQ](#ex-faq)
+10. [Acknowledgments](#ack)
+
+
+## Introduction<a name="intro"></a>
 `qgcomp` is a package to implement g-computation for analyzing the effects of exposure
 mixtures. Quantile g-computation yields estimates of the effect of increasing
 all exposures by one quantile, simultaneously. This, it estimates a "mixture
@@ -62,7 +75,7 @@ qgcomp(y~x1+x2+x3, expnms=c("x1", "x2", "x3"), data=qdat)
 ```
 
 
-## How to use the `qgcomp` package
+## How to use the `qgcomp` package<a name="howto"></a>
 Here we use a running example from the `metals` dataset from the from the package 
 `qgcomp` to demonstrate some features of the package and method. 
 
@@ -86,7 +99,7 @@ head(metals)
 ```
 
 
-### Example 1: linear model
+### Example 1: linear model<a name="ex-linear"></a>
 ```{r linear model and runtime, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 # we save the names of the mixture variables in the variable "Xnm"
 Xnm <- c(
@@ -170,7 +183,7 @@ coef(qc.fit) # overall effect and intercept from qgcomp fit
 ```
 This equality is why we can fit qgcomp so efficiently under such a model, but `qgcomp` is a much more general method that can allow for non-linearity and non-additivity in the underlying model, as well as non-linearity in the overall model. These extensions are described in some of the following examples.
 
-### Example 2: conditional odds ratio, marginal odds ratio in a logistic model
+### Example 2: conditional odds ratio, marginal odds ratio in a logistic model<a name="ex-logistic"></a>
 
 This example introduces the use of a binary outcome in `qgcomp` via the 
 `qgcomp.glm.noboot` function, which yields a conditional odds ratio or the
@@ -305,7 +318,7 @@ Because qgcomp estimates a joint effect of multiple exposures, we cannot, in gen
 allow for non-linear effects, as in the next example.
 
 
-### Example 4: non-linearity (and non-homogeneity)
+### Example 4: non-linearity (and non-homogeneity)<a name="ex-nonlin"></a>
 
 `qgcomp` (specifically `qgcomp.*.boot` and `qgcomp.*.ee` methods) addresses non-linearity in a way similar to standard parametric regression models, which lends itself to being able to leverage R language features for n-lin parametric models (or, more precisely, parametric models that deviate from a purely additive, linear function on the link function basis via the use of basis function representation of non-linear functions). 
 Here is an example where we use a feature of the R language for fitting models
@@ -379,7 +392,7 @@ so that $\psi_2$ can be interpreted similar to quadratic terms that might appear
 
 
 
-### Example 5: comparing model fits and further exploring non-linearity
+### Example 5: comparing model fits and further exploring non-linearity<a name="ex-nonlin2"></a>
 Exploring a non-linear fit in settings with multiple exposures is challenging. One way to explore non-linearity, as demonstrated above, is to to include all 2-way interaction terms (including quadratic terms, or "self-interactions"). Sometimes this approach is not desired, either because the number of terms in the model can become very large, or because some sort of model selection procedure is required, which risks inducing over-fit (biased estimates and standard errors that are too small). Short of having a set of a priori non-linear terms to include, we find it best to take a default approach (e.g. taking all second order terms) that doesn't rely on statistical significance, or to simply be honest that the search for a non-linear model is exploratory and shouldn't be relied upon for robust inference. Methods such as kernel machine regression may be good alternatives, or supplementary approaches to exploring non-linearity.
 
 NOTE: qgcomp necessarily fits a regression model with exposures that have a small number of possible values, based on the quantile chosen. By package default, this is `q=4`, but it is difficult to fully examine non-linear fits using only four points, so we recommend exploring larger values of `q`, which will change effect estimates (i.e. the model coefficient implies a smaller change in exposures, so the expected change in the outcome will also decrease).
@@ -458,7 +471,7 @@ smoothed conditional fit appear to be overfit. The smooth conditional fit can be
 plot(qc.overfit, flexfit = FALSE, pointwiseref = 5)
 ```
 
-### Example 6: miscellaneous other ways to allow non-linearity. 
+### Example 6: miscellaneous other ways to allow non-linearity<a name="ex-nonlin3"></a>
 Note that these are included as examples of *how* to include non-linearities, and are not intended as 
 a demonstration of appropriate model selection. In fact, qc.fit7b is generally a bad idea in small
 to moderate sample sizes due to large numbers of parameters. 
@@ -516,7 +529,7 @@ BIC(qc.fit6nonhom$fit)
 
 More examples on advanced topics can be viewed in the other package vignette.
 
-## FAQ
+## FAQ<a name="faq"></a>
 ### Why don't I get weights from the `boot` or `ee` functions?
 Users often use the `qgcomp.*.boot` or `qgcomp.*.ee` functions because they want to marginalize over confounders or fit a non-linear joint exposure function. In both cases, the overall exposure response will no longer correspond to a simple weighted average of model coefficients, so none of the `qgcomp.*.boot` or `qgcomp.*.ee` functions will calculate weights. In most use cases, the weights would vary according to which level of joint exposure you're at, so it is not a straightforward proposition to calculate them (and you may not wish to report 4 sets of weights if you use the default `q=4`). If you fit an otherwise linear model, you can get weights from a `qgcomp.*.noboot` which will be very close to the weights you might get from a linear model fit via `qgcomp.*.boot` functions, but be explicit that the weights come from a different model than the inference about joint exposure effects.
 
@@ -537,7 +550,7 @@ The vignettes of the package and the help files of the functions give many, many
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shanshan Zhao, Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://doi.org/10.1289/EHP5838> 
 
-## Acknowledgments
+## Acknowledgments<a name="ack"></a>
 
 The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing has been performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, Barrett Welch, Che-Jung (Rong) Chang, various github users, and Katie O'Brien.
 

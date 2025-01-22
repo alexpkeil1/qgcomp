@@ -10,6 +10,16 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+# Table of Contents
+1. [Example 7: time-to-event analysis and parallel processing](#ex-tte)
+2. [Example 8: clustering](#ex-cluster)
+3. [Example 9: partial effects](#ex-partial)
+4. [Example 10: multinomial outcomes](#ex-multinom)
+5. [Example 11: sample weighting from, e.g. NHANES](#ex-weighting)
+6. [Missing data, limits of detection and multiple imputation](#missing)
+10. [Acknowledgments](#ack)
+
+
 ```{r invisibles, echo=FALSE, results='markup', message=FALSE}
 library("knitr")
 #library("gWQS")
@@ -37,7 +47,7 @@ newXnm = unique(rownames(idx)) # iron, lead, and cadmium
 
 ```
 
-### Example 7: time-to-event analysis and parallel processing
+### Example 7: time-to-event analysis and parallel processing<a name="ex-tte"></a>
 
 - The `qgcomp` package utilizes the Cox proportional hazards models as the underlying model for 
   time-to-event analysis. The interpretation of a `qgcomp.glm.noboot` fit parameter is a conditional (on confounders)
@@ -156,7 +166,7 @@ Late entry and counting-process style data will currently yield results in qgcom
 
 
 
-### Example 8: clustering
+### Example 8: clustering<a name="ex-cluster"></a>
 
 Clustering on the individual or group level means that there are individual or group level characteristics which result in covariance between observations (e.g. within individual variance of an outcome may be much lower than the between individual variance). For linear models, the error term is assumed to be independent between observations, and clustering breaks this assumption. Ways to relax this assumption include empirical variance estimation and cluster-appropriate robust variance estimation (e.g. through the `sandwich` package in R). Another way is to use cluster-based bootstrapping, which samples clusters, rather than individual observations. `qgcomp.glm.boot` and `qgcomp.glm.ee` can be leveraged to produce clustering consistent estimates of standard errors for independent effects of exposure as well as the effect of the exposure as a whole. This is done using the `id` parameter of `qgcomp.glm.boot/ee` (which can only handle a single variable and so may not efficient for nested clustering, for example).
 
@@ -207,7 +217,7 @@ eefit
 # [1] 0.0409
 ```
 
-### Example 9: partial effects
+### Example 9: partial effects<a name="ex-partial"></a>
 
 Returning to our original example (and adjusting for covariates), note that the default output for a qgcomp.\*.noboot object includes "sum of positive/negative coefficients." These can be interpreted as "partial mixture effects" or effects of exposures with coefficients in a particular direction. This is displayed graphically via a plot of the qgcomp "weights," where all exposures that contribute to a given partial effect are on the same side of the plot.  Unfortunately, this does not yield valid inference for a true partial effect because it is a parameter conditional on the fitted results and thus does not represent the type of *a priori* hypothesis that is amenable to hypothesis testing and confidence intervals. Another way to think about this is that it is a data adaptive parameter and thus is subject to issues of overfit that are similar to issues with making inference from step-wise variable selection procedures.
 
@@ -292,7 +302,7 @@ Here are results for the non-essential metals:
 ```
 As shown from these results, the essential metals and minerals demonstrate an overall positive joint association with the outcome (controlling for non-essentials), whereas the partial effect of non-essential metals and minerals is close to null. This is close to the interpretation of the data adaptive selection of partial effects demonstrated above, but is interpretable in terms of how we might intervene (e.g. increase consumption of foods that are higher in essential metals and minerals).
 
-### Example 10: multinomial outcomes
+### Example 10: multinomial outcomes<a name="ex-multinom"></a>
 For outcomes modeled as 3+ discrete categories, qgcomp joint effect estimates are interpreted as a ratio of the probability of being in the referent category of the outcome and the probability of being in the index category.
 
 First, we'll bring in data and create a multinomial outcome.
@@ -337,7 +347,7 @@ summary(rr2) # differs from `rr` primarily due to low `MCSize` value
 ```
 Some of the convenience functions, like `plot` and `summary` are available for multinomial fits, and more functionality will be available in the future.
 
-### Example 11: sample weighting from, e.g. NHANES
+### Example 11: sample weighting from, e.g. NHANES<a name="ex-weighting"></a>
 
 Often, we will want to apply sampling weights to data to make inference to a population that is either fully external to the analytic data or represents a larger population of which the analytic data are a subset. Weighting (e.g. sampling weights or inverse-odds weights) may be used for inference. This is common in analyses of National Health and Nutrition Examination Survey (NHANES) data, which provides a rich source of data for analysis of mixtures. Weighting is done using the "weights" parameter in calls to qgcomp methods. Notably, the default in `qgcomp.*.noboot` interprets these weights as frequency weights in which one individual represents multiple known individuals with identical data. Sampling weights, however, are not frequency weights in the strict sense, and should be handled differently. Survey-weighting methods can be used in general, but within the qgcomp package the appropriate functions are the `qgcomp.*.ee` functions, which use robust standard errors that address uncertainty due to sampling weights. Bootstrapping is another alternative.
 
@@ -353,7 +363,7 @@ wtd2 = qgcomp.glm.ee(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")],
 #wtd3 = qgcomp.glm.boot(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")], weights=metals$samplingweights)
 ```
 
-## Missing data, limits of detection and multiple imputation
+## Missing data, limits of detection and multiple imputation<a name="missing"></a>
 When carrying out data analysis using quantile g-computation, on can address missing data in much the same way as in standard regression analyses. A common approach is complete case analysis. While regression functions in R will automatically carry out complete case analyses when variables take on the value `NA` (denoting missingness in R), when using quantile g-computation it is encouraged that one explicitly create the complete case dataset explicitly and use that complete case dataset. Using the pre-installed R packages, this can be accomplished with the `complete.cases` function. 
 
 The reason for this recommendation is that, while the regression analysis will be performed on complete cases (i.e. observations with non-missing values for all variables in the model), the calculation of quantiles for each exposures is done on an exposure-by-exposure basis, which can lead to numerical differences when explicitly using a dataset restricted to complete cases versus relying on automatically removing observations with `NA` values during analysis. 
@@ -428,7 +438,7 @@ Multiple imputation uses multiple datasets with different imputed values for eac
 ## References
 Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shanshan Zhao,Alexandra J. White. A quantile-based g-computation approach to addressing the effects of exposure mixtures. <https://doi.org/10.1289/EHP5838> 
 
-## Acknowledgments
+## Acknowledgments<a name="ack"></a>
 
 The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing has been performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, Barrett Welch, Che-Jung (Rong) Chang, various github users, and Katie O'Brien.
 

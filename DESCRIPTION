@@ -1,6 +1,6 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.16.4
+Version: 2.16.5
 Date: 2025-01-22
 Authors@R: 
     person("Alexander", "Keil", , "alex.keil@nih.gov", role = c("aut", "cre"))

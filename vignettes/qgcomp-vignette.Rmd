@@ -1,0 +1,58 @@
+---
+title: "The qgcomp package: g-computation on exposure quantiles"
+author: "Alexander Keil"
+date: "`r Sys.Date()`"
+#output: rmarkdown::pdf_document 
+output: rmarkdown::html_vignette  
+vignette: >
+  %\VignetteIndexEntry{The qgcomp package: list of vignettes}
+  %\VignetteEngine{knitr::knitr}
+  \usepackageutf8{inputenc}
+---
+
+```{r invisibles, echo=FALSE, results='markup', message=FALSE}
+library("knitr")
+#library("gWQS")
+```
+
+
+
+## Introduction<a name="intro"></a>
+`qgcomp` is a package to implement g-computation for analyzing the effects of exposure
+mixtures. Quantile g-computation yields estimates of the effect of increasing
+all exposures by one quantile, simultaneously. This, it estimates a "mixture
+effect" useful in the study of exposure mixtures such as air pollution, diet,
+and water contamination.
+
+Help for this package is available in the help files for individual functions, or in the package vignettes.
+
+The basic vignette can be viewed in R/Rstudio by running the following
+```{r v1, echo=TRUE, results='markup', message=FALSE}
+vignette("qgcomp-basic-vignette", "qgcomp")
+```
+The basic vignette covers:
+
+1. Introduction
+2. How to use the `qgcomp` package
+3. Example 1: linear model
+4. Example 2: conditional odds ratio, marginal odds ratio in a logistic model(#ex-logistic)
+5. Example 3: adjusting for covariates, plotting estimates
+
+6. Example 4: non-linearity (and non-homogeneity)
+7. Example 5: comparing model fits and further exploring non-linearity
+8. Example 6: miscellaneous other ways to allow non-linearity
+9. FAQ
+
+The advanced vignette can be viewed in R/Rstudio by running the following
+```{r v2, echo=TRUE, results='markup', message=FALSE}
+vignette("qgcomp-advanced-vignette", "qgcomp")
+```
+The advanced vignette covers:
+
+1. Example 7: time-to-event analysis and parallel processing
+2. Example 8: clustering
+3. Example 9: partial effects
+4. Example 10: multinomial outcomes
+5. Example 11: sample weighting from, e.g. NHANES
+6. Missing data, limits of detection and multiple imputation
+
