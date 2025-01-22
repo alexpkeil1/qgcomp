@@ -175,8 +175,8 @@
 
 ### More help
 
-See the vignette which is included with the `qgcomp` R package, and is accessible in 
-R via `vignette("qgcomp-vignette", package="qgcomp")`
+See the vignettes which are included with the `qgcomp` R package, and are accessible in 
+R via `vignette("qgcomp-basic-vignette", package="qgcomp")` and `vignette("qgcomp-advanced-vignette", package="qgcomp")`
 
 Read the original paper: [Keil et al. A quantile-based g-computation approach to
     addressing the effects of exposure mixtures. Env Health Persp. 2019; 128(4)](https://doi.org/10.1289/EHP5838)
