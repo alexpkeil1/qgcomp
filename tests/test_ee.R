@@ -22,8 +22,9 @@ dat <- within(dat, {
 #.qgcomp_object = qgcomp:::.qgcomp_object
 
 res = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = dat, family=poisson(), q=7) # offset not working
-res = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = as_tibble(dat), family=poisson(), q=7) # offset not working
-
+res2 = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = as_tibble(dat), family=poisson(), q=7) # offset not working
+res3 = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = dat, family=gaussian(), q=7) # offset not working
+#res3 = qgcomp.glm.ee(f=deaths~x1 + x2 + I(x2^2)+ I(x1^2), offset="logtime", expnms=c("x1", "x2"), data = dat, family=tobit(), q=7) # offset not working
 
 
 pointwisebound.noboot(res)

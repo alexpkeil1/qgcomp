@@ -114,14 +114,15 @@ ggplot(data=expwts)+ theme_classic() +
   geom_point(aes(x=Exposure, y=Weight)) +
   geom_hline(aes(yintercept=0))
   
-# this function can be used to impute from an intercept only model
+# this function can be used to impute from an intercept only model.
 # but you need to "trick" mice to bypass checks for collinearity by including
 # a variable that does not need to have values imputed (here, y).
 # The internal collinearity checks by the mice package remove collinear variables
 # and then throws an error if no predictor variabls are retained. Here, the 
 # trick is to use the "predictorMatrix" parameter to "impute" the non-missing
 # variable y using x1 (which does nothing), and remove all predictors from the model for x1.
-# This function only imputes x1 from a log normal distribution.
+# This function only imputes x1 from a log normal distribution and thus is similar
+# to many published examples of imputation from a Tobit model.
 
 impdat2 = mice(data = mdat[,c("y","x1")],
   method = c("", "tobit"), remove.collinear=FALSE,

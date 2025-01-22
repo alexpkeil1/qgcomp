@@ -144,7 +144,7 @@ qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family
 #  additive model this will equal the conditional)
 qgcomp.glm.ee(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian()) 
-qgcomp.glm.ee(f=y ~ x1 + x2 + x1*x2 + z, expnms = c('x1', 'x2'), data=dat, q=4,
+qgcomp.glm.ee(f=y ~ x1 + x2 + I(x1*x2) + z, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian()) 
 # no intercept model
 qgcomp.glm.ee(f=y ~ -1+z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
@@ -173,6 +173,7 @@ qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, B=1000)
 
 # generally non-linear/non-addiive underlying models lead to non-linear mixture slopes
+dat$y = dat$y + dat$x1*dat$x2
 qgcomp.glm.ee(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
  expnms = c('x1', 'x2'), data=dat, q=4, deg=2)
 qgcomp.glm.boot(y ~ z + x1 + x2 + I(x1^2) + I(x2*x1), family="gaussian",
@@ -218,8 +219,12 @@ res2a = qgcomp.glm.boot(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
 res2 = qgcomp.glm.ee(y ~ z + x1 + I(x2==1) + I(x2==2) + I(x2==3),
   family="binomial", expnms = c('x1', 'x2'), data=dat, q=4, rr=TRUE,
   degree=2)
+  
+# conditional model estimates (identical point estimates and similar std. errors)
+summary(res2a$fit)$coefficients
 res2$fit
-res2$msmfit  # correct point estimates, incorrect standard errors
+# msm estimates (identical point estimates and different std. errors)
+summary(res2a$msmfit)$coefficients  # correct point estimates, incorrect standard errors
 res2  # correct point estimates, correct standard errors
 plot(res2)
 # Log risk ratio per one IQR change in all exposures (not on quantile basis)

@@ -201,14 +201,15 @@ tidy.qgcompfit <- function (x,
 #'   geom_point(aes(x=Exposure, y=Weight)) +
 #'   geom_hline(aes(yintercept=0))
 #'   
-#' # this function can be used to impute from an intercept only model
+#' # this function can be used to impute from an intercept only model.
 #' # but you need to "trick" mice to bypass checks for collinearity by including
 #' # a variable that does not need to have values imputed (here, y).
 #' # The internal collinearity checks by the mice package remove collinear variables
 #' # and then throws an error if no predictor variabls are retained. Here, the 
 #' # trick is to use the "predictorMatrix" parameter to "impute" the non-missing
 #' # variable y using x1 (which does nothing), and remove all predictors from the model for x1.
-#' # This function only imputes x1 from a log normal distribution.
+#' # This function only imputes x1 from a log normal distribution and thus is similar
+#' # to many published examples of imputation from a Tobit model.
 #' 
 #' impdat2 = mice(data = mdat[,c("y","x1")],
 #'   method = c("", "tobit"), remove.collinear=FALSE,
@@ -265,19 +266,42 @@ mice.impute.leftcenslognorm <- function(y, ry, x, wy = NULL, lod = NULL, debug=F
   }
   ylod = y
   ylod[wy] = LOD[wy]
-  fit <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal',
-    control=survreg.control(), #introduced for mice v3.7.0
-    ...
-  )
+  if(all(x == 1)){
+    # introduced for mice v3.16.0
+    fit <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ 1,
+      dist='lognormal',
+      control=survreg.control(), #introduced for mice v3.7.0
+      ...
+    )
+    
+  } else{
+    # introduced for mice v3.16.0
+    fit <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ x,
+      dist='lognormal',
+      control=survreg.control(), #introduced for mice v3.7.0
+      ...
+    )
+    
+  }
   # take a draw from the coefficients
   draw = .rmvnorm(1, c(fit$coefficients, `Log(Scale)`=log(fit$scale)), fit$var)
   #  get predictions under new draws
-  fit2 <-  survreg(
-    Surv(time=ylod, event=ry, type='left') ~ x,
-    dist='lognormal', init=draw, control=survreg.control(maxiter=0)
-  )
+  if(all(x == 1)){
+    # introduced for mice v3.16.0
+    fit2 <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ 1,
+      dist='lognormal', init=draw, control=survreg.control(maxiter=0)
+    )
+  } else{
+    # introduced for mice v3.16.0
+    fit2 <-  survreg(
+      Surv(time=ylod, event=ry, type='left') ~ x,
+      dist='lognormal', init=draw, control=survreg.control(maxiter=0)
+    )
+    }
+  
   fit2$linear.predictors[wy] = ifelse(is.na(fit2$linear.predictors[wy]), -20, fit2$linear.predictors[wy])
   fub = plnorm(LOD[wy], fit2$linear.predictors[wy], fit2$scale)
   # note plnorm(mu,0,1) = pnorm(log(mu), 0, 1)
