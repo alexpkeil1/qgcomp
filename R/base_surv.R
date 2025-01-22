@@ -14,13 +14,12 @@
 #' @param ... not used
 #'
 #' @return a list of data.frames:
-#' 
-#' 
-#'  - **mdfpop**: Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure
-#'  - **cdfpop**: Population average survival curve (survival, time) based on the underlying conditional model
-#'  - **mdfq**: Survival curves (survival, time) for each quantile based on marginal structural model
-#'  - **cdfq**: Survival curves (survival, time) for each quantile based on underlying conditional model
-#' 
+#' \describe{
+#'  \item{**mdfpop**}{Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure}
+#'  \item{**cdfpop**}{Population average survival curve (survival, time) based on the underlying conditional model}
+#'  \item{**mdfq**}{Survival curves (survival, time) for each quantile based on marginal structural model}
+#'  \item{**cdfq**}{Survival curves (survival, time) for each quantile based on underlying conditional model}
+#' }
 #' @md
 #' @import survival
 #' @export

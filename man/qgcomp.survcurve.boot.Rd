@@ -13,11 +13,11 @@ qgcomp.survcurve.boot(x, ...)
 }
 \value{
 a list of data.frames:
-\itemize{
-\item \strong{mdfpop}: Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure
-\item \strong{cdfpop}: Population average survival curve (survival, time) based on the underlying conditional model
-\item \strong{mdfq}: Survival curves (survival, time) for each quantile based on marginal structural model
-\item \strong{cdfq}: Survival curves (survival, time) for each quantile based on underlying conditional model
+\describe{
+\item{\strong{mdfpop}}{Average Survival curve (survival, time) based on marginal structural model, averaged over the population at every quantile of exposure}
+\item{\strong{cdfpop}}{Population average survival curve (survival, time) based on the underlying conditional model}
+\item{\strong{mdfq}}{Survival curves (survival, time) for each quantile based on marginal structural model}
+\item{\strong{cdfq}}{Survival curves (survival, time) for each quantile based on underlying conditional model}
 }
 }
 \description{
