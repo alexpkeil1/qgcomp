@@ -224,11 +224,9 @@ qgcomp.glm.ee <- function(
     weights,
     offset=NULL,
     alpha=0.05,
-    B=200,
     rr=TRUE,
     degree=1,
     seed=NULL,
-    bayes=FALSE,
     includeX=TRUE,
     verbose=TRUE,
     ...
@@ -243,7 +241,12 @@ qgcomp.glm.ee <- function(
   #' allows non-linear and non-additive effects of individual components of the exposure, as well as
   #' non-linear joint effects of the mixture via polynomial basis functions, which increase the
   #' computational computational burden due to the need for non-parametric bootstrapping.
-  #' qgcomp.ee is an equivalent function (slated for deprecation)
+  #' 
+  #' Estimating equation methodology is used as the underlying estimation scheme. This allows that observations can be correlated, and is fundementally identical to some implementations of "generalized estimating equations" or GEE. Thus, it allows for a more general set of longitudinal data structures than does the qgcomp.glm.noboot function, because it allows that the outcome can vary over time within an individual. Interpretation of parameters is similar to that of a GEE: this function yields population average estimates of the effect of exposure over time. 
+  #' 
+  #' Note: GEE (and this function, by extension) does not automatically address all problems of longitudinal data, such as lag structures. Those are up to the investigator to specify correctly.
+  #' 
+  #' Note: qgcomp.ee is an equivalent function (slated for deprecation)
   #'
   #' @details Estimates correspond to the average expected change in the
   #'  (log) outcome per quantile increase in the joint exposure to all exposures
@@ -284,18 +287,12 @@ qgcomp.glm.ee <- function(
   #' @param offset Not yet implemented
   #' \code{\link[stats]{glm}} or \code{\link[arm]{bayesglm}}
   #' @param alpha alpha level for confidence limit calculation
-  #' @param B integer: number of bootstrap iterations (this should typically be >=200,
-  #'  though it is set lower in examples to improve run-time).
   #' @param rr logical: if using binary outcome and rr=TRUE, qgcomp.glm.ee will
   #'   estimate risk ratio rather than odds ratio
   #' @param degree polynomial bases for marginal model (e.g. degree = 2
   #'  allows that the relationship between the whole exposure mixture and the outcome
   #'  is quadratic (default = 1).
   #' @param seed integer or NULL: random number seed for replicable bootstrap results
-  #' @param bayes use underlying Bayesian model (`arm` package defaults). Results
-  #' in penalized parameter estimation that can help with very highly correlated
-  #' exposures. Note: this does not lead to fully Bayesian inference in general,
-  #' so results should be interpreted as frequentist.
   #' @param includeX (logical) should the design/predictor matrix be included in the output via the fit and msmfit parameters?
   #' @param verbose (logical) give extra messages about fits
   #' @param ... arguments to glm (e.g. family)
@@ -438,7 +435,6 @@ qgcomp.glm.ee <- function(
   #' qgcfit$fit
   #' summary(glm(y ~ z + x1 + x2, data = qdata, weights=w))
   #' }
-  # character names of exposure mixture components
   oldq = NULL
   if(is.null(seed)) seed = round(runif(1, min=0, max=1e8))
   
@@ -555,7 +551,6 @@ qgcomp.glm.ee <- function(
   #Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {modframe[,expnms] = x; model.matrix(newform,modframe)})))
   #Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {mf2 = modframe; mf2[,expnms] = x; model.matrix(newform,model.frame(newform, data=mf2))}))) # works in non-linear setting
   Xint = as.matrix(model.matrix(newform, do.call(rbind,lapply(intvals, function(x) {mf2 = basevars; mf2[,expnms] = x; model.frame(newform, data=mf2)})))) # works in non-linear setting
-  #: xmsm should allow for non-linearity
   Xmsm = poly(Xint[, expnms[1]], degree=degree, raw=TRUE) # intercept and constant exposure
   if(hasintercept){
     Xmsm = cbind(Xint[,colnames(Xint)[1]], Xmsm)
@@ -578,11 +573,11 @@ qgcomp.glm.ee <- function(
   parminits = startvals(family,Y,X,np,npmsm)
   #.esteq_qgc(parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=FALSE)
   eqfit <- rootSolve::multiroot(.esteq_qgc, start=parminits, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights, rr=rr, offset=qdata$offset__, delta=delta)
-  #
+  # "bread" of the sandwich covariance
   A = numDeriv::jacobian(func=.esteq_qgc, x=eqfit$root, family=family, Y=Y, X=X, Xint=Xint, Xmsm=Xmsm, weights=qdata$weights,method="Richardson", rr=rr,offset=qdata$offset__, delta=delta)
   #
   
-  
+  # "meat" of the sandwich covariance
   uid =   unique(qdata[,id,drop=TRUE])
   psii = lapply(uid, function(x){
     selidx = which(qdata[,id,drop=TRUE] == x);
@@ -595,14 +590,12 @@ qgcomp.glm.ee <- function(
     B = B + Bi[[i]]
   }
   
-
+  # sandwich covariance
   ibread = solve(A)
   (fullcovmat = ibread %*% B %*% t(ibread))
 
   condidx = 1:np
   msmidx = (np+1):(np+npmsm)
-  
-  #estb <- as.numeric(msmfit$msmfit$coefficients[-1])
   estb <- as.numeric(eqfit$root[msmidx])
   nobs <- dim(qdata)[1]
   covmat <- fullcovmat[msmidx,msmidx,drop=FALSE]
@@ -617,7 +610,7 @@ qgcomp.glm.ee <- function(
   pval <- 2 - 2 * pt(abs(tstat), df = df)
   pvalz <- 2 - 2 * pnorm(abs(tstat))
   ci <- cbind(estb + seb * qnorm(alpha / 2), estb + seb * qnorm(1 - alpha / 2))
-  # outcome 'weights' not applicable in this setting, generally (i.e. if using this function for non-linearity,
+  # qgcomp 'weights' not applicable in this setting, generally (i.e. if using this function for non-linearity,
   #   then weights will vary with level of exposure)
   if (!is.null(oldq)){
     q = oldq
@@ -652,11 +645,8 @@ qgcomp.glm.ee <- function(
     coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=degree,
     bootstrap=FALSE,
-    #y.expected=msmfit$Ya, y.expectedmsm=msmfit$Yamsm, index=msmfit$A,
     y.expected = fit$family$linkinv(Xint %*% coef(fit)), index=Xint[,expnms[1]], # predictions from conditional fit at intervention data
     y.expectedmsm=predict(msmfit),
-    #bootsamps = bootsamps,
-    #cov.yhat=cov.yhat,
     bread = A, meat = B,
     covmat.all_robust = fullcovmat,
     alpha=alpha,

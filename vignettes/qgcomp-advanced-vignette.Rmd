@@ -349,7 +349,7 @@ Some of the convenience functions, like `plot` and `summary` are available for m
 
 ### Example 11: sample weighting from, e.g. NHANES<a name="ex-weighting"></a>
 
-Often, we will want to apply sampling weights to data to make inference to a population that is either fully external to the analytic data or represents a larger population of which the analytic data are a subset. Weighting (e.g. sampling weights or inverse-odds weights) may be used for inference. This is common in analyses of National Health and Nutrition Examination Survey (NHANES) data, which provides a rich source of data for analysis of mixtures. Weighting is done using the "weights" parameter in calls to qgcomp methods. Notably, the default in `qgcomp.*.noboot` interprets these weights as frequency weights in which one individual represents multiple known individuals with identical data. Sampling weights, however, are not frequency weights in the strict sense, and should be handled differently. Survey-weighting methods can be used in general, but within the qgcomp package the appropriate functions are the `qgcomp.*.ee` functions, which use robust standard errors that address uncertainty due to sampling weights. Bootstrapping is another alternative.
+Often, we will want to apply sampling weights to data to make inference to a population that is either fully external to the analytic data or represents a larger population of which the analytic data are a subset. Weighting (e.g. sampling weights or inverse-odds weights) may be used for inference. This is common in analyses of National Health and Nutrition Examination Survey (NHANES) data, which provides a rich source of data for analysis of mixtures. Weighting is done using the "weights" parameter in calls to qgcomp methods. Notably, the default in `qgcomp.*.noboot` interprets these weights as frequency weights in which one individual represents multiple known individuals with identical data. Sampling weights, however, are not frequency weights in the strict sense, and should be handled differently. Survey-weighting methods can be used in general, but within the qgcomp package the appropriate functions are the `qgcomp.*.ee` functions, which use robust standard errors that address uncertainty due to sampling weights. Bootstrapping is another alternative that is not demonstrated here (though commented code is given below). Note that the unweighted estimate differs from the weighted estimates. The weighted estiamtes are equivalent (thought the bootstrap estimate may differ if non-exposure covariates are included in the model), though the standard errors and confidence intervals differ. If using inverse probability weighting (for example, to address loss-to-follow-up), then the `qgcomp.*.ee` or bootstrap methods should also be used.
 
 ```{r weighting, results='markup', fig.show='hold', fig.height=10, fig.width=7.5, cache=FALSE}
 
@@ -361,6 +361,16 @@ uw = qgcomp.glm.noboot(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")
 wtd = qgcomp.glm.noboot(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")], weights=metals$samplingweights)
 wtd2 = qgcomp.glm.ee(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")], weights=metals$samplingweights)
 #wtd3 = qgcomp.glm.boot(y~., expnms = Xnm,q=4, data = metals[,c(Xnm, covars, "y")], weights=metals$samplingweights)
+
+# unweighted
+uw
+# weighted with invalid standard error, confidence interval
+wtd
+# weighted with valid (robust) standard error, confidence interval
+wtd2
+# weighted with valid (bootstrap) standard error, confidence interval
+#wtd3
+
 ```
 
 ## Missing data, limits of detection and multiple imputation<a name="missing"></a>

@@ -128,7 +128,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     cat(paste0("Mixture log(",estimand,")", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
   }
-  if (fam %in% c("gaussian", "inverse.gaussian")){
+  if (fam %in% c("gaussian", "inverse.gaussian", "tobit")){
     cat(paste0("Mixture slope parameters", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "t"
     x$zstat = x$tstat
@@ -137,7 +137,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
     cat(paste0("Mixture log(hazard ratio)", ifelse(x$bootstrap, " (bootstrap CI)", ifelse(is.null(x$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
   }
-  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian"))){
+  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian", "tobit"))){
     testtype = "Z"
     rnm = c(paste0('psi',1:max(1, length(coef(x)))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution

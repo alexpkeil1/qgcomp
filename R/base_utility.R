@@ -35,6 +35,13 @@ cox <- function(){
   obj
 }
 
+# fake tobit family function
+tobit <- function(){
+  obj = gaussian(link="identity")
+  obj$family = "tobit"
+  obj
+}
+
 # fake zi family function
 zi <- function(){
   obj = binomial(link="log")

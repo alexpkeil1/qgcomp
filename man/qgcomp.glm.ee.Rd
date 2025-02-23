@@ -15,11 +15,9 @@ qgcomp.glm.ee(
   weights,
   offset = NULL,
   alpha = 0.05,
-  B = 200,
   rr = TRUE,
   degree = 1,
   seed = NULL,
-  bayes = FALSE,
   includeX = TRUE,
   verbose = TRUE,
   ...
@@ -35,11 +33,9 @@ qgcomp.ee(
   weights,
   offset = NULL,
   alpha = 0.05,
-  B = 200,
   rr = TRUE,
   degree = 1,
   seed = NULL,
-  bayes = FALSE,
   includeX = TRUE,
   verbose = TRUE,
   ...
@@ -76,9 +72,6 @@ errors via bootstrapping.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{B}{integer: number of bootstrap iterations (this should typically be >=200,
-though it is set lower in examples to improve run-time).}
-
 \item{rr}{logical: if using binary outcome and rr=TRUE, qgcomp.glm.ee will
 estimate risk ratio rather than odds ratio}
 
@@ -87,11 +80,6 @@ allows that the relationship between the whole exposure mixture and the outcome
 is quadratic (default = 1).}
 
 \item{seed}{integer or NULL: random number seed for replicable bootstrap results}
-
-\item{bayes}{use underlying Bayesian model (\code{arm} package defaults). Results
-in penalized parameter estimation that can help with very highly correlated
-exposures. Note: this does not lead to fully Bayesian inference in general,
-so results should be interpreted as frequentist.}
 
 \item{includeX}{(logical) should the design/predictor matrix be included in the output via the fit and msmfit parameters?}
 
@@ -113,7 +101,12 @@ structural model (MSM) based on g-computation with quantized exposures. Note: th
 allows non-linear and non-additive effects of individual components of the exposure, as well as
 non-linear joint effects of the mixture via polynomial basis functions, which increase the
 computational computational burden due to the need for non-parametric bootstrapping.
-qgcomp.ee is an equivalent function (slated for deprecation)
+
+Estimating equation methodology is used as the underlying estimation scheme. This allows that observations can be correlated, and is fundementally identical to some implementations of "generalized estimating equations" or GEE. Thus, it allows for a more general set of longitudinal data structures than does the qgcomp.glm.noboot function, because it allows that the outcome can vary over time within an individual. Interpretation of parameters is similar to that of a GEE: this function yields population average estimates of the effect of exposure over time.
+
+Note: GEE (and this function, by extension) does not automatically address all problems of longitudinal data, such as lag structures. Those are up to the investigator to specify correctly.
+
+Note: qgcomp.ee is an equivalent function (slated for deprecation)
 }
 \details{
 Estimates correspond to the average expected change in the

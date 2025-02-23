@@ -37,7 +37,6 @@ The basic vignette covers:
 3. Example 1: linear model
 4. Example 2: conditional odds ratio, marginal odds ratio in a logistic model(#ex-logistic)
 5. Example 3: adjusting for covariates, plotting estimates
-
 6. Example 4: non-linearity (and non-homogeneity)
 7. Example 5: comparing model fits and further exploring non-linearity
 8. Example 6: miscellaneous other ways to allow non-linearity

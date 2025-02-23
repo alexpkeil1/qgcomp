@@ -249,8 +249,10 @@ coxmsm_fit <- function(
     res$A =  msmdat$psi # joint exposure (0 = all exposures set category with 
     # upper cut-point as first quantile)
   }
-  res$fit[['family']] = coxfam # kludge for print function
-  res$msmfit[['family']] = coxfam # kludge for print function
+  #res$fit[['family']] = coxfam # kludge for print function
+  #res$msmfit[['family']] = coxfam # kludge for print function
+  res$fit[['family']] = cox() # kludge for print function
+  res$msmfit[['family']] = cox() # kludge for print function
   class(res$msmfit) = c("coxmsmfit",class(res$msmfit))
   res
 }

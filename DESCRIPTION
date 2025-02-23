@@ -1,7 +1,7 @@
 Package: qgcomp
 Title: Quantile G-Computation
-Version: 2.16.5
-Date: 2025-01-22
+Version: 2.17.0
+Date: 2025-02-23
 Authors@R: 
     person("Alexander", "Keil", , "alex.keil@nih.gov", role = c("aut", "cre"))
 Description: G-computation for a set of time-fixed exposures with
@@ -20,6 +20,7 @@ BugReports: https://github.com/alexpkeil1/qgcomp/issues
 Depends: 
     R (>= 3.5.0)
 Imports: 
+    AER,
     arm,
     future,
     future.apply,
@@ -47,4 +48,4 @@ VignetteBuilder:
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
