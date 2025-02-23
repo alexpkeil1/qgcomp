@@ -196,7 +196,7 @@
     lw = 1+maxstr/20
     p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
   }
-  return(p1)
+  p1
 }
 
 .plot_noboot_base <- function(x, nms, theme_butterfly_r, theme_butterfly_l){
@@ -230,7 +230,7 @@
     lw = 1+maxstr/20
     p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
   }
-  return(p1)
+  p1
 }
 
 
@@ -629,14 +629,14 @@ plot.qgcompmultfit <- function(
     warning("The default plot function is only functional for qgcomp.multinomial.noboot currently")
   } else{
     nms = list()
-    for (r in 1:nrow(x$weights)){
+    for (r in seq_len(nrow(x$weights))){
       nms[[r]] = names(sort(-abs(x$weights[r,])))
     }
     themes = .butterfly_themes()
     theme_butterfly_l = themes[[1]]
     theme_butterfly_r = themes[[2]]
     plist <- list()
-    for(r in 1:nrow(x$weights)){
+    for(r in seq_len(nrow(x$weights))){
       plist[[r]] <- .plot_noboot_multi_base(r, x, nms, theme_butterfly_r, theme_butterfly_l)
     }
 

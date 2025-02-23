@@ -391,7 +391,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
     cf = coef(x)
     lbp = log(.get_baseline_prob_multinom(x))
     py = numeric(nrow(msmdesign))
-    for(r in 1:length(py)){
+    for(r in seq_along(length(py))){
       designrow = msmdesign[r,]
       lab = labs[designrow[1]]
       whichco = paste0(lab, c(".(Intercept)", ".psi"))

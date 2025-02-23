@@ -112,20 +112,20 @@ Note: qgcomp.ee is an equivalent function (slated for deprecation)
 Estimates correspond to the average expected change in the
 (log) outcome per quantile increase in the joint exposure to all exposures
 in `expnms'. Test statistics and confidence intervals are based on
-a non-parametric bootstrap, using the standard deviation of the bootstrap
-estimates to estimate the standard error. The bootstrap standard error is
-then used to estimate Wald-type confidence intervals. Note that no bootstrapping
-is done on estimated quantiles of exposure, so these are treated as fixed
+a cluster-robust variance that is available in estimating equation methods,
+which are sometimes referred to as "M-estimators." The robust standard error is
+then used to estimate Wald-type confidence intervals. Note that no error
+is assumed for estimated quantiles of exposure, so these are treated as fixed
 quantities
 
-Note that there is an argument to "family" that is optional, but it defaults to gaussian
-per the glm function. Current options allow "gaussian" (or gaussian()) or "binomial." This
+There is an argument to "family" that is optional, but it defaults to gaussian.
+Current options allow "gaussian" (or gaussian()), "poisson" or "binomial." This
 function defaults to canonical links (binomial -> logistic link, gaussian ->
 identity link). However, setting family="binomial" and rr=TRUE uses a
 marginal structural model with a log-link (and an underlying conditional model with
 a logistic link). This mimics the behavior of \code{\link[qgcomp]{qgcomp.glm.boot}}
 which maximizes backwards compatibility but also is a useful default to avoid
-convergence issues when using the log-link for conditional models.
+convergence issues when using the log-link for conditional models. See examples below.
 }
 \examples{
 set.seed(30)

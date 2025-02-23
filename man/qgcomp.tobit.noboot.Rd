@@ -40,10 +40,10 @@ to define cutpoints.}
 
 \item{id}{Not used}
 
-\item{weights}{"case weights" - passed to the "weight" argument of
+\item{weights}{"case weights" - passed to the "weight" argument of AER::tobit. Note this must be a standalone vector so that it might accept, for example, an argument like data$weights but will not accept "weights" if there is a variable "weights" in the dataset representing the weights.
 \code{\link[AER]{tobit}}}
 
-\item{cluster}{not yet implemented}
+\item{cluster}{Passed to AER::tobit (Optional variable that identifies groups of subjects, used in computing the robust variance. Like model variables, this is searched for in the dataset pointed to by the data argument). Note: this will result in robust standard errors being returned unless robust=FALSE is used in the function call.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
@@ -66,12 +66,46 @@ This function yields population average effect estimates for
 #'
 }
 \examples{
+# First, a demonstration that the tobit model will return identical results (with variation due to numerical algorithms)
+# in the case of no censored values
 set.seed(50)
 # linear model
 dat <- data.frame(y=runif(50,-1,1), x1=runif(50), x2=runif(50), z=runif(50))
 qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
 qgcomp.tobit.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2)
 # not intercept model
-qgcomp.glm.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
-qgcomp.tobit.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="gaussian", left = -Inf, right = Inf)
+qgcomp.glm.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, 
+    q=2, family=gaussian())
+qgcomp.tobit.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, 
+    q=2, dist="gaussian", left = -Inf, right = Inf)
+# Next, a demonstration that the tobit model address censoring
+uncens_dat = qgcomp:::.dgm_quantized(N=1000, b0=0, coef=c(.33,.33,.33,.0))
+uncens_dat$ycens = ifelse(uncens_dat$y>0, uncens_dat$y, 0) # censor at zero
+uncens_dat$ycens1 = ifelse(uncens_dat$y>0, uncens_dat$y, 1) # censor at higher value
+# q set to NULL because the exposures are already quantized
+# again, first check the uncensored outcome for agreement
+qgcomp.glm.noboot(f= y ~ x1+x2+x3+x4, expnms = c('x1', 'x2', 'x3', 'x4'), 
+    data=uncens_dat, q=NULL, family=gaussian())
+qgcomp.tobit.noboot(f= y ~x1+x2+x3+x4, expnms = c('x1', 'x2', 'x3', 'x4'), 
+    data=uncens_dat, q=NULL, dist="gaussian", left = -Inf, right = Inf)
+# Next, after censoring
+ft_std <- qgcomp.glm.noboot(f= ycens ~ x1+x2+x3+x4, 
+    expnms = c('x1', 'x2', 'x3', 'x4'), data=uncens_dat, q=NULL, 
+    family=gaussian())
+ft_tobit <- qgcomp.tobit.noboot(f= ycens ~x1+x2+x3+x4, 
+    expnms = c('x1', 'x2', 'x3', 'x4'), data=uncens_dat, q=NULL, 
+    dist="gaussian", left = 0, right = Inf)
+# note the tobit regression will be closer to the estimates given when 
+# fitting with the uncensored outcome (which will typically not be available)
+summary(ft_std) 
+summary(ft_tobit)
+ft_std1 <- qgcomp.glm.noboot(f= ycens1 ~ x1+x2+x3+x4, 
+    expnms = c('x1', 'x2', 'x3', 'x4'), data=uncens_dat, q=NULL, 
+    family=gaussian())
+ft_tobit1 <- qgcomp.tobit.noboot(f= ycens1 ~x1+x2+x3+x4, 
+    expnms = c('x1', 'x2', 'x3', 'x4'), data=uncens_dat, q=NULL, 
+    dist="gaussian", left = 1, right = Inf)
+# the bias from standard methods is more extreme at higher censoring levels
+summary(ft_std1) 
+summary(ft_tobit1)
 }
