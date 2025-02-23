@@ -35,7 +35,8 @@
 #' @importFrom AER tobit
 #'
 #' @examples
-#' # First, a demonstration that the tobit model will return identical results (with variation due to numerical algorithms)
+#' # First, a demonstration that the tobit model will return identical results 
+#' # (with variation due to numerical algorithms)
 #' # in the case of no censored values
 #' set.seed(50)
 #' # linear model
