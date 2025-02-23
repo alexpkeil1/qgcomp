@@ -552,7 +552,7 @@ Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shans
 
 ## Acknowledgments<a name="ack"></a>
 
-The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing has been performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, Barrett Welch, Che-Jung (Rong) Chang, various github users, and Katie O'Brien.
+The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing has been performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, Barrett Welch, Che-Jung (Rong) Chang, various github users, and Katie O'Brien. Thank you to Hannah Jardel for contributing the "qgcomp.tobit.noboot" function.
 
 ```{r parend, echo=TRUE}
 # return to standard processing
