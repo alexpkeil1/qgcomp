@@ -16,8 +16,9 @@
   stodf = expand.grid(xx[[1]],xx[[2]])
   rownames(stodf) = paste(stodf$Var1, stodf$Var2, sep =".")
   stodf[,nm] = 0
-  for(i in 1:nrow(stodf)){
-    stodf[i,nm] = xm[stodf$Var1[i], stodf$Var2[i]]
+  #for(i in seq_along(nrow(stodf))){
+  for(i in seq_len(nrow(stodf))){
+      stodf[i,nm] = xm[stodf$Var1[i], stodf$Var2[i]]
   }
   t(as.matrix(stodf[,nm,drop=FALSE]))[1,]
 }
@@ -209,10 +210,10 @@ homogeneity_test.qgcompmultfit <- function(x,...){
 joint_test.qgcompmultfit <- function(x,...){
   nullh = paste0("H_0:", paste0(" psi_", x$labs[2:length(x$labs)], " = 0", collapse=" &"))
   df = x$nlevels
-  whichcont = combn(x$nlevels,1)
+  whichcont = combn(df,1)
   L = matrix(0, nrow=df, ncol=df)
   for(j in 1:(df)){
-    L[j,whichcont[,j]] = c(1)
+    L[j,whichcont[,j]] = 1
   }
   B = x$psi
   V = x$covmat.psi
@@ -707,7 +708,7 @@ msm_multinomial_fit <- function(f,
                                               weights=weights, Hess=TRUE, trace=FALSE, model=TRUE,
                                               ...))
     msmfit$model = msmdat
-    idx = ifelse(hasintercept, 2:length(msmfit$coefnames), 1:length(msmfit$coefnames))
+    idx = ifelse(hasintercept, 2:length(msmfit$coefnames), seq_along(msmfit$coefnames))
     nm = paste0("psi", gsub("[a-zA-Z= (),]+", "", msmfit$coefnames[idx]))
     msmfit$coefnames[idx] <- msmfit$vcoefnames[idx] <- nm
     

@@ -344,7 +344,7 @@ qgcomp.glm.noboot <- function(f,
     qx <- qdata[, expnms]
     names(qx) <- paste0(names(qx), "_q")
     psiidx = 1+hasintercept
-    names(estb)[psiidx] <- c("psi1")
+    names(estb)[psiidx] <- "psi1"
     cnms = "psi1"
     if(hasintercept){
       covmat.coef=vc_comb(aname="(Intercept)", expnms=expnms, covmat = mod$cov.scaled)

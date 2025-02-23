@@ -129,7 +129,7 @@ simdata_quantized <- function(
   corv = rep(0, p)
   corv[1] = 1.0
   if(is.null(corr)) corr = corv[-1]
-  if(length(corr)>1) corv[1+(1:length(corr))] = corr
+  if(length(corr)>1) corv[1+(seq_along(corr))] = corr
   X = matrix(nrow=N, ncol=p)
   xtemplate = sample(rep(0:(q-1), length.out=N), N, replace=FALSE)
   for(k in 1:p){

@@ -94,7 +94,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   #' print(obj1)
   #' print(obj2)
   fam <- x$fit$family$family
-  rnm =  c(paste0('psi',1:max(1, length(coef(x)))))
+  rnm =  c(paste0('psi',seq_len(max(1, length(coef(x))))))
   if(x$hasintercept){
     rnm = c("(Intercept)",rnm[-length(rnm)])
   }
@@ -139,7 +139,7 @@ print.qgcompfit <- function(x, showweights=TRUE, ...){
   }
   if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian", "tobit"))){
     testtype = "Z"
-    rnm = c(paste0('psi',1:max(1, length(coef(x)))))
+    rnm = c(paste0('psi',seq_len(max(1, length(coef(x))))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
@@ -168,29 +168,29 @@ summary.qgcompfit <- function(object, ...){
     if(object$bootstrap && object$msmfit$family$link=='log') estimand = 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
+    rnm = c("(Intercept)", c(paste0('psi',seq_len(max(1, length(coef(object))-1)))))
   }
   if (fam %in% c("poisson", "quasipoisson")){
     #message("Poisson family still experimental: use with caution")
     estimand <- 'RR'
     cat(paste0("Mixture log(",estimand,")", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
+    rnm = c("(Intercept)", c(paste0('psi',seq_len(max(1, length(coef(object))-1)))))
   }
-  if (fam %in% c("gaussian", "inverse.gaussian")){
+  if (fam %in% c("gaussian", "inverse.gaussian", "tobit")){
     cat(paste0("Mixture slope parameters", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "t"
-    rnm = c("(Intercept)", c(paste0('psi',1:max(1, length(coef(object))-1))))
+    rnm = c("(Intercept)", c(paste0('psi',seq_len(max(1, length(coef(object))-1)))))
   }
   if (fam %in% c("cox", "cch")){
     cat(paste0("Mixture log(hazard ratio)", ifelse(object$bootstrap, " (bootstrap CI)", ifelse(is.null(object$covmat.all_robust), " (delta method CI)", " (robust CI)")), ":\n\n"))
     testtype = "Z"
-    rnm = c(paste0('psi',1:max(1, length(coef(object)))))
+    rnm = c(paste0('psi',seq_len(max(1, length(coef(object))))))
   }
-  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian"))){
+  if (!(fam %in% c("poisson", "quasipoisson", "binomial", "cox", "cch", "gaussian", "tobit"))){
     # in development: quasipoisson, Gamma, quasi, quasibinomial, inverse.gaussian
     testtype = "Z"
-    rnm = c(paste0('psi',1:max(1, length(coef(object)))))
+    rnm = c(paste0('psi',seq_len(max(1, length(coef(object))))))
     warning(paste0("The ", fam, " distribution has not been tested with qgcomp! Please use with extreme caution
                    and check results thoroughly with simulated data to ensure it works."))
   }
