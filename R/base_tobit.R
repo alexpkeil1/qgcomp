@@ -18,7 +18,8 @@
 #' break up the variables named in expnms. This is an alternative to using 'q'
 #' to define cutpoints.
 #' @param id Not used
-#' @param weights_name 
+#' @param weights "case weights" - passed to the "weight" argument of
+#' \code{\link[AER]{tobit}}
 #' @param cluster not yet implemented
 #' @param alpha alpha level for confidence limit calculation
 #' @param left Passed to AER::tobit (From tobit docs: left limit for the censored dependent variable y. If set to -Inf, y is assumed not to be left-censored.)
@@ -43,9 +44,9 @@
 #' qgcomp.glm.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
 #' qgcomp.tobit.noboot(f=y ~-1+ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, dist="gaussian", left = -Inf, right = Inf)
 qgcomp.tobit.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL, id = NULL, 
-                                  weights_name = NULL, cluster = NULL, alpha = 0.05, left = -Inf, right = Inf, ...) 
+                                  weights = NULL, cluster = NULL, alpha = 0.05, left = -Inf, right = Inf, ...) 
 {
-  weights <- data[weights_name]
+  #weights <- data[weights_name]
   newform <- terms(f, data = data)
   hasintercept = as.logical(attr(newform, "intercept"))
   class(newform) <- "formula"

@@ -11,7 +11,7 @@ qgcomp.tobit.noboot(
   q = 4,
   breaks = NULL,
   id = NULL,
-  weights_name = NULL,
+  weights = NULL,
   cluster = NULL,
   alpha = 0.05,
   left = -Inf,
@@ -40,7 +40,8 @@ to define cutpoints.}
 
 \item{id}{Not used}
 
-\item{weights_name}{}
+\item{weights}{"case weights" - passed to the "weight" argument of
+\code{\link[AER]{tobit}}}
 
 \item{cluster}{not yet implemented}
 
