@@ -16,7 +16,6 @@
   stodf = expand.grid(xx[[1]],xx[[2]])
   rownames(stodf) = paste(stodf$Var1, stodf$Var2, sep =".")
   stodf[,nm] = 0
-  #for(i in seq_along(nrow(stodf))){
   for(i in seq_len(nrow(stodf))){
       stodf[i,nm] = xm[stodf$Var1[i], stodf$Var2[i]]
   }
