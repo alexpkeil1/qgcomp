@@ -20,9 +20,19 @@ deviance.qgcompfit <- function(object, ...){
 
 
 df.residual.qgcompfit <- function(object, ...){
-  #' @importFrom stats df.residual
-  #' @export
-  object$fit$df.residual
+  #' @exportS3Method stats::df.residual
+  df.residual(object$fit)
+}
+
+
+model.matrix.eeqgcompfit <- function(object, ...) {
+  #' @exportS3Method stats::model.matrix
+  object$fit$X
+}
+
+formula.eeqgcompfit <- function(x, ...) {
+  #' @exportS3Method stats::formula
+  x$call$f
 }
 
 vcov.qgcompfit <- function(object, ...){
@@ -437,15 +447,4 @@ anovaqgcompgee <- function(m1, m2, ...) {
                      class = c("anova", "data.frame"))
     return(val)
   }
-}
-
-
-model.matrix.eeqgcompfit <- function(object, ...) {
-  #' @exportS3Method stats::model.matrix
-  object$fit$X
-}
-
-formula.eeqgcompfit <- function(x, ...) {
-  #' @exportS3Method stats::formula
-  x$call$f
 }

@@ -231,21 +231,9 @@ joint_test.qgcompmultfit <- function(x,...){
 # generic printing/summary functions ####
 #----------------------------------------------------------------#
 
-anova.qgcompmultfit <- function(object, ...){
-  #' @importFrom stats anova
-  #' @export
-  warning("anova not implemented for this model")
-}
-
-df.residual.qgcompfit <- function(object, ...){
-  #' @importFrom stats df.residual
-  #' @export
-  warning("df.residual not implemented for this model")
-}
 
 
-
-#' @export
+#' @exportS3Method base::print
 print.qgcompmultfit <- function(x, ...){
   if(!x$bootstrap){
     cat("Weights\n")
@@ -320,7 +308,7 @@ summary.qgcompmultfit <- function(object, ..., tests=NULL){
   }
 }
 
-#' @export
+#' @exportS3Method base::print
 print.qgcompmulttest <- function(x,...){
   nullh = x$nullh
   cat(paste0(nullh, "\n"))
