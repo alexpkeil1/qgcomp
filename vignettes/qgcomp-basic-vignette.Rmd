@@ -293,7 +293,8 @@ qcee.fit3
 
 We can change the referent category for pointwise comparisons via the `pointwiseref` parameter:
 ```{r adj4cov c, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
-plot(qcee.fit3, pointwiseref = 3, flexfit = FALSE)
+qgcomp:::modelbound.ee(qcee.fit3)
+plot(qcee.fit3, pointwiseref = 3, flexfit = FALSE, modelbound=TRUE)
 plot(qcboot.fit3, pointwiseref = 3, flexfit = FALSE)
 ```
 

@@ -7,8 +7,8 @@
   ymin <- ymax <- v <- w <- y <- NULL
   isboot <- x$bootstrap
   isee <- inherits(x, "eeqgcompfit")
-  if(isboot) modbounds = modelbound.boot(x, pwonly = TRUE, alpha = alpha)
-  if(isee) modbounds = modelbound.ee(x, pwonly = TRUE, alpha = alpha)
+  if(isboot) modbounds = modelbound.boot(x, pwonly = FALSE, alpha = alpha)
+  if(isee) modbounds = modelbound.ee(x, pwonly = FALSE, alpha = alpha)
 
   ret = geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
                         fill="Model confidence band"),
@@ -531,7 +531,10 @@ plot.qgcompfit <- function(x,
   isesteq = inherits(x, "eeqgcompfit")
   iszi = is.null(x$fit$family)
   isboot = x$bootstrap
-  #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
+  if(geom_only & !suppressprint){
+    message("geomonly=TRUE, suppressing output by setting suppressprint=TRUE")
+    suppressprint=TRUE
+  }  #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
   if(!isboot & !isesteq){
     themes = .butterfly_themes()
@@ -557,7 +560,7 @@ plot.qgcompfit <- function(x,
     if(x$msmfit$family$family=='gaussian') temppfun <- .plot_ee_gaussian
     if(x$msmfit$family$family=='binomial') temppfun <- .plot_ee_binomial
     if(x$msmfit$family$family=='poisson')  temppfun <- .plot_ee_poisson
-    p <- temppfun(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    p <- temppfun(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
     p <- c(p, list(
       scale_fill_grey(name="", start=.9), 
       scale_colour_grey(name="", start=0.0, end=0.6),

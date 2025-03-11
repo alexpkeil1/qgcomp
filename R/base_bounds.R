@@ -576,6 +576,52 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
 }
 
 
+#' @title Estimating qgcomp regression line confidence bounds
+#'
+#' @description Calculates: expected outcome (on the link scale), and upper and lower
+#'  confidence intervals (both pointwise and simultaneous)
+#'
+#' @details This method leverages the bootstrap distribution of qgcomp model coefficients
+#' to estimate pointwise regression line confidence bounds. These are defined as the bounds
+#' that, for each value of the independent variable X (here, X is the joint exposure quantiles)
+#' the 95% bounds (for example) for the model estimate of the regression line E(Y|X) are expected to include the
+#' true value of E(Y|X) in 95% of studies. The "simultaneous" bounds are also calculated, and the 95%
+#' simultaneous bounds contain the true value of E(Y|X) for all values of X in 95% of studies. The
+#' latter are more conservative and account for the multiple testing implied by the former. Pointwise
+#' bounds are calculated via the standard error for the estimates of E(Y|X), while the simultaneous
+#' bounds are estimated using the bootstrap method of Cheng (reference below). All bounds are large
+#' sample bounds that assume normality and thus will be underconservative in small samples. These
+#' bounds may also inclue illogical values (e.g. values less than 0 for a dichotomous outcome) and
+#' should be interpreted cautiously in small samples.
+#'
+#'
+#' Reference:
+#'
+#' Cheng, Russell CH. "Bootstrapping simultaneous confidence bands."
+#' Proceedings of the Winter Simulation Conference, 2005.. IEEE, 2005.
+#'
+#' @param x "qgcompfit" object from `qgcomp.glm.boot`,
+#' @param alpha alpha level for confidence intervals
+#' @param pwonly logical: return only pointwise estimates (suppress simultaneous estimates)
+#' @return A data frame containing
+#'  \describe{
+#'  \item{linpred: }{The linear predictor from the marginal structural model}
+#'  \item{r/o/m: }{The canonical measure (risk/odds/mean) for the marginal structural model link}
+#'  \item{se....: }{the stndard error of linpred}
+#'  \item{ul..../ll....: }{Confidence bounds for the effect measure, and bounds centered at the canonical measure (for plotting purposes)}
+#' }
+#' The confidence bounds are either  "pointwise" (pw) and "simultaneous" (simul) confidence
+#' intervals at each each quantized value of all exposures.
+#' @seealso \code{\link[qgcomp]{qgcomp.glm.boot}}
+#' @export
+#' @examples
+#' set.seed(12)
+#' \dontrun{
+#' dat <- data.frame(x1=(x1 <- runif(50)), x2=runif(50), x3=runif(50), z=runif(50),
+#'                   y=runif(50)+x1+x1^2)
+#' ft <- qgcomp.glm.eet(y ~ z + x1 + x2 + x3, expnms=c('x1','x2','x3'), data=dat, q=5)
+#' modelbound.ee(ft, 0.05)
+#' }
 modelbound.ee <- function(x, alpha=0.05, pwonly=FALSE){
   isboot <- x$bootstrap
   isee <- inherits(x, "eeqgcompfit")
@@ -586,10 +632,8 @@ modelbound.ee <- function(x, alpha=0.05, pwonly=FALSE){
     stop("This function does not work with this type of qgcomp fit")
   }
   link = x$msmfit$family$link
-  py = tapply(x$y.expectedmsm, x$index, mean)
-  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-  pw_vars = diag(ycovmat)
-  designmat <- x$msmfit$X
+
+  designmat <- .makenewdesign(x, seq_len(x$q)-1)
   coef_fixed <- coef(x)
   coef_vcov <- vcov(x)
   # samples from the sampling distribution
