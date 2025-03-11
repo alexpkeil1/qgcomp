@@ -20,54 +20,70 @@
 .safelog <- function(x,eps=1e-10) ifelse(x==0, log(x+eps), log(x))
 
 # confidence intervals for pointwise comparisons #
-.pointwise.lin <- function(q, py, se.diff, alpha, pwr){
+.pointwise.ident <- function(q, py, se.diff, alpha, pwr) {
   # mean, mean differences
-  pw = data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             mean.diff = py - py[pwr],
-             se.diff = se.diff, # standard error on link scale
-             ll.diff =  py - py[pwr] + qnorm(alpha/2) * se.diff,
-             ul.diff =  py - py[pwr] + qnorm(1-alpha/2) * se.diff
+  data.frame(
+    quantile = (seq_len(q)) - 1,
+    quantile.midpoint=((seq_len(q)) - 1 + 0.5) / q,
+    hx = py,
+    mean.diff = py - py[pwr],
+    se.diff = se.diff, # standard error on link scale
+    ll.diff =  py - py[pwr] + qnorm(alpha / 2) * se.diff,
+    ul.diff =  py - py[pwr] + qnorm(1 - alpha / 2) * se.diff
   )
+}
+
+
+
+.pointwise.log <- function(q, py, se.diff, alpha, pwr) {
+  # risk, risk ratios / prevalence ratios
+  data.frame(
+    quantile = (seq_len(q)) - 1,
+    quantile.midpoint = ((seq_len(q)) - 1 + 0.5) / q,
+    hx = py,
+    rr = exp(py - py[pwr]),
+    se.lnrr = se.diff, # standard error on link scale
+    ll.rr = exp(py - py[pwr] + qnorm(alpha / 2) * se.diff),
+    ul.rr = exp(py - py[pwr] + qnorm(1 - alpha / 2) * se.diff)
+  )
+}
+
+
+
+.pointwise.logit <- function(q, py, se.diff, alpha, pwr) {
+  # odds, odds ratios
+  data.frame(
+    quantile= (seq_len(q)) - 1,
+    quantile.midpoint=((seq_len(q)) - 1 + 0.5) / q,
+    hx = py, # log odds
+    or = exp(py - py[pwr]),
+    se.lnor = se.diff, # standard error on link scale
+    ll.or = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
+    ul.or = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
+  )
+}
+
+.pointwise.ident.boot <- function(q, py, se.diff, alpha, pwr) {
+  pw = .pointwise.ident(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - pw$mean.diff + pw$ll.diff
   pw$ul.linpred = pw$hx - pw$mean.diff + pw$ul.diff
   pw
 }
 
-
-
-.pointwise.log <- function(q, py, se.diff, alpha, pwr){
-  # risk, risk ratios / prevalence ratios
-  pw = data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             rr = exp(py - py[pwr]),
-             se.lnrr = se.diff, # standard error on link scale
-             ll.rr = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
-             ul.rr = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
-  )
+.pointwise.log.boot <- function(q, py, se.diff, alpha, pwr) {
+  pw = .pointwise.log(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - log(pw$rr) + log(pw$ll.rr)
   pw$ul.linpred = pw$hx - log(pw$rr) + log(pw$ul.rr)
   pw
 }
 
-
-
-.pointwise.logit <- function(q, py, se.diff, alpha, pwr){
-  # odds, odds ratios
-  pw = data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # log odds
-             or = exp(py - py[pwr]),
-             se.lnor = se.diff, # standard error on link scale
-             ll.or = exp(py - py[pwr] + qnorm(alpha/2) * se.diff),
-             ul.or = exp(py - py[pwr] + qnorm(1-alpha/2) * se.diff)
-  )
+.pointwise.logit.boot <- function(q, py, se.diff, alpha, pwr) {
+  pw = .pointwise.logit(q, py, se.diff, alpha, pwr)
   pw$ll.linpred = pw$hx - log(pw$or) + log(pw$ll.or)
   pw$ul.linpred = pw$hx - log(pw$or) + log(pw$ul.or)
   pw
 }
+
 
 
 .pointwise.zi <- function(q, py, se.diff, alpha, pwr, bootY){
@@ -91,92 +107,24 @@
   )
 }
 
-.pointwise.lin.boot <- function(q, py, se.diff, alpha, pwr){
-  pw = .pointwise.lin(q, py, se.diff, alpha, pwr)
-  pw$ll.linpred = pw$hx - pw$mean.diff + pw$ll.diff
-  pw$ul.linpred = pw$hx - pw$mean.diff + pw$ul.diff
-  pw
-}
-
-.pointwise.log.boot <- function(q, py, se.diff, alpha, pwr){
-  pw = .pointwise.log(q, py, se.diff, alpha, pwr)
-  pw$ll.linpred = pw$hx - log(pw$rr) + log(pw$ll.rr)
-  pw$ul.linpred = pw$hx - log(pw$rr) + log(pw$ul.rr)
-  pw
-}
-
-.pointwise.logit.boot <- function(q, py, se.diff, alpha, pwr){
-  pw = .pointwise.logit(q, py, se.diff, alpha, pwr)
-  pw$ll.linpred = pw$hx - log(pw$or) + log(pw$ll.or)
-  pw$ul.linpred = pw$hx - log(pw$or) + log(pw$ul.or)
-  pw
-}
 
 .pointwise.zi.boot <- .pointwise.zi
 
 
-
-
-# confidence intervals for model slopes  #
-.modelwise.lin <- function(q, py, se.diff, alpha, ll, ul){
-  # mean, mean differences
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py,
-             m = py,
-             se.pw = se.diff, # standard error on link scale
-             ll.pw = py + qnorm(alpha/2) * se.diff,
-             ul.pw = py + qnorm(1-alpha/2) * se.diff,
-             ll.simul= ifelse(is.na(ll), NA, ll),
-             ul.simul=ifelse(is.na(ul), NA, ul)
-  )
+.makenewdesign <- function(x, qvals, ...) {
+  coefnm <- names(coef(x))
+  cfi <- coefnm[which(tolower(coefnm) != "(intercept)")]
+  cfi <- gsub("psi([0-9])", "I(q^\\1)", cfi)
+  cfi <- gsub("mixture([\\^0-9]{0,2})", "I(q\\1)", cfi)
+  cfi <- gsub("mixture", "q", cfi)
+  cfi <- gsub("I\\(q\\)|I\\(q\\^1\\)", "q", cfi)
+  cfi <- c(ifelse(x$hasintercept, "~1", "~-1"), cfi)
+  ff <- as.formula(paste(cfi, collapse="+"))
+  df <- model.frame(formula=ff, data = data.frame(q=qvals))
+  res <- model.matrix.default(ff, data = df)
+  row.names(res) <- NULL
+  res
 }
-
-.modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
-  # risk
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # log risk
-             r = exp(py), # risk
-             se.pw = se.diff, # standard error on link scale
-             ll.pw = exp(py + qnorm(alpha/2) * se.diff),# risk
-             ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # risk
-             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
-             ul.simul=ifelse(is.na(ul), NA, exp(ul))
-  )
-}
-
-.modelwise.logit <- function(q, py, se.diff, alpha, ll, ul){
-  # odds
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # log odds
-             o = exp(py), # odds
-             se.pw = se.diff, # standard error on link scale
-             ll.pw = exp(py + qnorm(alpha/2) * se.diff),
-             ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # odds
-             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
-             ul.simul=ifelse(is.na(ul), NA, exp(ul))
-  )
-}
-
-.modelwise.zi <- function(q, py, se.diff, alpha, ll, ul, bootY){
-  # marginal expected rates
-  lby = .safelog(bootY)
-  se.lpy = apply(lby,1, sd)
-  data.frame(quantile= (seq_len(q)) - 1,
-             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
-             hx = py, # expected (marginal) rate
-             r = py, # expected (marginal) rate
-             se.pw = se.lpy, # standard error on link scale
-             ll.pw = exp(.safelog(py) + qnorm(alpha/2) * se.lpy),
-             ul.pw = exp(.safelog(py) + qnorm(1-alpha/2) * se.lpy),
-             ll.simul = NA,
-             ul.simul = NA
-  )
-}
-
-
 
 ############ pointwise boot ############
 #' @title Estimating pointwise comparisons for qgcomp.glm.boot objects
@@ -229,7 +177,11 @@
 #' pointwisebound.boot(ft, alpha=0.05, pointwiseref=3)
 #' }
 pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
-  if(!x$bootstrap || inherits(x, "survqgcompfit")){
+  isboot = x$bootstrap
+  isee = inherits(x, "eeqgcompfit")
+  issurv = inherits(x, "survqgcompfit")
+  iszi = inherits(x, "ziqgcompfit")
+  if((!isee && !isboot) || issurv){
     stop("This function does not work with this type of qgcomp fit")
   }
   if(inherits(x, "qgcompmultfit")){
@@ -237,7 +189,7 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   }
   #link = x$fit$family$link
   link = x$msmfit$family$link
-  if(inherits(x, "ziqgcompfit")){
+  if(iszi){
     link = "zi"
     npsi = 2*length(coef(x)[[1]])
     maxcidx=1
@@ -248,21 +200,41 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
     bootY = x$bootsamps[-seq_len(maxcidx),] # rowwise
   }
   pwr = pointwiseref+0 # may break this in the future
+  #if(isboot) 
   py = tapply(x$y.expectedmsm, x$index, mean)
-  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-  pw.diff = c(0,diff(py))
-  pw.vars = numeric(length(pw.diff))
-  pw.vars[pwr] = 0
-  pw.idx = seq_len(length(py))[-pwr]
-  for(j in pw.idx){
-    yc = ycovmat[c(pwr,j),c(pwr,j)]
-    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
-    pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
+  # 
+  if(isboot){
+    ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+    pw.diff = c(0,diff(py))
+    se.diff = numeric(length(pw.diff))
+    se.diff[pwr] = 0
+    pw.idx = seq_len(length(py))[-pwr]
+    for(j in pw.idx){
+      yc = ycovmat[c(pwr,j),c(pwr,j)]
+      #pw_vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
+      se.diff[j] = sqrt(c(1,-1) %*% yc %*% c(1,-1))
+    }
+    
   }
+  if(isee){
+    vc <- vcov(x)
+    designdf = .makenewdesign(x, seq_len(x$q)-1)
+    refrow <- designdf[pointwiseref, ]
+    nrows <- nrow(designdf)
+    
+    se.diff <- numeric(nrows)
+    for (nr in seq_len(nrows)) {
+      grad <- as.numeric(designdf[nr, ] - refrow)
+      #whichgrad = (grad!<-0)
+      se.diff[nr] <- se_comb(names(grad), covmat = vc, grad)
+    }
+    
+  }
+  
   res = switch(link,
-               identity = .pointwise.lin.boot(x$q, py, sqrt(pw.vars), alpha, pointwiseref),
-               log = .pointwise.log.boot(x$q, log(py), sqrt(pw.vars), alpha, pointwiseref),
-               logit = .pointwise.logit.boot(x$q, .logit(py), sqrt(pw.vars), alpha, pointwiseref),
+               identity = .pointwise.ident.boot(x$q, py, se.diff, alpha, pointwiseref),
+               log = .pointwise.log.boot(x$q, log(py), se.diff, alpha, pointwiseref),
+               logit = .pointwise.logit.boot(x$q, .logit(py), se.diff, alpha, pointwiseref),
                zi = .pointwise.zi.boot(x$q, py, NULL, alpha, pwr, bootY)
   )
   fix = which(names(res)=="hx")
@@ -270,6 +242,7 @@ pointwisebound.boot <- function(x, pointwiseref=1, alpha=0.05){
   attr(res, "link") = link
   res
 }
+
 
 
 ############ pointwise noboot ############
@@ -362,7 +335,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   if(x$bootstrap || inherits(x, "ziqgcompfit") || inherits(x, "survqgcompfit")){
     stop("This function is only for qgcomp.glm.noboot objects")
   }
-    #sediff <- function(qdiffj){
+  #sediff <- function(qdiffj){
   #  # gives standard deviation of pointwise difference on log scale (conditional)
   #  se_comb(x$expnms, vcov(x$fit), grad = qdiffj)
   #}
@@ -373,7 +346,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   q = x$q
   if(is.null(q))    
     stop("This function only works if q is not NULL")
-
+  
   link = x$fit$family$link
   #link = x$msmfit$family$link
   #coefs = x$fit$coefficients
@@ -417,7 +390,7 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
     se.diff = vapply(qdiff, sediff, 0)
   }
   res = switch(link,
-               identity = .pointwise.lin(q, py, se.diff, alpha, pointwiseref),
+               identity = .pointwise.ident(q, py, se.diff, alpha, pointwiseref),
                log = .pointwise.log(q, py, se.diff, alpha, pointwiseref),
                logit = .pointwise.logit(q, py, se.diff, alpha, pointwiseref)
   )
@@ -426,6 +399,71 @@ pointwisebound.noboot <- function(x, alpha=0.05, pointwiseref=1){
   attr(res, "link") = link
   res
 }
+
+
+
+
+
+# confidence intervals for model slopes  #
+.modelwise.lin <- function(q, py, se.diff, alpha, ll, ul){
+  # mean, mean differences
+  data.frame(quantile= (seq_len(q)) - 1,
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
+             hx = py,
+             m = py,
+             se.pw = se.diff, # standard error on link scale
+             ll.pw = py + qnorm(alpha/2) * se.diff,
+             ul.pw = py + qnorm(1-alpha/2) * se.diff,
+             ll.simul= ifelse(is.na(ll), NA, ll),
+             ul.simul=ifelse(is.na(ul), NA, ul)
+  )
+}
+
+.modelwise.log <- function(q, py, se.diff, alpha, ll, ul){
+  # risk
+  data.frame(quantile= (seq_len(q)) - 1,
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
+             hx = py, # log risk
+             r = exp(py), # risk
+             se.pw = se.diff, # standard error on link scale
+             ll.pw = exp(py + qnorm(alpha/2) * se.diff),# risk
+             ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # risk
+             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
+             ul.simul=ifelse(is.na(ul), NA, exp(ul))
+  )
+}
+
+.modelwise.logit <- function(q, py, se.diff, alpha, ll, ul){
+  # odds
+  data.frame(quantile= (seq_len(q)) - 1,
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
+             hx = py, # log odds
+             o = exp(py), # odds
+             se.pw = se.diff, # standard error on link scale
+             ll.pw = exp(py + qnorm(alpha/2) * se.diff),
+             ul.pw = exp(py + qnorm(1-alpha/2) * se.diff), # odds
+             ll.simul= ifelse(is.na(ll), NA, exp(ll)),
+             ul.simul=ifelse(is.na(ul), NA, exp(ul))
+  )
+}
+
+.modelwise.zi <- function(q, py, se.diff, alpha, ll, ul, bootY){
+  # marginal expected rates
+  lby = .safelog(bootY)
+  se.lpy = apply(lby,1, sd)
+  data.frame(quantile= (seq_len(q)) - 1,
+             quantile.midpoint=((seq_len(q)) - 1 + 0.5)/(q),
+             hx = py, # expected (marginal) rate
+             r = py, # expected (marginal) rate
+             se.pw = se.lpy, # standard error on link scale
+             ll.pw = exp(.safelog(py) + qnorm(alpha/2) * se.lpy),
+             ul.pw = exp(.safelog(py) + qnorm(1-alpha/2) * se.lpy),
+             ll.simul = NA,
+             ul.simul = NA
+  )
+}
+
+
 
 
 ############ model boot ############
@@ -495,16 +533,16 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
   }
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-  pw.vars = diag(ycovmat)
-
+  pw_vars = diag(ycovmat)
+  
   if(!pwonly){
-    coef.boot = x$bootsamps
-    boot.err = t(coef.boot - x$coef)
+    coef_boot = x$bootsamps
+    boot_err = t(coef_boot - x$coef)
     iV = solve(qr(x$covmat.coef, tol=1e-20))
-    #chi.boots = sapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
-    chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
+    #chi_boots = sapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,])
+    chi_boots = vapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,], 0.0)
     chicrit = qchisq(1-alpha, length(x$coef))
-    C.set = t(coef.boot[,which(chi.boots<chicrit)])
+    c_set = t(coef_boot[,which(chi_boots<chicrit)])
     fx = function(coef, q=x$q, degree=x$degree){
       reps = numeric(q)
       for(q_ in 0:(q-1)){
@@ -518,7 +556,7 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
       }
       reps
     }
-    fullset = apply(C.set, 1, fx)
+    fullset = apply(c_set, 1, fx)
     ll = apply(fullset, 1, min)
     ul = apply(fullset, 1, max)
   } else{
@@ -526,9 +564,9 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
     ul=NA
   }
   res = switch(link,
-               identity = .modelwise.lin(x$q, py, sqrt(pw.vars), alpha, ll, ul),
-               log = .modelwise.log(x$q, log(py), sqrt(pw.vars), alpha, ll, ul),
-               logit = .modelwise.logit(x$q, .logit(py), sqrt(pw.vars), alpha, ll, ul),
+               identity = .modelwise.lin(x$q, py, sqrt(pw_vars), alpha, ll, ul),
+               log = .modelwise.log(x$q, log(py), sqrt(pw_vars), alpha, ll, ul),
+               logit = .modelwise.logit(x$q, .logit(py), sqrt(pw_vars), alpha, ll, ul),
                zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
   )
   fix = which(names(res)=="hx")
@@ -538,6 +576,59 @@ modelbound.boot <- function(x, alpha=0.05, pwonly=FALSE){
 }
 
 
+modelbound.ee <- function(x, alpha=0.05, pwonly=FALSE){
+  isboot <- x$bootstrap
+  isee <- inherits(x, "eeqgcompfit")
+  issurv <- inherits(x, "survqgcompfit")
+  ismult = inherits(x, "qgcompmultfit")
+  iszi = inherits(x, "ziqgcompfit")
+  if(isboot || issurv || ismult){
+    stop("This function does not work with this type of qgcomp fit")
+  }
+  link = x$msmfit$family$link
+  py = tapply(x$y.expectedmsm, x$index, mean)
+  ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
+  pw_vars = diag(ycovmat)
+  designmat <- x$msmfit$X
+  coef_fixed <- coef(x)
+  coef_vcov <- vcov(x)
+  # samples from the sampling distribution
+  # rather than the bootstrap distribution
+  coef_boot <- t(.rmvnorm(5000, coef_fixed, coef_vcov))
+  ypred <- t(designmat %*% coef_boot)
+  py <- as.numeric(designmat %*% coef(x))
+  ycovmat <- cov(ypred) # covariance at specific value of emmval
+  pw_vars <- diag(ycovmat)
+  
+  if(!pwonly){
+    boot_err = t(coef_boot - x$coef)
+    iV = solve(qr(x$covmat.coef, tol=1e-20))
+    #chi_boots = sapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,])
+    chi_boots = vapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,], 0.0)
+    chicrit = qchisq(1-alpha, length(x$coef))
+    c_set = t(coef_boot[,which(chi_boots<chicrit)])
+    fx <- function(coef) {
+      designmat %*% coef
+    }
+    fullset = apply(c_set, 1, fx)
+    ll = apply(fullset, 1, min)
+    ul = apply(fullset, 1, max)
+  } else{
+    ll=NA
+    ul=NA
+  }
+  res = switch(link,
+               identity = .modelwise.lin(x$q, py, sqrt(pw_vars), alpha, ll, ul),
+               log = .modelwise.log(x$q, log(py), sqrt(pw_vars), alpha, ll, ul),
+               logit = .modelwise.logit(x$q, .logit(py), sqrt(pw_vars), alpha, ll, ul)
+               #zi = .modelwise.zi(x$q, py, NULL, alpha, ll, ul, bootY)
+  )
+  fix = which(names(res)=="hx")
+  names(res)[fix] = "linpred"
+  attr(res, "link") = link
+  res
+}
+
 
 
 modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
@@ -545,16 +636,16 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
   #x = qgcomp.glm.boot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,family=gaussian(), B=10000, parallel = TRUE)
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
-  pw.vars = diag(ycovmat)
-
+  pw_vars = diag(ycovmat)
+  
   if(!pwonly){
-    coef.boot = x$bootsamps
-    boot.err = t(coef.boot - x$coef)
+    coef_boot = x$bootsamps
+    boot_err = t(coef_boot - x$coef)
     iV = solve(qr(x$covmat.coef, tol=1e-20))
-    #chi.boots = sapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,])
-    chi.boots = vapply(seq_len(nrow(boot.err)), function(i) boot.err[i,] %*% iV %*% boot.err[i,], 0.0)
+    #chi_boots = sapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,])
+    chi_boots = vapply(seq_len(nrow(boot_err)), function(i) boot_err[i,] %*% iV %*% boot_err[i,], 0.0)
     chicrit = qchisq(1-alpha, length(x$coef))
-    C.set = t(coef.boot[,which(chi.boots<chicrit)])
+    c_set = t(coef_boot[,which(chi_boots<chicrit)])
     fx = function(coef, q=x$q, degree=x$degree){
       reps = numeric(q)
       for(q_ in 0:(q-1)){
@@ -568,7 +659,7 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
       }
       reps
     }
-    fullset = apply(C.set, 1, fx)
+    fullset = apply(c_set, 1, fx)
     ll = apply(fullset, 1, min)
     ul = apply(fullset, 1, max)
   } else{
@@ -578,9 +669,9 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
   data.frame(quantile = seq_len(x$q)-1,
              quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q),
              y.expected = py,
-             se.pw=sqrt(pw.vars),
-             ll.pw=py + qnorm(alpha/2)*sqrt(pw.vars),
-             ul.pw=py + qnorm(1-alpha/2)*sqrt(pw.vars),
+             se.pw=sqrt(pw_vars),
+             ll.pw=py + qnorm(alpha/2)*sqrt(pw_vars),
+             ul.pw=py + qnorm(1-alpha/2)*sqrt(pw_vars),
              ll.simul=ll,
              ul.simul=ul
   )
@@ -591,26 +682,26 @@ modelbound.boot_old <- function(x, alpha=0.05, pwonly=FALSE){
 pointwisebound.boot_old <- function(x, alpha=0.05, pointwiseref=1){
   if(!x$bootstrap) stop("This function is only for qgcomp.glm.boot objects")
   # : error catching for other functions
-
+  
   pwr = pointwiseref+0 # may break this in the future
   py = tapply(x$y.expectedmsm, x$index, mean)
   ycovmat = x$cov.yhat # bootstrap covariance matrix of E(y|x) from MSM
   pw.diff = c(0,diff(py))
-  pw.vars = numeric(length(pw.diff))
-  pw.vars[pwr] = 0
+  pw_vars = numeric(length(pw.diff))
+  pw_vars[pwr] = 0
   pw.idx = seq_len(length(py))[-pwr]
   for(j in pw.idx){
     yc = ycovmat[c(pwr,j),c(pwr,j)]
-    #pw.vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
-    pw.vars[j] = c(1,-1) %*% yc %*% c(1,-1)
+    #pw_vars[j] = 2*sum(diag(yc)) - sum(yc) # shortcut to subtracting covariances
+    pw_vars[j] = c(1,-1) %*% yc %*% c(1,-1)
   }
   data.frame(quantile = seq_len(x$q)-1,
              quantile.midpoint=(seq_len(x$q)-1+0.5)/(x$q),
              y.expected = py,
              mean.diff=py-py[pwr],
-             se.diff=sqrt(pw.vars),
-             ul.pw = py + qnorm(1-alpha/2)*sqrt(pw.vars),
-             ll.pw = py + qnorm(alpha/2)*sqrt(pw.vars)
+             se.diff=sqrt(pw_vars),
+             ul.pw = py + qnorm(1-alpha/2)*sqrt(pw_vars),
+             ll.pw = py + qnorm(alpha/2)*sqrt(pw_vars)
   )
 }
 
@@ -640,25 +731,25 @@ pointwisebound.noboot_old <- function(x, alpha=0.05, pointwiseref = 1){
              quantile.midpoint=(seq_len(x$q) - 1 + 0.5)/(x$q),
              #y.expected = sapply(seq_len(length(py)), function(i) switch(link,
              y.expected = vapply(seq_len(length(py)), function(i) switch(link,
-                                                                  identity = (py[i]),
-                                                                  log=exp(py[i]),
-                                                                  logit=(1/(1+exp(-py[i])))), 0.0),
+                                                                         identity = (py[i]),
+                                                                         log=exp(py[i]),
+                                                                         logit=(1/(1+exp(-py[i])))), 0.0),
              #mean.diff = sapply(seq_len(length(py)), function(i) switch(link,
              mean.diff = vapply(seq_len(length(py)), function(i) switch(link,
-                                                                 identity = (py[i] - py[pointwiseref]),
-                                                                 log=exp(py[i]) - exp(py[pointwiseref]),
-                                                                 logit=(1/(1+exp(-(py[i])))) - (1/(1+exp(-(py[pointwiseref]))))), 0.0),
+                                                                        identity = (py[i] - py[pointwiseref]),
+                                                                        log=exp(py[i]) - exp(py[pointwiseref]),
+                                                                        logit=(1/(1+exp(-(py[i])))) - (1/(1+exp(-(py[pointwiseref]))))), 0.0),
              se.diff = se.diff,
              #ul.pw = sapply(seq_len(length(py)), function(i) switch(link,
              ul.pw = vapply(seq_len(length(py)), function(i) switch(link,
-                                                             identity = (py[i] + qnorm(1-alpha/2) * se.diff[i]),
-                                                             log=exp((py[i] + qnorm(1-alpha/2) * se.diff[i])),
-                                                             logit=(1/(1+exp(-(py[i] + qnorm(1-alpha/2) * se.diff[i]))))), 0.0) ,
+                                                                    identity = (py[i] + qnorm(1-alpha/2) * se.diff[i]),
+                                                                    log=exp((py[i] + qnorm(1-alpha/2) * se.diff[i])),
+                                                                    logit=(1/(1+exp(-(py[i] + qnorm(1-alpha/2) * se.diff[i]))))), 0.0) ,
              #ll.pw = sapply(seq_len(length(py)), function(i) switch(link,
              ll.pw = vapply(seq_len(length(py)), function(i) switch(link,
-                                                             identity = (py[i] + qnorm(alpha/2) * se.diff[i]),
-                                                             log=exp((py[i] + qnorm(alpha/2) * se.diff[i])),
-                                                             logit=(1/(1+exp(-(py[i] + qnorm(alpha/2) * se.diff[i]))))), 0.0)
+                                                                    identity = (py[i] + qnorm(alpha/2) * se.diff[i]),
+                                                                    log=exp((py[i] + qnorm(alpha/2) * se.diff[i])),
+                                                                    logit=(1/(1+exp(-(py[i] + qnorm(alpha/2) * se.diff[i]))))), 0.0)
   )
 }
 

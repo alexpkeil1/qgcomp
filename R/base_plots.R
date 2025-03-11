@@ -5,11 +5,16 @@
 
 .plot.md.mod.bounds <- function(x,alpha){
   ymin <- ymax <- v <- w <- y <- NULL
-  modbounds = modelbound.boot(x, pwonly = TRUE, alpha = alpha)
-  geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
-                           fill="Model confidence band"),
-                       data=data.frame(ymin=modbounds$ll.pw, ymax=modbounds$ul.pw, 
-                                       x=modbounds$quantile.midpoint))
+  isboot <- x$bootstrap
+  isee <- inherits(x, "eeqgcompfit")
+  if(isboot) modbounds = modelbound.boot(x, pwonly = TRUE, alpha = alpha)
+  if(isee) modbounds = modelbound.ee(x, pwonly = TRUE, alpha = alpha)
+
+  ret = geom_ribbon(aes(x=x,ymin=ymin,ymax=ymax, 
+                        fill="Model confidence band"),
+                    data=data.frame(ymin=modbounds$ll.pw, ymax=modbounds$ul.pw, 
+                                    x=modbounds$quantile.midpoint))
+  list(ribbon=ret)
 }
 
 
@@ -18,43 +23,38 @@
 
 .plot.linear.smooth.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-                  method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-                  data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
+  ret = geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                    method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
+                    data=data.frame(y=x$y.expected, x=(x$index+0.5)/max(x$index+1)))
+  list(smooth = ret)
 }
 
-.plot.rr.smooth.line <- function(x){
-  ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-              data=data.frame(y=(x$y.expected), x=(x$index+0.5)/max(x$index+1)))
-}
+.plot.rr.smooth.line <- .plot.linear.smooth.line
 
 .plot.or.smooth.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
-              method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
-              data=data.frame(y=(x$y.expected)/(1-x$y.expected), x=(x$index+0.5)/max(x$index+1)))
+  ret = geom_smooth(aes(x=x,y=y, color="Smooth conditional fit"),se = FALSE,
+                    method = "gam", formula = y ~ s(x, k=length(table(x$index))-1, bs = "cs"),
+                    data=data.frame(y=(x$y.expected)/(1-x$y.expected), x=(x$index+0.5)/max(x$index+1)))
+  list(smooth=ret)
 }
 
 
 
 .plot.linear.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
+  ret = geom_line(aes(x=x,y=y, color="MSM fit"),
+                  data=data.frame(y=x$y.expectedmsm, x=(x$index+0.5)/max(x$index+1)))
+  list(line = ret)
 }
 
-.plot.loglin.line <- function(x){
-  ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=(x$y.expectedmsm), x=(x$index+0.5)/max(x$index+1)))
-}
+.plot.loglin.line <- .plot.linear.line
 
 .plot.logitlin.line <- function(x){
   ymin <- ymax <- v <- w <- y <- NULL
-  geom_line(aes(x=x,y=y, color="MSM fit"),
-            data=data.frame(y=(x$y.expectedmsm/(1-x$y.expectedmsm)), x=(x$index+0.5)/max(x$index+1)))
+  ret = geom_line(aes(x=x,y=y, color="MSM fit"),
+                  data=data.frame(y=(x$y.expectedmsm/(1-x$y.expectedmsm)), x=(x$index+0.5)/max(x$index+1)))
+  list(line=ret)
 }
 
 
@@ -67,12 +67,12 @@
   ll = pwbdat$ll.linpred
   ul = pwbdat$ul.linpred
   list(
-    geom_point(aes(x=x,y=y, 
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    point = geom_point(aes(x=x,y=y, 
+                           color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+                       data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    errorbar = geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                                 color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                             data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
   )
 }
 
@@ -84,12 +84,12 @@
   ll = exp(pwbdat$ll.linpred)
   ul = exp(pwbdat$ul.linpred)
   list(
-    geom_point(aes(x=x,y=y, 
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    point = geom_point(aes(x=x,y=y, 
+                           color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+                       data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    errorbar = geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                                 color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                             data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
   )
 }
 
@@ -103,12 +103,12 @@
   ll = py*(pwbdat$ll.rr)
   ul = py*(pwbdat$ul.rr)
   list(
-    geom_point(aes(x=x,y=y, 
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    point = geom_point(aes(x=x,y=y, 
+                           color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+                       data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    errobar = geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                                color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                            data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
   )
 }
 
@@ -121,12 +121,12 @@
   ll = pwbdat$ll.linpred
   ul = pwbdat$ul.linpred
   list(
-    geom_point(aes(x=x,y=y, 
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    point = geom_point(aes(x=x,y=y, 
+                           color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+                       data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    errorbar = geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                                 color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                             data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
   )
 }
 
@@ -138,12 +138,12 @@
   ll = exp(pwbdat$ll.linpred)
   ul = exp(pwbdat$ul.linpred)
   list(
-    geom_point(aes(x=x,y=y, 
-                   color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
-               data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
-    geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
-                      color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
-                  data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
+    point = geom_point(aes(x=x,y=y, 
+                           color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")),
+                       data=data.frame(y=py, x=pwbdat$quantile.midpoint)) ,
+    errobar = geom_errorbar(aes(x=x,ymin=ymin,ymax=ymax, 
+                                color=paste0("Pointwise ",as.character(100*(1-alpha)),"% CI")), width = 0.03,
+                            data=data.frame(ymin=ll, ymax=ul, x=pwbdat$quantile.midpoint))
   )
 }
 
@@ -154,7 +154,7 @@
 
 .plfun <- function(plt){ 
   grid::grid.newpage()
-  grid::grid.draw(plt)
+  grid::grid.draw(plt) 
 }
 
 
@@ -171,32 +171,38 @@
   varnm = names(pospsi)
   
   poscolwt = 1-pospsi/(pospsi - negpsi)
-  pright <- ggplot() + 
+  #ggplot() +
+  pright <-  c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=pos.weights, v=names(pos.weights)),
-                  fill=gray(poscolwt)) + 
-    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
-    geom_hline(aes(yintercept=0)) + 
-    coord_flip(ylim=c(0,1)) + 
+                  fill=gray(poscolwt)), 
+    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)), 
+    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top"),
+    geom_hline(aes(yintercept=0)), 
+    coord_flip(ylim=c(0,1))),
     theme_butterfly_r
-  pleft <- ggplot() + 
+  )
+  pleft <-  c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=neg.weights, v=names(neg.weights)),
-                  fill=gray(1-poscolwt)) + 
-    scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()) +
-    scale_x_discrete(name=varnm, limits=nms, breaks=nms, labels=nms, drop=FALSE) +
-    geom_hline(aes(yintercept=0)) + 
+                  fill=gray(1-poscolwt)),
+    scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()),
+    scale_x_discrete(name=varnm, limits=nms, breaks=nms, labels=nms, drop=FALSE),
+    geom_hline(aes(yintercept=0)),
     #coord_flip(ylim=c(0,1), expand = FALSE) + 
-    coord_flip() + 
+    coord_flip()), 
     theme_butterfly_l
+  )
+    
   if((length(neg.weights)>0 || length(pos.weights)>0)){
     #maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
     maxstr = max(nchar(c(names(neg.weights), names(pos.weights))))
     lw = 1+maxstr/20
-    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+    pleft = ggplot() + pleft
+    pright = ggplot() + pright
+    p <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
   }
-  p1
+  p
 }
 
 .plot_noboot_base <- function(x, nms, theme_butterfly_r, theme_butterfly_l){
@@ -205,32 +211,34 @@
   poscolwt = 1-x$pos.psi/(x$pos.psi - x$neg.psi)
   if(length(x$pos.weights)==0) x$pos.weights = x$neg.weights*0
   if(length(x$neg.weights)==0) x$neg.weights = x$pos.weights*0
-  pright <- ggplot() + 
+  pright <- c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=x$pos.weights, v=names(x$pos.weights)),
-                  fill=gray(poscolwt)) + 
-    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
-    geom_hline(aes(yintercept=0)) + 
-    coord_flip(ylim=c(0,1)) + 
-    theme_butterfly_r
-  pleft <- ggplot() + 
+                  fill=gray(poscolwt)),
+    scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)),
+    scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top"),
+    geom_hline(aes(yintercept=0)),
+    coord_flip(ylim=c(0,1))
+  ), theme_butterfly_r)
+  pleft <-  c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=x$neg.weights, v=names(x$neg.weights)),
-                  fill=gray(1-poscolwt)) + 
-    scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()) +
-    scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE) +
-    geom_hline(aes(yintercept=0)) + 
-    #coord_flip(ylim=c(0,1), expand = FALSE) + 
-    coord_flip() + 
-    theme_butterfly_l
+                  fill=gray(1-poscolwt)), 
+    scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()),
+    scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE),
+    geom_hline(aes(yintercept=0)),
+    #coord_flip(ylim=c(0,1), expand = FALSE),
+    coord_flip()
+    ), theme_butterfly_l)
   if((length(x$neg.weights)>0 || length(x$pos.weights)>0)){
     #maxstr = max(mapply(nchar, c(names(x$neg.weights), names(x$pos.weights))))
     maxstr = max(nchar(c(names(x$neg.weights), names(x$pos.weights))))
     lw = 1+maxstr/20
-    p1 <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
+    pleft = ggplot() + pleft
+    pright = ggplot() + pright
+    p <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
   }
-  p1
+  p
 }
 
 
@@ -247,28 +255,32 @@
     poscolwt = 1-x$pos.psi[[modtype]]/(x$pos.psi[[modtype]] - x$neg.psi[[modtype]])
     if(length(x$pos.weights[[modtype]])==0) x$pos.weights[[modtype]] = x$neg.weights[[modtype]]*0
     if(length(x$neg.weights[[modtype]])==0) x$neg.weights[[modtype]] = x$pos.weights[[modtype]]*0
-    pright <- ggplot() + 
+    pright <- list(
       stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                     data=data.frame(w=x$pos.weights[[modtype]], v=names(x$pos.weights[[modtype]])),
-                    fill=gray(poscolwt)) + 
-      scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-      scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top") +
-      geom_hline(aes(yintercept=0)) + 
-      coord_flip(ylim=c(0,1)) + 
+                    fill=gray(poscolwt)),
+      scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)),
+      scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top"),
+      geom_hline(aes(yintercept=0)),
+      coord_flip(ylim=c(0,1)),
       theme_butterfly_r
-    pleft <- ggplot() + 
+    ) 
+    pleft <- list(
       stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                     data=data.frame(w=x$neg.weights[[modtype]], v=names(x$neg.weights[[modtype]])),
-                    fill=gray(1-poscolwt)) + 
-      scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)) +
-      scale_x_discrete(name=paste0("Variable (", modtype, " model)"), limits=nms, breaks=nms, labels=nms, drop=FALSE) +
-      geom_hline(aes(yintercept=0)) + 
-      coord_flip(ylim=c(0,1)) + 
+                    fill=gray(1-poscolwt)), 
+      scale_y_reverse(name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)),
+      scale_x_discrete(name=paste0("Variable (", modtype, " model)"), limits=nms, breaks=nms, labels=nms, drop=FALSE),
+      geom_hline(aes(yintercept=0)),
+      coord_flip(ylim=c(0,1)),
       theme_butterfly_l
+    )  
     if((length(x$neg.weights[[modtype]])>0 & length(x$pos.weights[[modtype]])>0)){
       #maxstr = max(mapply(nchar, c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
       maxstr = max(nchar(c(names(x$neg.weights[[modtype]]), names(x$pos.weights[[modtype]]))))
       lw = 1+maxstr/20
+      pleft = ggplot() + pleft
+      pright = ggplot() + pright
       p1[[modtype]] <- gridExtra::arrangeGrob(grobs=list(pleft, pright), ncol=2, padding=0.0, widths=c(lw,1))
     }
   }
@@ -276,96 +288,61 @@
 }
 
 
-
+  
 .plot_boot_gaussian <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
-  p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
+  p <- c(p, list(
+    labs(x = "Joint exposure quantile", y = "Y"),
+    lims(x=c(0,1))
+  ))
   #
-  if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # : add alpha to main function
-  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
-  if(modelfitline)  p <- p + .plot.linear.line(x)
-  if(pointwisebars) p <- p + .plot.md.pw.boot(x,alpha,pointwiseref)
+  if(modelband)     p <- c(p, .plot.md.mod.bounds(x,alpha=alpha)) # : add alpha to main function
+  if(flexfit)       p <- c(p, .plot.linear.smooth.line(x))
+  if(modelfitline)  p <- c(p, .plot.linear.line(x))
+  if(pointwisebars) p <- c(p, .plot.md.pw.boot(x, alpha, pointwiseref))
   p
 }
 
-.plot_ee_gaussian <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=TRUE, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link == "identity")) stop("Plotting not implemented for this link function")
-  p <- p + labs(x = "Joint exposure quantile", y = "Y") + lims(x=c(0,1))
-  #
-  #if(modelband)     p <- p + .plot.md.mod.bounds(x,alpha=alpha) # : add alpha to main function
-  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
-  if(modelfitline)  p <- p + .plot.linear.line(x)
-  if(pointwisebars) p <- p + .plot.md.pw.noboot(x,alpha,pointwiseref)
-  p
-}
+.plot_ee_gaussian <- .plot_boot_gaussian
 
 
 .plot_boot_binomial <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
   #
-  p <- p + scale_y_log10()
+  p <- c(p, list(scale_y_log10()))
   if(x$msmfit$family$link == "logit"){
-    p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.or.smooth.line(x)
-    if(modelfitline) p <- p + .plot.logitlin.line(x)
-    if(pointwisebars) p <- p + .plot.or.pw.boot(x,alpha,pointwiseref)
+    p <- c(p, list(labs(x = "Joint exposure quantile", y = "Odds(Y=1)"),  lims(x=c(0,1))))
+    if(modelband)     p <- c(p, .plot.or.mod.bounds(x,alpha))
+    if(flexfit)       p <- c(p, .plot.or.smooth.line(x))
+    if(modelfitline)  p <- c(p, .plot.logitlin.line(x))
+    if(pointwisebars) p <- c(p, .plot.or.pw.boot(x,alpha,pointwiseref))
   } else if(x$msmfit$family$link=="log"){
-    p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref)
+    p <-c(p, list(labs(x = "Joint exposure quantile", y = "Pr(Y=1)"),  lims(x=c(0,1))))
+    if(modelband)     p <- c(p, .plot.rr.mod.bounds(x,alpha))
+    if(flexfit)       p <- c(p, .plot.rr.smooth.line(x))
+    if(modelfitline)  p <- c(p, .plot.loglin.line(x))
+    if(pointwisebars) p <- c(p, .plot.rr.pw.boot(x,alpha,pointwiseref))
   }
   p
 }
 
-.plot_ee_binomial <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=TRUE, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link %in% c("log", "logit"))) stop("Plotting not implemented for this link function")
-  #
-  p <- p + scale_y_log10()
-  if(x$msmfit$family$link == "logit"){
-    p <- p + labs(x = "Joint exposure quantile", y = "Odds(Y=1)") + lims(x=c(0,1))
-    #if(modelband) p <- p + .plot.or.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.or.smooth.line(x)
-    if(modelfitline) p <- p + .plot.logitlin.line(x)
-    if(pointwisebars) p <- p + .plot.or.pw.noboot(x,alpha,pointwiseref)
-  } else if(x$msmfit$family$link=="log"){
-    p <- p + labs(x = "Joint exposure quantile", y = "Pr(Y=1)") + lims(x=c(0,1))
-    #if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.noboot(x,alpha,pointwiseref)
-  }
-  p
-}
+.plot_ee_binomial <- .plot_boot_binomial
 
 
 .plot_boot_poisson <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
-  p <- p + scale_y_log10()
+  p <- c(p, list(scale_y_log10()))
   if(x$msmfit$family$link == "log"){
-    p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-    if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.boot(x,alpha,pointwiseref)
+    p <- c(p, list(labs(x = "Joint exposure quantile", y = "E(Y)"), lims(x=c(0,1))))
+    if(modelband)     p <- c(p, .plot.rr.mod.bounds(x,alpha))
+    if(flexfit)       p <- c(p, .plot.rr.smooth.line(x))
+    if(modelfitline)  p <- c(p, .plot.loglin.line(x))
+    if(pointwisebars) p <- c(p, .plot.rr.pw.boot(x,alpha,pointwiseref))
   }
   p
 }
 
-.plot_ee_poisson <- function(p, x, modelband=FALSE, flexfit, modelfitline, pointwisebars=FALSE, pointwiseref=1, alpha=0.05){
-  if(!(x$msmfit$family$link == "log")) stop("Plotting not implemented for this link function")
-  p <- p + scale_y_log10()
-  if(x$msmfit$family$link == "log"){
-    p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-    #if(modelband) p <- p + .plot.rr.mod.bounds(x,alpha)
-    if(flexfit)   p <- p + .plot.rr.smooth.line(x)
-    if(modelfitline) p <- p + .plot.loglin.line(x)
-    if(pointwisebars) p <- p + .plot.rr.pw.noboot(x,alpha,pointwiseref)
-  }
-  p
-}
+.plot_ee_poisson <- .plot_boot_poisson
 
 
 .plot_boot_cox <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
@@ -376,34 +353,36 @@
   cdfmax = scl$cdfq[scl$cdfq$q==x$q,]
   mdf0 = scl$mdfq[scl$mdfq$q==1,]
   mdfmax = scl$mdfq[scl$mdfq$q==x$q,]
-  p <- p +
-    geom_step(aes(x=time, y=surv, color="MSM", linetype="Average (all quantiles)"), data=scl$mdfpop)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Average (all quantiles)"), data=scl$cdfpop) + 
-    geom_step(aes(x=time, y=surv, color="MSM", linetype="Lowest quantile"), data=mdf0)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Lowest quantile"), data=cdf0) + 
-    geom_step(aes(x=time, y=surv, color="MSM", linetype="Highest quantile"), data=mdfmax)+
-    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Highest quantile"), data=cdfmax) + 
-    scale_y_continuous(name="Survival", limits=c(0,1)) + 
-    scale_x_continuous(name="Time") +
-    scale_linetype_discrete(name="")+
-    theme(legend.position = c(0.01, 0.01), legend.justification = c(0,0))
+  p <- c(p, list(
+    geom_step(aes(x=time, y=surv, color="MSM", linetype="Average (all quantiles)"), data=scl$mdfpop),
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Average (all quantiles)"), data=scl$cdfpop),
+    geom_step(aes(x=time, y=surv, color="MSM", linetype="Lowest quantile"), data=mdf0),
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Lowest quantile"), data=cdf0),
+    geom_step(aes(x=time, y=surv, color="MSM", linetype="Highest quantile"), data=mdfmax),
+    geom_step(aes(x=time, y=surv, color="Conditional", linetype="Highest quantile"), data=cdfmax),
+    scale_y_continuous(name="Survival", limits=c(0,1)),
+    scale_x_continuous(name="Time"),
+    scale_linetype_discrete(name=""),
+    theme(legend.position.inside = c(0.01, 0.01), legend.justification = c(0,0)))
+  )
+  
   return(p)
 }
 
 
 .plot_boot_zi <- function(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref=1, alpha=0.05){
   # zero inflated
-  p <- p + labs(x = "Joint exposure quantile", y = "E(Y)") + lims(x=c(0,1))
-  if(modelband)     p <- p + .plot.rr.mod.bounds(x,alpha=alpha)
-  if(flexfit)       p <- p + .plot.linear.smooth.line(x)
-  if(modelfitline)  p <- p + .plot.linear.line(x)
-  if(pointwisebars) p <- p + .plot.zi.pw.boot(x, alpha=alpha, pointwiseref)
+  p <- c(p, list(labs(x = "Joint exposure quantile", y = "E(Y)"),  lims(x=c(0,1))))
+  if(modelband)     p <- c(p, .plot.rr.mod.bounds(x,alpha=alpha))
+  if(flexfit)       p <- c(p, .plot.linear.smooth.line(x))
+  if(modelfitline)  p <- c(p, .plot.linear.line(x))
+  if(pointwisebars) p <- c(p, .plot.zi.pw.boot(x, alpha=alpha, pointwiseref))
   p
 }
 
 .butterfly_themes <- function(){
   theme_butterfly_l <- list(theme(
-    legend.position = c(0,0), 
+    legend.position.inside = c(0,0), 
     legend.justification = c(0,0),
     legend.background = element_blank(), 
     panel.background = element_blank(), 
@@ -453,6 +432,8 @@
 #' @param suppressprint If TRUE, suppresses the plot, rather than printing it 
 #'   by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
 #'   inflated model) and used programmatically)
+#'   (default = FALSE)
+#' @param geom_only If TRUE, returns only the geometry (i.e. does not contain the entire plot object). Used for overlays. Only used for `.ee` and `.boot` methods.
 #'   (default = FALSE)
 #' @param pointwisebars (boot.gcomp only) If TRUE, adds 95%  error bars for pointwise comparisons
 #' of E(Y|joint exposure) to the smooth regression line plot
@@ -535,81 +516,84 @@
 #' }
 plot.qgcompfit <- function(x, 
                            suppressprint=FALSE, 
+                           geom_only=FALSE,
                            pointwisebars=TRUE, 
                            modelfitline=TRUE, 
                            modelband=TRUE, 
                            flexfit=TRUE, 
                            pointwiseref = ceiling(x$q/2),
                            ...){
-
+  
   requireNamespace("ggplot2")
   requireNamespace("grid")
   requireNamespace("gridExtra")
   ymin <- ymax <- w <- v <- NULL # appease R CMD check
-  
+  isesteq = inherits(x, "eeqgcompfit")
+  iszi = is.null(x$fit$family)
+  isboot = x$bootstrap
   #vpl <- grid::viewport(width=0.525, height=1, x=0, y=0, just=c("left", "bottom"))
   #vpr <- grid::viewport(width=0.475, height=1, x=0.525, y=0, just=c("left", "bottom"))
-  if(!x$bootstrap & !inherits(x, "eeqgcompfit")){
-    if(!is.null(x$fit$family)) nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
+  if(!isboot & !isesteq){
     themes = .butterfly_themes()
     theme_butterfly_l = themes[[1]]
     theme_butterfly_r = themes[[2]]
     # zero inflated
-    if(is.null(x$fit$family)){
-      p1 <- .plot_noboot_zi(x, theme_butterfly_r, theme_butterfly_l)
+    if(iszi){
+      p <- .plot_noboot_zi(x, theme_butterfly_r, theme_butterfly_l) # arrangeGrob object
       if(!suppressprint) {
-        lapply(p1, .plfun)
+        lapply(p, .plfun)
+      }
+    } else {
+      nms = unique(names(sort(c(x$pos.weights, x$neg.weights), decreasing = FALSE)))
+      p <- .plot_noboot_base(x, nms, theme_butterfly_r, theme_butterfly_l) # arrangeGrob object
+      if(!suppressprint) {
+        .plfun(p)
       }
     }
-    if(!is.null(x$fit$family)){
-      p1 <- .plot_noboot_base(x, nms, theme_butterfly_r, theme_butterfly_l)
-      if(!suppressprint) {
-        .plfun(p1)
-      }
-    }
-    if(suppressprint) return(p1)
   }
-  if(inherits(x, "eeqgcompfit")){
-    p <- ggplot() 
-    if(x$msmfit$family$family=='gaussian') p <-  
-        .plot_ee_gaussian(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-    if(x$msmfit$family$family=='binomial') p <- 
-        .plot_ee_binomial(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-    if(x$msmfit$family$family=='poisson') p <- 
-        .plot_ee_poisson(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-    if(suppressprint) return(p)
-    p <- p + scale_fill_grey(name="", start=.9) + 
-      scale_colour_grey(name="", start=0.0, end=0.6) + 
+  if(isesteq){
+    #p <- ggplot() 
+    p <- list()
+    if(x$msmfit$family$family=='gaussian') temppfun <- .plot_ee_gaussian
+    if(x$msmfit$family$family=='binomial') temppfun <- .plot_ee_binomial
+    if(x$msmfit$family$family=='poisson')  temppfun <- .plot_ee_poisson
+    p <- temppfun(p, x, FALSE, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    p <- c(p, list(
+      scale_fill_grey(name="", start=.9), 
+      scale_colour_grey(name="", start=0.0, end=0.6),
       theme_classic()
-    if(!suppressprint) print(p)
+    ))
+    if (!suppressprint){
+      print(ggplot2::ggplot() + p)
+    }
   }
   
-  if(x$bootstrap & !inherits(x, "eeqgcompfit")){
+  if(isboot & !isesteq){
     # variance based on delta method and knowledge that non-linear
     #functions will always be polynomials in qgcomp
     # default plot for bootstrap results (no weights obtained)
-    p <- ggplot() 
-    if(is.null(x$msmfit$family)) {
-      # ZI model
-      p <- .plot_boot_zi(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    p = list()
+    if(iszi) {
+      temppfun <- .plot_boot_zi
     } else{
       # Cox model or standard GLM
-      if(x$msmfit$family$family=='cox') p <- 
-          .plot_boot_cox(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-      if(x$msmfit$family$family=='gaussian') p <-  
-          .plot_boot_gaussian(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-      if(x$msmfit$family$family=='binomial') p <- 
-          .plot_boot_binomial(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
-      if(x$msmfit$family$family=='poisson') p <- 
-          .plot_boot_poisson(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+      if(x$msmfit$family$family=='cox')      temppfun <- .plot_boot_cox
+      if(x$msmfit$family$family=='gaussian') temppfun <- .plot_boot_gaussian
+      if(x$msmfit$family$family=='binomial') temppfun <- .plot_boot_binomial
+      if(x$msmfit$family$family=='poisson')  temppfun <- .plot_boot_poisson
     }
-
-    p <- p + scale_fill_grey(name="", start=.9) + 
-      scale_colour_grey(name="", start=0.0, end=0.6) + 
+    p <- temppfun(p, x, modelband, flexfit, modelfitline, pointwisebars, pointwiseref, alpha=0.05)
+    p <- c(p, list(
+      scale_fill_grey(name="", start=.9),
+      scale_colour_grey(name="", start=0.0, end=0.6),
       theme_classic()
-    if(!suppressprint) print(p)
+    ))
+    if (!suppressprint){
+      print(ggplot2::ggplot() + p)
+    }
   }
-  if(suppressprint) return(p)
+  if (suppressprint & geom_only ) return(p)
+  if (suppressprint & !geom_only ) return(ggplot2::ggplot() + p)
 }
 
 
@@ -639,11 +623,11 @@ plot.qgcompmultfit <- function(
     for(r in seq_len(nrow(x$weights))){
       plist[[r]] <- .plot_noboot_multi_base(r, x, nms, theme_butterfly_r, theme_butterfly_l)
     }
-
-    p1 <- gridExtra::arrangeGrob(grobs=plist)
+    
+    p <- gridExtra::arrangeGrob(grobs=plist)
     
     if(!suppressprint) {
-      .plfun(p1)
+      .plfun(p) # arrangeGrob object
     }
     
   }

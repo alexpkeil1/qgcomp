@@ -130,12 +130,15 @@ convergence issues when using the log-link for conditional models. See examples 
 \examples{
 set.seed(30)
 # continuous outcome
-dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
+dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100), 
+  f = as.factor(sample(c(1,2,3), size=100, replace=TRUE)))
 # Conditional linear slope
 qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
 # Marginal linear slope (population average slope, for a purely linear,
 #  additive model this will equal the conditional)
 qgcomp.glm.ee(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  family=gaussian()) 
+qgcomp.glm.ee(f=y ~ z + x1 + factor(x2) + f, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian()) 
 qgcomp.glm.ee(f=y ~ x1 + x2 + I(x1*x2) + z, expnms = c('x1', 'x2'), data=dat, q=4,
   family=gaussian()) 

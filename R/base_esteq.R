@@ -95,7 +95,7 @@
   fun2 = do.call(c,lapply(1:npmsm, function(x) {
     mu = Xmsm %*% theta[(np+1):(np+npmsm)]
     t(intweights * (Xint %*% theta[1:np] - mu)) %*% Xmsm[,x]
-    }))
+  }))
   c(
     fun1,fun2
   )
@@ -210,7 +210,7 @@ tobit <- function(){
   dist = stats::gaussian()
   dist$family = "tobit"
   dist
-  }
+}
 
 
 
@@ -310,12 +310,15 @@ qgcomp.glm.ee <- function(
   #' @examples
   #' set.seed(30)
   #' # continuous outcome
-  #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100))
+  #' dat <- data.frame(y=rnorm(100), x1=runif(100), x2=runif(100), z=runif(100), 
+  #'   f = as.factor(sample(c(1,2,3), size=100, replace=TRUE)))
   #' # Conditional linear slope
   #' qgcomp.glm.noboot(y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4, family=gaussian())
   #' # Marginal linear slope (population average slope, for a purely linear,
   #' #  additive model this will equal the conditional)
   #' qgcomp.glm.ee(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=4,
+  #'   family=gaussian()) 
+  #' qgcomp.glm.ee(f=y ~ z + x1 + factor(x2) + f, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian()) 
   #' qgcomp.glm.ee(f=y ~ x1 + x2 + I(x1*x2) + z, expnms = c('x1', 'x2'), data=dat, q=4,
   #'   family=gaussian()) 
@@ -461,9 +464,9 @@ qgcomp.glm.ee <- function(
   }
   #family = testfit$family
   
-#  famlist = c("binomial", "gaussian", "poisson")
-#  if(!(family$family %in% famlist))
-#    stop(paste0("Distribution (family) `", family$family, "` not (yet?) supported."))
+  #  famlist = c("binomial", "gaussian", "poisson")
+  #  if(!(family$family %in% famlist))
+  #    stop(paste0("Distribution (family) `", family$family, "` not (yet?) supported."))
   
   
   nobs = nrow(data)
@@ -547,15 +550,12 @@ qgcomp.glm.ee <- function(
   X = model.matrix(newform, modframe)
   Y = model.response(modframe)
   # nesting model.frame within the model.matrix function seems to be necessary to get interaction terms to propogate after setting exposures
-#  Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {modframe[,expnms] = x; model.matrix(newform,model.frame(newform, modframe))})))
-  #Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {modframe[,expnms] = x; model.matrix(newform,modframe)})))
-  #Xint = as.matrix(do.call(rbind,lapply(intvals, function(x) {mf2 = modframe; mf2[,expnms] = x; model.matrix(newform,model.frame(newform, data=mf2))}))) # works in non-linear setting
   Xint = as.matrix(model.matrix(newform, do.call(rbind,lapply(intvals, function(x) {mf2 = basevars; mf2[,expnms] = x; model.frame(newform, data=mf2)})))) # works in non-linear setting
   Xmsm = poly(Xint[, expnms[1]], degree=degree, raw=TRUE) # intercept and constant exposure
   if(hasintercept){
     Xmsm = cbind(Xint[,colnames(Xint)[1]], Xmsm)
   }
-
+  
   # point estimates
   np = ncol(X)
   npmsm = ncol(Xmsm)
@@ -563,10 +563,10 @@ qgcomp.glm.ee <- function(
   startvals <- function(family,Y,X,np,npmsm,offset=0){
     fam = family$family
     res = switch(fam,
-           binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
-           poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
-           tobit = c(rep(0, np+npmsm),1),
-           rep(0, np+npmsm)
+                 binomial = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
+                 poisson = c(log(mean(Y))-(mean(offset)), rep(0, np-1), log(mean(Y))-(mean(offset)), rep(0, npmsm-1)),
+                 tobit = c(rep(0, np+npmsm),1),
+                 rep(0, np+npmsm)
     )
     res
   }
@@ -582,7 +582,7 @@ qgcomp.glm.ee <- function(
   psii = lapply(uid, function(x){
     selidx = which(qdata[,id,drop=TRUE] == x)
     .esteq_qgcdf(newform, data=modframe[selidx,,drop=FALSE], theta=eqfit$root, family, intvals, expnms, hasintercept, weights=qdata$weights[selidx], degree=degree, rr=rr,offset=qdata$offset__[selidx], delta=delta) 
-    } )
+  } )
   Bi = lapply(psii, function(x) x%*%t(x))
   n = length(Y)
   B = Bi[[1]]
@@ -593,7 +593,7 @@ qgcomp.glm.ee <- function(
   # sandwich covariance
   ibread = solve(A)
   (fullcovmat = ibread %*% B %*% t(ibread))
-
+  
   condidx = 1:np
   msmidx = (np+1):(np+npmsm)
   estb <- as.numeric(eqfit$root[msmidx])
@@ -623,7 +623,7 @@ qgcomp.glm.ee <- function(
   if(msmfamily$family == "binomial" & rr == TRUE){
     msmfamily = binomial(link="log")
   }
-    
+  
   fit = list(formula = newform, est=allest[condidx], vcov=fullcovmat[condidx,condidx], family=family, type="conditional")
   msmfit = list(est=allest[msmidx], vcov=fullcovmat[msmidx,msmidx], family=msmfamily, type="msm")
   if(includeX){
@@ -638,14 +638,21 @@ qgcomp.glm.ee <- function(
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   res <- .qgcomp_object(
-    qx = qx, fit=fit, msmfit = msmfit,
-    psi = estb[psiidx], var.psi = seb[psiidx] ^ 2, 
+    qx = qx, 
+    fit=fit, 
+    msmfit = msmfit,
+    psi = estb[psiidx], 
+    var.psi = seb[psiidx] ^ 2, 
     covmat.psi=covmat[psiidx,psiidx, drop=FALSE], 
     ci = ci[psiidx,],
-    coef = estb, var.coef = seb ^ 2, covmat.coef=covmat, ci.coef = ci,
+    coef = estb, 
+    var.coef = seb ^ 2, 
+    covmat.coef=covmat, 
+    ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=degree,
     bootstrap=FALSE,
-    y.expected = fit$family$linkinv(Xint %*% coef(fit)), index=Xint[,expnms[1]], # predictions from conditional fit at intervention data
+    y.expected = fit$family$linkinv(Xint %*% coef(fit)), 
+    index=Xint[,expnms[1]], 
     y.expectedmsm=predict(msmfit),
     bread = A, meat = B,
     covmat.all_robust = fullcovmat,

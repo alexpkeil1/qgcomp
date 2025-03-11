@@ -8,6 +8,7 @@
 \method{plot}{qgcompfit}(
   x,
   suppressprint = FALSE,
+  geom_only = FALSE,
   pointwisebars = TRUE,
   modelfitline = TRUE,
   modelband = TRUE,
@@ -34,6 +35,9 @@
 \item{suppressprint}{If TRUE, suppresses the plot, rather than printing it
 by default (it can be saved as a ggplot2 object (or list of ggplot2 objects if x is from a zero-
 inflated model) and used programmatically)
+(default = FALSE)}
+
+\item{geom_only}{If TRUE, returns only the geometry (i.e. does not contain the entire plot object). Used for overlays. Only used for \code{.ee} and \code{.boot} methods.
 (default = FALSE)}
 
 \item{pointwisebars}{(boot.gcomp only) If TRUE, adds 95\%  error bars for pointwise comparisons
