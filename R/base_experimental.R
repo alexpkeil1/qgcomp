@@ -169,9 +169,9 @@ print.qgcompmultixfit <- function(x,...){
 #' survival package), this yields a conditional log hazard ratio representing  
 #' a change in the expected conditional hazard (conditional on covariates)
 #' from increasing every exposure by 1 quantile. In general, this quantity 
-#' quantity is not equivalent to g-computation estimates. Hypothesis test
-#' statistics and 95% confidence intervals are based on using the delta
-#' estimate variance of a linear combination of random variables.
+#' quantity is not equivalent to marginal g-computation estimates. Hypothesis 
+#' test statistics and 95% confidence intervals are based on using the delta
+#' method estimate variance of a linear combination of random variables.
 #' 
 #' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
 #'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
@@ -192,7 +192,7 @@ print.qgcompmultixfit <- function(x,...){
 #' @param weights Not used here
 #' @param cluster not yet implemented
 #' @param alpha alpha level for confidence limit calculation
-#' @param ... arguments to glm (e.g. family)
+#' @param ... arguments to cch (e.g. robust, method, stratum)
 #' @family qgcomp_methods
 #' @return a qgcompfit object, which contains information about the effect
 #'  measure of interest (psi) and associated variance (var.psi), as well

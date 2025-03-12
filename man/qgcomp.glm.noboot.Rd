@@ -2,7 +2,6 @@
 % Please edit documentation in R/base.R
 \name{qgcomp.glm.noboot}
 \alias{qgcomp.glm.noboot}
-\alias{gcomp.noboot}
 \alias{qgcomp.noboot}
 \title{Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity}
 \usage{

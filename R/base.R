@@ -184,7 +184,7 @@ qgcomp.glm.noboot <- function(f,
                           bayes=FALSE,
                           ...){
   #' @title Quantile g-computation for continuous, binary, and count outcomes under linearity/additivity
-  #' @aliases gcomp.noboot
+  #' @aliases qgcomp.noboot
   #' @description This function estimates a linear dose-response parameter representing a one quantile
   #' increase in a set of exposures of interest. This function is limited to linear and additive
   #' effects of individual components of the exposure. This model estimates the parameters of a marginal

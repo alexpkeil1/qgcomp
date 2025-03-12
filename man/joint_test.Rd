@@ -2,15 +2,21 @@
 % Please edit documentation in R/base_multinomial.R
 \name{joint_test}
 \alias{joint_test}
-\title{Hypothesis testing about joint effect of exposures on a multinomial outcome}
+\alias{joint_test.qgcompmultfit}
+\title{Hypothesis testing about a joint effect of exposures on a multinomial outcome}
 \usage{
 joint_test(x, ...)
+
+\method{joint_test}{qgcompmultfit}(x, ...)
 }
 \arguments{
-\item{x}{Result from fit.}
+\item{x}{Result from qgcomp multinomial fit (qgcompmultfit object).}
 
 \item{...}{Unused}
 }
+\value{
+qgcompmulttest object (list) with results of a chi-squared test
+}
 \description{
-Hypothesis testing about joint effect of exposures on a multinomial outcome
+Tests the null hypothesis that the joint effect of the mixture components is null across all referent outcome types (Test of global null effect of the mixture on a quantized basis)
 }

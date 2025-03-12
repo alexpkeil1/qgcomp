@@ -624,8 +624,13 @@ qgcomp.glm.ee <- function(
     msmfamily = binomial(link="log")
   }
   
+  msmf = as.formula(paste("y.expected ~ ", 
+                          ifelse(hasintercept, "1+", "-1+"),
+                          sub("^1", "", paste(paste0("mixture^", seq_len(degree)), collapse="+"), fixed=TRUE)
+                    ))
+  
   fit = list(formula = newform, est=allest[condidx], vcov=fullcovmat[condidx,condidx], family=family, type="conditional")
-  msmfit = list(est=allest[msmidx], vcov=fullcovmat[msmidx,msmidx], family=msmfamily, type="msm")
+  msmfit = list(formula = msmf, est=allest[msmidx], vcov=fullcovmat[msmidx,msmidx], family=msmfamily, type="msm")
   if(includeX){
     fit$X = X
     msmfit$X = Xmsm

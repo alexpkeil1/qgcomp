@@ -2,15 +2,18 @@
 % Please edit documentation in R/base_multinomial.R
 \name{homogeneity_test}
 \alias{homogeneity_test}
-\title{Hypothesis testing about joint effect of exposures on a multinomial outcome}
+\alias{homogeneity_test.qgcompmultfit}
+\title{Hypothesis testing about a joint effect of exposures on a multinomial outcome}
 \usage{
 homogeneity_test(x, ...)
+
+\method{homogeneity_test}{qgcompmultfit}(x, ...)
 }
 \arguments{
-\item{x}{Result from fit.}
+\item{x}{Result from qgcomp multinomial fit (qgcompmultfit object).}
 
 \item{...}{Unused}
 }
 \description{
-Hypothesis testing about joint effect of exposures on a multinomial outcome
+Tests the null hypothesis that the joint effect of the mixture components is homogenous across all referent outcome types
 }

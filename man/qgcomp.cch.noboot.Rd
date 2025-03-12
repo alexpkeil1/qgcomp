@@ -50,7 +50,7 @@ to define cutpoints.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
-\item{...}{arguments to glm (e.g. family)}
+\item{...}{arguments to cch (e.g. robust, method, stratum)}
 }
 \value{
 a qgcompfit object, which contains information about the effect
@@ -70,9 +70,9 @@ For survival outcomes (as specified using methods from the
 survival package), this yields a conditional log hazard ratio representing
 a change in the expected conditional hazard (conditional on covariates)
 from increasing every exposure by 1 quantile. In general, this quantity
-quantity is not equivalent to g-computation estimates. Hypothesis test
-statistics and 95\% confidence intervals are based on using the delta
-estimate variance of a linear combination of random variables.
+quantity is not equivalent to marginal g-computation estimates. Hypothesis
+test statistics and 95\% confidence intervals are based on using the delta
+method estimate variance of a linear combination of random variables.
 }
 \examples{
 set.seed(50)

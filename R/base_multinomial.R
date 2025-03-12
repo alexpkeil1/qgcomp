@@ -152,31 +152,31 @@
 # functions for testing hypotheses ####
 #----------------------------------------------------------------#
 
-#' Hypothesis testing about joint effect of exposures on a multinomial outcome
+#' Hypothesis testing about a joint effect of exposures on a multinomial outcome
 #'
-#' @param x Result from fit.
+#' @description Tests the null hypothesis that the joint effect of the mixture components is homogenous across all referent outcome types
+#' 
+#' @param x Result from qgcomp multinomial fit (qgcompmultfit object).
 #' @param ... Unused
 #' @export
 homogeneity_test <- function(x,...){
   UseMethod("homogeneity_test")
 }
 
-#' Hypothesis testing about joint effect of exposures on a multinomial outcome
+#' Hypothesis testing about a joint effect of exposures on a multinomial outcome
+#' 
+#' @description Tests the null hypothesis that the joint effect of the mixture components is null across all referent outcome types (Test of global null effect of the mixture on a quantized basis)
 #'
-#' @param x Result from fit.
+#' @param x Result from qgcomp multinomial fit (qgcompmultfit object).
 #' @param ... Unused
+#' @returns qgcompmulttest object (list) with results of a chi-squared test
 #' @export
 joint_test <- function(x,...){
   UseMethod("joint_test")
 }
 
-#' Hypothesis testing about joint effect of exposures on a multinomial outcome
-#' @description Tests the null hypothesis that the joint effect of the mixture components is identical across all referent outcome types (homogeneity test for linear effect of the mixture on a quantized basis)
-#'
-#' @param x Result from qgcomp multinomial fit (qgcompmultfit object).
-#' @param ... Unused
-#' @returns qgcompmulttest object (list) with results of a chi-squared test
 #' @importFrom utils combn
+#' @rdname homogeneity_test
 #' @export
 homogeneity_test.qgcompmultfit <- function(x,...){
   nullh = paste0("H_0: ", paste0("psi_", x$labs[2:length(x$labs)], collapse=" = "))
@@ -199,13 +199,8 @@ homogeneity_test.qgcompmultfit <- function(x,...){
 
 
 
-#' Hypothesis testing about joint effect of exposures on a multinomial outcome
-#' @description Tests the null hypothesis that the joint effect of the mixture components is null across all referent outcome types (Test of global null effect of the mixture on a quantized basis)
-#'
-#' @param x Result from qgcomp multinomial fit (qgcompmultfit object).
-#' @param ... Unused
-#' @returns qgcompmulttest object (list) with results of a chi-squared test
 #' @importFrom utils combn
+#' @rdname joint_test
 #' @export
 joint_test.qgcompmultfit <- function(x,...){
   nullh = paste0("H_0:", paste0(" psi_", x$labs[2:length(x$labs)], " = 0", collapse=" &"))
@@ -265,6 +260,8 @@ print.qgcompmultfit <- function(x, ...){
 #' @param tests Character vector (e.g. c("global", "homogeneity")) that determine the types of hypothesis tests that are printed
 #' @returns qgcompmulttest object (list) with results of a chi-squared test
 #' @export
+#' @exportS3Method base::summary
+#' @rdname summary
 summary.qgcompmultfit <- function(object, ..., tests=NULL){
   # to do
   cat("Reference outcome levels:\n")
