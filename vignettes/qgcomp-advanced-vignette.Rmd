@@ -105,7 +105,7 @@ p3 + labs(title="Non-linear log(hazard ratio) overall, linear exposure specific 
 ```
 
 
-*Technical Note:* this mode of usage is designed for simplicity. The implementation relies on the `future` and `future.apply` packages. Use guidelines of the `future` package dictates that the user should be able to control the future "plan", rather than embedding it in functions as has been done here. This slightly more advanced usage (which allows nesting within larger parallel schemes such as simulations) is demonstrated here by setting the "parplan" parameter to FALSE and explicitly specifying a "plan" outside of qgcomp functions. This will move much of the overhead due to parallel processing outside of the actual qgcomp functions. The final code block of this vignette shows how to exit the "plan" and return to standard evaluation via `plan(sequential)` - doing so at the end means that the next parallel call (with parplan=FALSE) we make will have lower overhead and run slightly faster.
+*Technical Note:* this mode of usage is designed for simplicity. The implementation relies on the `future` and `future.apply` packages. Use guidelines of the `future` package dictates that the user should be able to control the future "plan", rather than embedding it in functions as has been done here. This slightly more advanced usage (which allows nesting within larger parallel schemes such as simulations) is demonstrated here by setting the "parplan" parameter to FALSE and explicitly specifying a "plan" outside of `qgcomp` functions. This will move much of the overhead due to parallel processing outside of the actual `qgcomp` functions. The final code block of this vignette shows how to exit the "plan" and return to standard evaluation via `plan(sequential)` - doing so at the end means that the next parallel call (with parplan=FALSE) we make will have lower overhead and run slightly faster.
 ```{r tm2evnt3b, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 future::plan(future::multisession)# parallel evaluation
 qc.survfit3 <- qgcomp.cox.boot(Surv(disease_time, disease_state) ~ . + .^2,expnms=Xnm,
@@ -136,7 +136,7 @@ p4 + labs(title="Non-linear log(hazard ratio), overall and exposure specific")
 
 ``` 
 
-Testing proportional hazards is somewhat complicated with respect to interpretation. Consider first a linear fit from `qgcomp.cox.noboot`. Because the underlying model of a linear qgcomp fit is equivalent to the sum of multiple parameters, it is not clear how proportional hazards might be best tested for the mixture. One could examine test statistics for each exposure, but there may be some exposures for which the test indicates non-proportional hazards and some for which the test does not.
+Testing proportional hazards is somewhat complicated with respect to interpretation. Consider first a linear fit from `qgcomp.cox.noboot`. Because the underlying model of a linear `qgcomp` fit is equivalent to the sum of multiple parameters, it is not clear how proportional hazards might be best tested for the mixture. One could examine test statistics for each exposure, but there may be some exposures for which the test indicates non-proportional hazards and some for which the test does not.
 
  The "GLOBAL" test in the cox.zph function from the `survival` package comes closest to what we might want, and gives an overall assessment of non-proportional hazards for all model terms simultaneously  (including non-mixture covariates). While this seems somewhat undesirable due to non-specificity, it is not necessarily important that only the mixture have proportional hazards, so it is useful and easily interpretable to have a global test of fit via GLOBAL. 
  
@@ -162,7 +162,7 @@ phtest3$table[dim(phtest3$table)[1],, drop=FALSE]
 ```
  
  
-Late entry and counting-process style data will currently yield results in qgcomp.cox functions. There has been some testing of this in limited settings, but we note that this is still an experimental feature at this point that may not be valid in all cases and so it is not documented here. As much effort as possible to validate results through other means is needed  when using qgcomp in data subject to late-entry or when using counting-process style data.
+Late entry and counting-process style data will currently yield results in `qgcomp.cox.*` functions. There has been some testing of this in limited settings, but we note that this is still an experimental feature at this point that may not be valid in all cases and so it is not documented here. As much effort as possible to validate results through other means is needed  when using qgcomp in data subject to late-entry or when using counting-process style data.
 
 
 
@@ -197,7 +197,7 @@ qgcomp.glm.noboot(y~ x1, data=datl$dat, family=gaussian(), q = NULL)
 
 while the `qgcomp.glm.boot` result (not run, but shown in a comment below MCsize=5000, B=500) yields a corrected standard error of 0.0398, which is close to the robust standard error estimate of 0.0409 of `qgcomp.glm.ee`. Both of these methods can provide clustering-appropriate inference, wheras uncorrected estimates from `qgcomp.glm.noboot` cannot. The standard errors from the uncorrected fit are too low, but this may not always be the case. Similarly, use of an external package to estimate the sandwich (robust) standard error estimate of 0.0409 is shown below, which works here only because the mixture only has a single exposure. It should be noted that the sandwich variance estimator is for a conditional model parameter, wheras the estimate from `qgcomp.glm.ee` is from an MSM, so results will differ from standard sandwich estimators when there are covariates or multiple exposures. 
 
-```{r clustering 2, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
+```{r clustering-2, results='markup', fig.show='hold', fig.height=5, fig.width=7.5, cache=FALSE}
 
 # clustering by specifying id parameter on
 #qgcomp.glm.boot(y~ x1, data=datl$dat, id="id", family=gaussian(), q = NULL, MCsize=1000, B = 5)
@@ -219,14 +219,14 @@ eefit
 
 ### Example 9: partial effects<a name="ex-partial"></a>
 
-Returning to our original example (and adjusting for covariates), note that the default output for a qgcomp.\*.noboot object includes "sum of positive/negative coefficients." These can be interpreted as "partial mixture effects" or effects of exposures with coefficients in a particular direction. This is displayed graphically via a plot of the qgcomp "weights," where all exposures that contribute to a given partial effect are on the same side of the plot.  Unfortunately, this does not yield valid inference for a true partial effect because it is a parameter conditional on the fitted results and thus does not represent the type of *a priori* hypothesis that is amenable to hypothesis testing and confidence intervals. Another way to think about this is that it is a data adaptive parameter and thus is subject to issues of overfit that are similar to issues with making inference from step-wise variable selection procedures.
+Returning to our original example (and adjusting for covariates), note that the default output for a `qgcomp.*.noboot` object includes "sum of positive/negative coefficients." These can be interpreted as "partial mixture effects" or effects of exposures with coefficients in a particular direction. This is displayed graphically via a plot of the qgcomp "weights," where all exposures that contribute to a given partial effect are on the same side of the plot.  Unfortunately, this does not yield valid inference for a true partial effect because it is a parameter conditional on the fitted results and thus does not represent the type of *a priori* hypothesis that is amenable to hypothesis testing and confidence intervals. Another way to think about this is that it is a data adaptive parameter and thus is subject to issues of overfit that are similar to issues with making inference from step-wise variable selection procedures.
 
 ```{r pe1, fig.height=5, fig.width=7.5}
 (qc.fit.adj <- qgcomp.glm.noboot(y~.,dat=metals[,c(Xnm, covars, 'y')], expnms=Xnm, family=gaussian()))
 plot(qc.fit.adj)
 ```
 
-Fortunately, there is a way towards estimation of "partial effects." One way to do this is sample splitting, where the data are first randomly partitioned into a "training" and a "validation" data set. The assessment of whether a coefficient is positive or not occurs in the "training" set and then effect estimation for positive/negative partial effects occurs in the validation data. Basic simulations can show that such a procedure can yield valid (often called "honest") hypothesis tests and confidence intervals for partial effects, provided that there is no separate data exploration in the combined dataset to select the models. In the `qgcomp` package, the partitioning of the datasets into "training" and "validation" sets is done by the user, which prevents issues that may arise if this is done naively on a dataset that contains clusters (where we should partition based on clusters, rather than observations) or multiple observations per individual (all observations from an individual should be partitioned together). Here is an example of simple partitioning on a dataset that contains one observation per individual with no clustering. The downside of sample splitting is the loss of precision, because the final "validation" dataset comprises only a fraction of the original sample size. Thus, the estimation of partial effects is most appropriate with large sample sizes. We also note that these partial effect are only well defined when all effects are linear and additive, since whether a variable contributes to a positive or negative partial effect would depend on the value of that variable, so the valid estimation of "partial effects" is limited to settings in which the `qgcomp.\*.noboot` objects are used for inference.
+Fortunately, there is a way towards estimation of "partial effects." One way to do this is sample splitting, where the data are first randomly partitioned into a "training" and a "validation" data set. The assessment of whether a coefficient is positive or not occurs in the "training" set and then effect estimation for positive/negative partial effects occurs in the validation data. Basic simulations can show that such a procedure can yield valid (often called "honest") hypothesis tests and confidence intervals for partial effects, provided that there is no separate data exploration in the combined dataset to select the models. In the `qgcomp` package, the partitioning of the datasets into "training" and "validation" sets is done by the user, which prevents issues that may arise if this is done naively on a dataset that contains clusters (where we should partition based on clusters, rather than observations) or multiple observations per individual (all observations from an individual should be partitioned together). Here is an example of simple partitioning on a dataset that contains one observation per individual with no clustering. The downside of sample splitting is the loss of precision, because the final "validation" dataset comprises only a fraction of the original sample size. Thus, the estimation of partial effects is most appropriate with large sample sizes. We also note that these partial effect are only well defined when all effects are linear and additive, since whether a variable contributes to a positive or negative partial effect would depend on the value of that variable, so the valid estimation of "partial effects" is limited to settings in which the `qgcomp.*.noboot` objects are used for inference.
 ```{r pe2}
 # 40/60% training/validation split
 set.seed(123211)
@@ -443,6 +443,10 @@ A common form of missing data that occurs in mixtures are exposure values that a
 ### Multiple imputation
 Multiple imputation uses multiple datasets with different imputed values for each missing value across datasets. Separate analyses are performed on each of these datasets, and the results are combined using standard rules. The function `mice.impute.leftcenslognorm` can be interfaced with the `mice` package for efficient programming of multiple imputation based analysis with quantile g-computation. Examples cannot be included here without explicitly installing the `mice` package, but an example can be seen in the help file for `mice.impute.leftcenslognorm`.
 
+```{r parend, echo=TRUE}
+# return to standard processing
+future::plan(future::sequential) # return to standard evaluation
+```
 
 
 ## References
@@ -452,8 +456,4 @@ Alexander P. Keil, Jessie P. Buckley, Katie M. O'Brien, Kelly K. Ferguson, Shans
 
 The development of this package was supported by NIH Grant RO1ES02953101. Invaluable code testing has been performed by Nicole Niehoff, Michiel van den Dries, Emily Werder, Jessie Buckley, Barrett Welch, Che-Jung (Rong) Chang, various github users, and Katie O'Brien.
 
-```{r parend, echo=TRUE}
-# return to standard processing
-future::plan(future::sequential) # return to standard evaluation
-```
 

@@ -5,13 +5,14 @@ date: "`r Sys.Date()`"
 #output: rmarkdown::pdf_document 
 output: rmarkdown::html_vignette  
 vignette: >
-  %\VignetteIndexEntry{The qgcomp package: list of vignettes}
+  %\VignetteIndexEntry{The qgcomp package: a list of vignettes}
   %\VignetteEngine{knitr::knitr}
   \usepackageutf8{inputenc}
 ---
 
 ```{r invisibles, echo=FALSE, results='markup', message=FALSE}
 library("knitr")
+library("qgcomp")
 #library("gWQS")
 ```
 
@@ -27,7 +28,7 @@ and water contamination.
 Help for this package is available in the help files for individual functions, or in the package vignettes.
 
 The basic vignette can be viewed in R/Rstudio by running the following
-```{r v1, echo=TRUE, results='markup', message=FALSE}
+```{r v1, echo=TRUE, results='markup', message=FALSE, eval=FALSE}
 vignette("qgcomp-basic-vignette", "qgcomp")
 ```
 The basic vignette covers:
@@ -43,7 +44,7 @@ The basic vignette covers:
 9. FAQ
 
 The advanced vignette can be viewed in R/Rstudio by running the following
-```{r v2, echo=TRUE, results='markup', message=FALSE}
+```{r v2, echo=TRUE, results='markup', message=FALSE, eval=FALSE}
 vignette("qgcomp-advanced-vignette", "qgcomp")
 ```
 The advanced vignette covers:

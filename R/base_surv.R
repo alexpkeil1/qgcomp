@@ -694,3 +694,187 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   attr(res, "class") <- c("survqgcompfit", attr(res, "class"))
   res
 }
+
+
+
+#' @title Quantile g-computation for survival outcomes in a case-cohort design under linearity/additivity
+#'  
+#'
+#' @description This function performs quantile g-computation in a survival
+#' setting with case-cohort sampling. The approach estimates the 
+#' covariate-conditional hazard ratio for 
+#' a joint change of 1 quantile in each exposure variable specified in expnms
+#' parameter
+#' 
+#' @details For survival outcomes (as specified using methods from the 
+#' survival package), this yields a conditional log hazard ratio representing  
+#' a change in the expected conditional hazard (conditional on covariates)
+#' from increasing every exposure by 1 quantile. In general, this quantity 
+#' quantity is not equivalent to marginal g-computation estimates. Hypothesis 
+#' test statistics and 95% confidence intervals are based on using the delta
+#' method estimate variance of a linear combination of random variables. 
+#' 
+#' Note that this closely follows the \code{\link[survival]{cch}} function in the
+#' survival package by Terry Therneau, and is restricted to the methods used in that
+#' function, which may not address all extant methods for case-cohort studies.
+#' 
+#' @param f R style survival formula, which includes \code{\link[survival]{Surv}}
+#'   in the outcome definition. E.g. \code{Surv(time,event) ~ exposure}. Offset
+#'   terms can be included via \code{Surv(time,event) ~ exposure + offset(z)}
+#' @param data data frame
+#' @param subcoh (From \code{\link[survival]{cch}} help) Vector of indicators for subjects sampled as part of the sub-cohort. Code 1 or TRUE for members of the sub-cohort, 0 or FALSE for others. If data is a data frame then subcoh may be a one-sided formula.
+#' @param id (From \code{\link[survival]{cch}} help) Vector of unique identifiers, or formula specifying such a vector.
+#' @param cohort.size (From \code{\link[survival]{cch}} help) Vector with size of each stratum original cohort from which subcohort was sampled
+#' @param expnms character vector of exposures of interest
+#' @param q NULL or number of quantiles used to create quantile indicator variables
+#' representing the exposure variables. If NULL, then gcomp proceeds with un-transformed
+#' version of exposures in the input datasets (useful if data are already transformed,
+#' or for performing standard g-computation)
+#' @param breaks (optional) NULL, or a list of (equal length) numeric vectors that 
+#' characterize the minimum value of each category for which to 
+#' break up the variables named in expnms. This is an alternative to using 'q'
+#' to define cutpoints. See examples for how you might use this in case-cohort studies.
+#' @param weights Not used here (argument will be ignored)
+#' @param cluster Not used here (argument will be ignored)
+#' @param alpha alpha level for confidence limit calculation
+#' @param ... arguments to \code{\link[survival]{cch}} (e.g. robust, method, stratum - see examples)
+#' @family qgcomp_methods
+#' @return a qgcompfit object, which contains information about the effect
+#'  measure of interest (psi) and associated variance (var.psi), as well
+#'  as information on the model fit (fit) and information on the 
+#'  weights/standardized coefficients in the positive (pos.weights) and 
+#'  negative (neg.weights) directions.
+#' @concept variance mixtures
+#' @import survival
+#' @export
+#' @examples
+#' set.seed(50)
+#' N=500
+#' # cohort analysis
+#' dat <- data.frame(id = 1:N, time=(tmg <- pmin(.1,rweibull(N, 10, 0.1))), 
+#'                 d=1.0*(tmg<0.1), x1=runif(N), x2=runif(N), z=rbinom(N, 1, 0.5))
+#' expnms=paste0("x", 1:2)
+#' f1 = survival::Surv(time, d)~x1 + x2 + z
+#' (fit1 <- survival::coxph(f1, data = dat))
+#' (obj <- qgcomp.cox.noboot(f1, expnms = expnms, data = dat))
+#' f1s = survival::Surv(time, d)~x1 + x2 + strata(z)
+#' (fit1s <- survival::coxph(f1s, data = dat))
+#' (objs <- qgcomp.cox.noboot(f1s, expnms = expnms, data = dat))
+#' #### now doing a case-cohort analysis
+#' # 1) sampling simple case-cohort data
+#' dat$subcohort = 1:nrow(dat) %in% sort(sample(1:nrow(dat), 100))
+#' caco_dat = dat[dat$subcohort | dat$d,]
+#' dim(caco_dat)
+#' dim(dat)
+#' 
+#' # getting quantile categories from the subcohort
+#' qdata = quantize(caco_dat[caco_dat$subcohort,], expnms=expnms)
+#' qdata$breaks
+#' # 2) doing simple (unstratified) analysis
+#' f2 = survival::Surv(time, d)~x1 + x2 + z
+#' (obj2 <- qgcomp.cch.noboot(f2, expnms = expnms, breaks = qdata$breaks, 
+#'          data = caco_dat, subcoh = ~ subcohort, id = ~id, cohort.size=N))
+#' obj2$fit
+#' 
+#' ### doing stratified analysis (if subcohort is a stratified sample)
+#' # 1) sampling stratified case-cohort data
+#' selected_ids = sort(c(sample(dat[dat$z==1, "id"], 75), 
+#'                  sample(dat[dat$z==0, "id"], 25)))
+#' dat$subcohort = dat$id %in% selected_ids
+#' caco_dat_strat = dat[dat$subcohort | dat$d,]
+#' dim(caco_dat_strat)
+#' dim(dat)
+#' 
+#' # getting quantile categories from the subcohort by differential sampling across strata
+#' subco_strat = caco_dat_strat[caco_dat_strat$subcohort,]
+#' z_stratum_sizes = table(dat$z)
+#' z_stratum_sizes_caco = table(subco_strat$z)
+#' sampweights = z_stratum_sizes/z_stratum_sizes_caco
+#' sampweightsn = sampweights/(min(sampweights))
+#' 
+#' # now oversample the undersampled into a dataset used to create cutpoints
+#' wtdcutids = data.frame(id=sort(c(sample(subco_strat[subco_strat$z==0,"id"], 
+#'                 sampweightsn[1]*z_stratum_sizes_caco[1], replace=TRUE), 
+#'                 sample(subco_strat[subco_strat$z==1,"id"], 
+#'                 sampweightsn[2]*z_stratum_sizes_caco[2]))))
+#' cutdata = merge(wtdcutids,subco_strat, all.x=TRUE)                 
+#' qdata_strat = quantize(caco_dat[caco_dat$subcohort,], expnms=expnms)
+#' qdata_strat$breaks
+#' f2s = survival::Surv(time, d)~x1 + x2
+#' (obj2s <- qgcomp.cch.noboot(f2s, expnms = expnms, breaks = qdata_strat$breaks, 
+#'          data = caco_dat, subcoh = ~ subcohort, id = ~id, 
+#'          stratum=~z,
+#'          cohort.size=z_stratum_sizes, method="I.Borgan"))
+#' obj2s$fit
+#' 
+#' 
+qgcomp.cch.noboot <- function(f, data, subcoh=NULL, id=NULL, cohort.size=NULL, expnms = NULL, q = 4, breaks = NULL, 
+                              weights, cluster = NULL, alpha = 0.05, ...) 
+{
+  of <- f
+  newform <- terms(f, data = data)
+  class(newform) <- "formula"
+  nobs = nrow(data)
+  origcall <- thecall <- match.call(expand.dots = FALSE)
+  names(thecall) <- gsub("f", "formula", names(thecall))
+  m <- match(c("f", "data", "weights", "offset"), names(thecall), 
+             0L)
+  hasweights = ifelse("weights" %in% names(thecall), TRUE, 
+                      FALSE)
+  thecall <- thecall[c(1L, m)]
+  thecall$drop.unused.levels <- TRUE
+  thecall[[1L]] <- quote(stats::model.frame)
+  thecalle <- eval(thecall, parent.frame())
+  if (hasweights) {
+    data$weights <- as.vector(model.weights(thecalle))
+  }
+  else data$weights = rep(1, nobs)
+  if (is.null(expnms)) {
+    message("Including all model terms as exposures of interest")
+    expnms <- attr(newform, "term.labels")
+  }
+  if (!is.null(q) | !is.null(breaks)) {
+    ql <- quantize(data, expnms, q, breaks)
+    qdata <- ql$data
+    br <- ql$breaks
+  }
+  else {
+    qdata <- data
+    br <- breaks
+  }
+  environment(newform) <- list2env(list(qdata = qdata))
+  fit <- cch(newform, data = qdata, subcoh = subcoh, id=id, cohort.size=cohort.size, ...)
+  cchfam = list(family = "cch", link = "log", linkfun = log)
+  class(cchfam) = "family"
+  fit[["family"]] = cchfam
+  mod <- summary(fit)
+  estb <- sum(mod$coefficients[expnms, 1])
+  covMat = fit$var
+  colnames(covMat) <- names(mod$coefficients[, 1])
+  seb <- se_comb(expnms, covmat = covMat)
+  tstat <- estb/seb
+  pvalz <- 2 - 2 * pnorm(abs(tstat))
+  ci <- c(estb + seb * qnorm(alpha/2), estb + seb * qnorm(1 - 
+                                                            alpha/2))
+  wcoef <- fit$coefficients[expnms]
+  names(wcoef) <- gsub("_q", "", names(wcoef))
+  poscoef <- which(wcoef > 0)
+  negcoef <- which(wcoef <= 0)
+  pos.weights <- abs(wcoef[poscoef])/sum(abs(wcoef[poscoef]))
+  neg.weights <- abs(wcoef[negcoef])/sum(abs(wcoef[negcoef]))
+  pos.psi <- sum(wcoef[poscoef])
+  neg.psi <- sum(wcoef[negcoef])
+  qx <- qdata[, expnms]
+  names(qx) <- paste0(names(qx), "_q")
+  names(estb) = "psi1"
+  res <- .qgcomp_object(qx = qx, fit = fit, psi = estb, var.psi = seb^2, 
+                        covmat.psi = seb^2, ci = ci, coef = estb, var.coef = seb^2, 
+                        covmat.coef = seb^2, ci.coef = ci, expnms = expnms, q = q, 
+                        breaks = br, degree = 1, pos.psi = pos.psi, neg.psi = neg.psi, 
+                        pos.weights = sort(pos.weights, decreasing = TRUE), neg.weights = sort(neg.weights, 
+                                                                                               decreasing = TRUE), pos.size = sum(abs(wcoef[poscoef])), 
+                        neg.size = sum(abs(wcoef[negcoef])), zstat = tstat, pval = pvalz, 
+                        alpha = alpha, call = origcall, hasintercept = FALSE)
+  attr(res, "class") <- c("survqgcompfit", attr(res, "class"))
+  res
+}

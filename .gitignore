@@ -38,3 +38,4 @@ NEWS.md
 CRAN-RELEASE
 .github/workflows/r.yml
 vignettes/qgcomp-vignette.html
+/revdep
