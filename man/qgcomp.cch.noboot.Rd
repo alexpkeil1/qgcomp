@@ -89,7 +89,7 @@ expnms=paste0("x", 1:2)
 f1 = survival::Surv(time, d)~x1 + x2 + z
 (fit1 <- survival::coxph(f1, data = dat))
 (obj <- qgcomp.cox.noboot(f1, expnms = expnms, data = dat))
-f1s = survival::Surv(time, d)~x1 + x2 + strata(z)
+f1s = survival::Surv(time, d)~x1 + x2 + survival::strata(z)
 (fit1s <- survival::coxph(f1s, data = dat))
 (objs <- qgcomp.cox.noboot(f1s, expnms = expnms, data = dat))
 #### now doing a case-cohort analysis
@@ -108,12 +108,18 @@ f2 = survival::Surv(time, d)~x1 + x2 + z
          data = caco_dat, subcoh = ~ subcohort, id = ~id, cohort.size=N))
 obj2$fit
 
-### doing stratified analysis (if subcohort is a stratified sample)
+### doing stratified analysis (if subcohort and/or cases are a stratified sample)
 # 1) sampling stratified case-cohort data
-selected_ids = sort(c(sample(dat[dat$z==1, "id"], 75), 
-                 sample(dat[dat$z==0, "id"], 25)))
+sampfracs = c(.25, .75) # z=0 vs. z=1
+nco = 100 # total subcohort members
+nca = nrow(dat[dat$d==1,])
+selected_ids = sort(c(sample(dat[dat$z==0, "id"], round(nco*sampfracs[1])), 
+                 sample(dat[dat$z==1, "id"],  round(nco*sampfracs[2]))))
+selected_cases = sort(c(sample(dat[dat$d==1 & dat$z==0, "id"], round(nca*sampfracs[1])), 
+                 sample(dat[dat$d==1 & dat$z==1, "id"], round(nca*sampfracs[1]))))
 dat$subcohort = dat$id \%in\% selected_ids
-caco_dat_strat = dat[dat$subcohort | dat$d,]
+dat$selectedcases = dat$id \%in\% selected_cases
+caco_dat_strat = dat[dat$subcohort | dat$selectedcases,]
 dim(caco_dat_strat)
 dim(dat)
 
@@ -130,11 +136,11 @@ wtdcutids = data.frame(id=sort(c(sample(subco_strat[subco_strat$z==0,"id"],
                 sample(subco_strat[subco_strat$z==1,"id"], 
                 sampweightsn[2]*z_stratum_sizes_caco[2]))))
 cutdata = merge(wtdcutids,subco_strat, all.x=TRUE)                 
-qdata_strat = quantize(caco_dat[caco_dat$subcohort,], expnms=expnms)
+qdata_strat = quantize(cutdata, expnms=expnms)
 qdata_strat$breaks
 f2s = survival::Surv(time, d)~x1 + x2
 (obj2s <- qgcomp.cch.noboot(f2s, expnms = expnms, breaks = qdata_strat$breaks, 
-         data = caco_dat, subcoh = ~ subcohort, id = ~id, 
+         data = caco_dat_strat, subcoh = ~ subcohort, id = ~id, 
          stratum=~z,
          cohort.size=z_stratum_sizes, method="I.Borgan"))
 obj2s$fit
