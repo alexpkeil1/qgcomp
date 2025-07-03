@@ -52,7 +52,7 @@ errors via bootstrapping.}
 \item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[survival]{coxph}}}
 
-\item{cluster}{not yet implemented}
+\item{cluster}{not implemented (here, "id" plays the same role as cluster plays in cqgcomp.cox.noboot)}
 
 \item{alpha}{alpha level for confidence limit calculation}
 

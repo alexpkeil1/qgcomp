@@ -94,12 +94,14 @@ qgcomp.tobit.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL, i
                       FALSE)
   thecall <- thecall[c(1L, m)]
   thecall$drop.unused.levels <- TRUE
+  thecall$na.action <- identity
+
   thecall[[1L]] <- quote(stats::model.frame)
   thecalle <- eval(thecall, parent.frame())
   if (hasweights) {
     data$weights <- weights
   }
-  else data$weights = rep(1, nobs)
+  else data$weights <- rep(1,nobs)
   if (is.null(expnms)) {
     message("Including all model terms as exposures of interest")
     expnms <- attr(newform, "term.labels")

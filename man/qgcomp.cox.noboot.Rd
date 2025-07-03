@@ -43,7 +43,7 @@ id/cluster)}
 \item{weights}{"case weights" - passed to the "weight" argument of
 \code{\link[survival]{coxph}}}
 
-\item{cluster}{not yet implemented}
+\item{cluster}{(from coxph function help) optional variable which clusters the observations, for the purposes of a robust variance. If present, it implies robust. This variable will normally be found in data.}
 
 \item{alpha}{alpha level for confidence limit calculation}
 
