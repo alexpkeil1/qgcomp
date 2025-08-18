@@ -173,6 +173,30 @@ print.qgcompmultixfit <- function(x,...){
 }
 
 
+#
+pointwisebound.coxhr.boot <- function (x, pointwiseref = 1, alpha = 0.05) {
+  link = x$msmfit$family$link
+  pwr = pointwiseref + 0
+  designmat = qgcomp:::.makenewdesign(x, seq_len(x$q) - 1)
+  refrow <- designmat[pointwiseref, ]
+  nrows <- nrow(designmat)
+  res = as.data.frame(designmat)
+  
+  lnhr = designmat %*% coef(x)
+  se.lnhr = numeric(nrows)
+  se.lnhr[pwr] = 0
+  pw.idx = seq_len(nrow(res))[-pwr]
+  vc <- vcov(x)
+  for (nr in seq_len(nrows)) {
+    grad <- as.numeric(designmat[nr, ] - refrow)
+    se.lnhr[nr] <- se_comb(names(grad), covmat = vc, grad)
+  }
+  res = qgcomp:::.pointwise.log.boot(x$q, lnhr, se.lnhr, alpha, pointwiseref)
+  names(res) <- c(names(res)[c(1,2)], "lnhr", "hr", "se.lnhr", "ll.hr", "ul.hr", "ll.lnhr", "ul.lnhr")
+  res
+}
+
+
 
 
 

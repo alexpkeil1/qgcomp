@@ -421,7 +421,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   qx <- qdata[, expnms]
   names(qx) <- paste0(names(qx), "_q")
   names(estb) = "psi1"
-  res <- qgcomp:::.qgcomp_object(
+  res <- .qgcomp_object(
     qx = qx, fit = fit, 
     psi = estb, var.psi = seb^2, covmat.psi = seb^2, ci = ci, 
     coef = estb, var.coef = seb^2, covmat.coef = seb^2, ci.coef = ci, 

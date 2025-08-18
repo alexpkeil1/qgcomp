@@ -573,7 +573,7 @@ qgcomp.hurdle.boot <- function(
   thecalle <- eval(thecall, parent.frame())
   if(hasweights){
     data$weights <- as.vector(model.weights(thecalle))
-  } else data$weights = rep(1, nobs)
+  } else data$weights <- rep(1,nobs)
 
 
   if (is.null(expnms)) {
