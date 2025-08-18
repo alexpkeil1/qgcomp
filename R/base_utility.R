@@ -293,6 +293,7 @@ checknames <- function(terms){
 }
 
 .qgcomp_object <- function(...){
+  #' @export
   res = list(...)
   nms = names(res)
   if(is.na(match("hasintercept", nms))) res$hasintercept = TRUE

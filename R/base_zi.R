@@ -114,7 +114,7 @@ zimsm_fit <- function(
   thecalle <- eval(thecall, parent.frame())
   if(hasweights){
     qdata$weights <- as.vector(model.weights(thecalle))
-  } else weights <- NULL
+  } else data$weights <- rep(1,nobs)
 
   if(is.null(id)) {
     id = "id__"
@@ -298,7 +298,7 @@ qgcomp.zi.noboot <- function(f,
   thecalle <- eval(thecall, parent.frame())
   if(hasweights){
     data$weights <- as.vector(model.weights(thecalle))
-  } else data$weights = rep(1, nobs)
+  } else data$weights <- rep(1,nobs)
 
 
   if (is.null(expnms)) {
@@ -565,7 +565,7 @@ qgcomp.zi.boot <- function(f,
   thecalle <- eval(thecall, parent.frame())
   if(hasweights){
     data$weights <- as.vector(model.weights(thecalle))
-  } else data$weights = rep(1, nobs)
+  } else data$weights <- rep(1,nobs)
 
 
   if (is.null(expnms)) {
