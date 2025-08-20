@@ -292,8 +292,30 @@ checknames <- function(terms){
   }
 }
 
+
+#' Creating a `qgcompfit` object
+#' 
+#' @description
+#' `.qgcomp_object` developer function to create a `qgcompfit` object (a list of class "qgcompfit")
+#'
+#' @param ... named objects to add to the `qgcompfit` object
+#' @details
+#' This is not a generally useful function, except for developers, who need to add items to an existing qgcompfit object.
+#' @returns a `qgcompfit` object
+#' @export
+#' @examples
+#' set.seed(50)
+#' # linear model, adding an arbitrary string to the object
+#' dat <- data.frame(y=runif(50,-1,1), x1=runif(50), x2=runif(50), z=runif(50))
+#' expnms = c('x1')
+#' q=NULL
+#' ft = glm(f=y ~ z + x1 + x2, data=dat, family=gaussian())
+#' z = coef(ft)[2]/sqrt(vcov(ft)[2,2])
+#' pval = (1-pnorm(abs(z)))*2
+#' .qgcomp_object(fit = ft, coef=coef(ft)[2], q=NULL, var.coef = vcov(ft)[2,2], 
+#' ci.coef=coef(ft)[2] + c(-1.96, 1.96)*sqrt(vcov(ft)[2,2]), tstat = z, pval = pval, 
+#' bootstrap=FALSE)
 .qgcomp_object <- function(...){
-  #' @export
   res = list(...)
   nms = names(res)
   if(is.na(match("hasintercept", nms))) res$hasintercept = TRUE
@@ -312,8 +334,26 @@ checknames <- function(terms){
   res
 }
 
+#' Adding objects to a `qgcompfit` object
+#' 
+#' @description
+#' `.qgcomp_object_add` developer function to add items to an existing `qgcompfit` object
+#'
+#' @param x `qgcompfit` object
+#' @param ... named objects to add to the `qgcompfit` object
+#' @param overwrite_duplicates (logical) overwrite list items in `qgcompfit` object with arguments that have matching names in `...`
+#' @details
+#' This is not a generally useful function, except for developers, who need to add items to an existing qgcompfit object.
+#' @returns a `qgcompfit` object
+#' @export
+#' @examples
+#' set.seed(50)
+#' # linear model, adding an arbitrary string to the object
+#' dat <- data.frame(y=runif(50,-1,1), x1=runif(50), x2=runif(50), z=runif(50))
+#' ft = qgcomp.glm.noboot(f=y ~ z + x1 + x2, expnms = c('x1', 'x2'), data=dat, q=2, family=gaussian())
+#' ft2 = .qgcomp_object_add(ft, date=Sys.Date())
+#' ft2$date # not typically part of a qgcomp object, but could be useful for e.g. datestamping analyses
 .qgcomp_object_add <- function(x,..., overwrite_duplicates=TRUE){
-  #' @export
   if(!inherits(x, "qgcompfit")) stop("The object you are trying to add to is not a qgcompfit object")
   res = list(...)
   nms = names(res)
