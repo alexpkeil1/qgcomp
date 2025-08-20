@@ -374,13 +374,10 @@ qgcomp.glm.noboot <- function(f,
       hasintercept=hasintercept
     )
       if(fit$family$family=='gaussian'){
-        res$tstat <- tstat
-        res$df <- df
-        res$pval <- pval
+        res = .qgcomp_object_add(res, tstat=tstat, df=df, pval=pval)
       }
       if(fit$family$family %in% c('binomial', 'poisson')){
-        res$zstat <- tstat
-        res$pval <- pvalz
+        res = .qgcomp_object_add(res, zstat=tstat, pval=pvalz)
       }
     res
 }
@@ -757,13 +754,10 @@ qgcomp.glm.boot <- function(
       hasintercept=hasintercept
     )
       if(msmfit$fit$family$family=='gaussian'){
-        res$tstat <- tstat
-        res$df <- df
-        res$pval <- pval
+         res = .qgcomp_object_add(res, tstat=tstat, df=df, pval=pval)
       }
       if(msmfit$fit$family$family %in% c('binomial', 'poisson')){
-        res$zstat <- tstat
-        res$pval <- pvalz
+         res = .qgcomp_object_add(res, zstat=tstat, pval=pvalz)
       }
     res
 }

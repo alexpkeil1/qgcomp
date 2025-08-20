@@ -312,6 +312,25 @@ checknames <- function(terms){
   res
 }
 
+.qgcomp_object_add <- function(x,..., overwrite_duplicates=TRUE){
+  #' @export
+  if(!inherits(x, "qgcompfit")) stop("The object you are trying to add to is not a qgcompfit object")
+  res = list(...)
+  nms = names(res)
+  orig_class = class(x)
+  if(overwrite_duplicates){
+    commnames = intersect(names(x), names(res))
+    commnames = intersect(names(x), names(res))
+    keepnms = setdiff(names(x), commnames)
+    x = x[keepnms]
+  }
+  res = c(x,res)
+  attr(res, "class") <- orig_class
+  res
+}
+
+
+
 .qgcompmult_object <- function(...){
   res = .qgcomp_object(...)
   attr(res, "class") <- c("qgcompmultfit", attr(res, "class"))

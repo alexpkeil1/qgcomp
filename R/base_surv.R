@@ -696,11 +696,10 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
     alpha=alpha, call=origcall, hasintercept=FALSE
   )
   if(msmfit$fit$family$family=='cox'){
-    res$zstat <- tstat
-    res$pval <- pvalz
+    res = .qgcomp_object_add(res, zstat=tstat, pval=pvalz)
   } else{
     stop("MSM fit is not a cox model, which is an unexpected bug. 
-         Send any relevant info to akeil@unc.edu")
+         Send any relevant info to keilap@nih.gov")
   }
   attr(res, "class") <- c("survqgcompfit", attr(res, "class"))
   res

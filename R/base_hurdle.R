@@ -375,9 +375,6 @@ qgcomp.hurdle.noboot <- function(f,
     ci = lapply(ci, function(x) x[-1,]), 
     coef = estb, 
     var.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
-    #covmat.coef = lapply(seb, function(x) c('(Intercept)' = x[1]^2, 'psi1' = x[2]^2)),
-    #covmat.coef=c('(Intercept)' = seb[1]^2, 'psi1' = seb[2]^2), 
-    #covmat.coef=lapply(vcov_mod, function(x) vc_comb(aname="(Intercept)", expnms=expnms, covmat = x)),
     covmat.coef= vcov_mod,
     ci.coef = ci,
     expnms=expnms, q=q, breaks=br, degree=1,
@@ -389,16 +386,8 @@ qgcomp.hurdle.noboot <- function(f,
     neg.size = neg.size,
     alpha=alpha, call=origcall
   )
-  #if(fit$family$family=='gaussian'){
-  #  res$tstat <- tstat
-  #  res$df <- df
-  #  res$pval <- pval
-  #}
-  #if(fit$family$family=='binomial'){
-    res$zstat <- tstat
-    res$pval <- pvalz
-  #}
     attr(res, "class") <- c("ziqgcompfit", attr(res, "class"))
+    res = .qgcomp_object_add(res, zstat=tstat, pval=pvalz)
     res
 }
 
@@ -729,9 +718,8 @@ qgcomp.hurdle.boot <- function(
     bootsamps = bootsamps,
     alpha=alpha
   )
-  res$zstat <- tstat
-  res$pval <- pvalz
   attr(res, "class") <- c("ziqgcompfit", attr(res, "class"))
+  res = .qgcomp_object_add(res, zstat=tstat, pval=pvalz)
   res
 }
 
