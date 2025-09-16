@@ -211,8 +211,8 @@ coxmsm_fit <- function(
               style data (>1 record per individual)."
               )
     }
-    ch = pfit$cumhaz
-    h1 = ch[1,]
+    ch = pfit$cumhaz # cumulative hazard estimates for every observation at every time
+    h1 = ch[1,] # hazard estimate at first failure
     haz = rbind(h1, apply(ch, 2, diff))
     dh = dim(haz)
     ui = matrix(runif(prod(dh)), nrow=dh[1], ncol=dh[2])
