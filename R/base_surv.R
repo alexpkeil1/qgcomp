@@ -343,6 +343,16 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   #' 
   #' # not run: bootstrapped version is much slower
   #' (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+  #' # checking whether missing data causes an issue
+  #' dat$z[1:10] <- NA
+  #' (objzmiss <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' (objzmiss_alt <- qgcomp.cox.noboot(f, expnms = expnms, data = dat[,c(expnms, "time", "d")]))
+  #' set.seed(110)
+  #' (objzmiss2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=3, MCsize=100))
+  #' dat$x1[1:10] <- NA
+  #' (objx1miss <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+  #' set.seed(110)
+  #' (objx1miss2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=3, MCsize=100))
   #' }
   
   of <- f
@@ -623,6 +633,8 @@ qgcomp.cox.boot <- function(f, data, expnms=NULL, q=4, breaks=NULL,
   if(dim(qdata)[1]>MCsize) MCsize = dim(qdata)[1]
   ###
   environment(newform) <- list2env(list(qdata=qdata))
+  mf = model.frame(newform, qdata)
+  if (nrow(mf) != nrow(qdata)) stop("qgcomp.cox.boot error: missing values are present in model variables. Please use complete-case data only on this function to ensure that all calculations are performed correctly.")
   msmfit <- coxmsm_fit(newform, qdata, intvals, expnms, main=TRUE,degree=degree, 
                        weights=weights,
                        # cluster = cluster,

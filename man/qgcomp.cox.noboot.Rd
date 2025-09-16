@@ -91,6 +91,16 @@ survival::coxph(f, data = qdata$data, weight=w)
 
 # not run: bootstrapped version is much slower
 (obj2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=200, MCsize=20000))
+# checking whether missing data causes an issue
+dat$z[1:10] <- NA
+(objzmiss <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+(objzmiss_alt <- qgcomp.cox.noboot(f, expnms = expnms, data = dat[,c(expnms, "time", "d")]))
+set.seed(110)
+(objzmiss2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=3, MCsize=100))
+dat$x1[1:10] <- NA
+(objx1miss <- qgcomp.cox.noboot(f, expnms = expnms, data = dat))
+set.seed(110)
+(objx1miss2 <- qgcomp.cox.boot(f, expnms = expnms, data = dat, B=3, MCsize=100))
 }
 }
 \seealso{
