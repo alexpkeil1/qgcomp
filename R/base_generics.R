@@ -21,6 +21,15 @@ df.residual.qgcompfit <- function(object, ...){
   df.residual(object$fit)
 }
 
+residuals.qgcompfit <- function(object, ...){
+  #' @exportS3Method stats::residuals
+  if (object$bootstrap){
+    NULL
+  } else{
+    stats::residuals(object$fit)
+  }
+}
+
 
 model.matrix.eeqgcompfit <- function(object, ...) {
   #' @exportS3Method stats::model.matrix

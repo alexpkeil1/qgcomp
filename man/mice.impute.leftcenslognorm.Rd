@@ -71,7 +71,7 @@ set.seed(1231)
 impdat = mice(data = mdat,
   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   lod=c(NA, 0.5, 0.75, NA), debug=FALSE, m=10)
-qc.fit.imp <- list(
+qc.fit.imp <- mira(
   call = call("qgcomp.glm.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
   call1 = impdat$call,
   nmis = impdat$nmis,
@@ -85,15 +85,15 @@ set.seed(1231)
 impdat_alt = mice(data = mdat,
   method = c("", "leftcenslognorm", "leftcenslognorm", ""),
   lod=lodlist, debug=FALSE, m=10)
-qc.fit.imp_alt <- list(
+qc.fit.imp_alt <- mira(
   call = call("qgcomp.glm.noboot(y~., expnms = c('x1', 'x2'), family=gaussian())"),
   call1 = impdat_alt$call,
   nmis = impdat_alt$nmis,
   analyses = lapply(1:10, function(x) qgcomp.glm.noboot(y~., expnms = c("x1", "x2"),
     data=complete(impdat_alt, x), family=gaussian(), bayes=TRUE))
 )
-obj = pool(as.mira(qc.fit.imp))
-obj_alt = pool(as.mira(qc.fit.imp_alt))
+obj = pool(qc.fit.imp)
+obj_alt = pool(qc.fit.imp_alt)
 # true values
 true
 # complete case analysis
@@ -135,14 +135,14 @@ plot(density(complete(impdat2, 1)$x1))
 impdat = mice(data = mdat,
   method = c("", "tobit", "tobit", ""),
   lod=c(NA, 0.5, 0.75, NA), debug=FALSE)
-qc.fit.imp <- list(
+qc.fit.imp <- mira(
   call = call("qgcomp.cox.noboot(Surv(y)~., expnms = c('x1', 'x2'))"),
   call1 = impdat$call,
   nmis = impdat$nmis,
   analyses = lapply(1:5, function(x) qgcomp.cox.noboot(Surv(y)~., expnms = c("x1", "x2"),
     data=complete(impdat, x)))
 )
-obj = pool(as.mira(qc.fit.imp))
+obj = pool(qc.fit.imp)
 # MI based analysis
 summary(obj)
 
