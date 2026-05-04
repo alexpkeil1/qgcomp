@@ -199,6 +199,159 @@ pointwisebound.coxhr.boot <- function (x, pointwiseref = 1, alpha = 0.05) {
 
 
 
+.qgcomp.partials_avg <- function(
+    data,
+    fun = c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
+    M=1000,
+    expnms=NULL,
+    prop.train = 0.4,
+    ...
+){
+  thecall <- match.call(expand.dots = TRUE)
+  if(!(fun %in% c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot")))
+    throw("`fun` argument must be string: 'qgcomp.glm.noboot', 'qgcomp.cox.noboot', or 'qgcomp.zi.noboot'")
+  if(!("q" %in% names(thecall)))
+    message("The package authors recommend setting `q=NULL` and 'pre-quantizing' the data using the `quantize` function")
+
+  if(!("bayes" %in% names(thecall)))
+    message("The package authors recommend setting `bayes=TRUE` in small or moderate samples for this function")
+  droppers <- match(c("fun", "M"), names(thecall), 0L) #index (will need to add names here if more arguments are added)
+  thecall[["data"]] <- eval(thecall[["traindata"]], parent.frame())
+
+  .repit <- function(i, dat=data, ...){
+    trainidx <- sample(1:nrow(dat), round(nrow(dat)*prop.train))
+    valididx <- setdiff(1:nrow(dat),trainidx)
+    traindata = dat[trainidx,]
+    validdata = dat[valididx,]
+    
+    x <- qgcomp.partials(fun=fun,
+                         traindata=traindata,
+                         validdata=validdata, 
+                         expnms=expnms, 
+                         ...
+    )
+    #splitres
+    c(
+      ifelse(is.null(x$pos.fit$psi), 0,  x$pos.fit$psi),
+      ifelse(is.null(x$pos.fit$psi), 0,  x$pos.fit$var.psi),
+      ifelse(is.null(x$neg.fit$psi), 0,  x$neg.fit$psi),
+      ifelse(is.null(x$neg.fit$psi), 0,  x$neg.fit$var.psi)
+    )
+  }
+  #M = 1000
+  res = future.apply::future_lapply(1:M, function(x) .repit(x, dat=data, ...), future.seed = TRUE)
+  pospsi_ests = sapply(res, function(x) x[1])
+  pospsi_vars = sapply(res, function(x) x[2])
+  
+  negpsi_ests = sapply(res, function(x) x[3])
+  negpsi_vars = sapply(res, function(x) x[4])
+  
+  #cv = cov(cbind(negpsi_ests,pospsi_ests))
+  
+  est_neg = mean(negpsi_ests) 
+  est_pos = mean(pospsi_ests) 
+  U_neg = mean(negpsi_vars)
+  U_pos = mean(pospsi_vars)
+  B_neg = sum((negpsi_ests - est_neg)^2)/(M-1)
+  B_pos = sum((pospsi_ests - est_pos)^2)/(M-1)
+  var_rubin_pos = U_pos + (1+1/M)*B_pos
+  var_rubin_neg = U_neg + (1+1/M)*B_neg
+  
+  pos.fit = list(
+    psi=est_pos,
+    se_est_mean = sqrt(B_pos),
+    se_rubin = sqrt(var_rubin_pos),
+    var_est_mean = B_pos,
+    var_rubin = var_rubin_pos
+  )
+  neg.fit = list(
+    psi=est_neg,
+    se_est_mean = sqrt(B_neg),
+    se_rubin = sqrt(var_rubin_neg),
+    var_rubin = var_rubin_neg,
+    var_est_mean = B_neg
+  )
+  res = list(
+    pos.fit = pos.fit,
+    neg.fit = neg.fit, 
+    M=M,
+    prop.train = prop.train
+  )
+  attr(res, "class") <- c("qgcomppartialavg", attr(res, "class"))
+  res
+}
+
+.qgcomp.partials_avg_bootci <- function(data,
+                                        fun = c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot"),
+                                        B = 100,
+                                        M=1000,
+                                        expnms=NULL,
+                                        prop.train = 0.4,
+                                        ...
+                                        ){
+  message("Note: this is a convenience function that only works for data with 1 data frame row per unit of analysis")
+  bootfun <- function(i){
+    bootidx = sample(1:nrow(data), replace=TRUE)
+    .qgcomp.partials_avg(
+      data[bootidx,],
+      fun = fun,
+      M=M,
+      expnms=expnms,
+      prop.train = prop.train,
+      ...
+    )
+  }
+    resl = future.apply::future_lapply(1:B, bootfun, future.seed=TRUE)
+    posests = sapply(resl, function(x) x$pos.fit$psi)
+    negests = sapply(resl, function(x) x$neg.fit$psi)
+    
+    res = list(
+      sd_psi_positive = sd(posests),
+      sd_psi_negative = sd(negests),
+      q025_psi_positive = quantile(posests, .025),
+      q975_psi_positive = quantile(posests, .975),
+      q025_psi_negative = quantile(negests, .025),
+      q975_psi_negative = quantile(negests, .975),
+      pos_psi_bootvals = posests,
+      neg_psi_bootvals = negests
+    )
+    attr(res, "class") <- c("qgcomppartialavg_boot", attr(res, "class"))
+    res
+    
+}
+
+#' @title Default printing method for a qgcomppartialavg object
+#' @exportS3Method base::print
+print.qgcomppartialavg <- function(x,
+                                   ...){
+  cat(paste0("\nEstimates for M=",x$M, ", prop.train=", x$prop.train))
+  cat("\nPositive partial effect:\n")
+  print(as.data.frame(x$pos.fit))
+  
+  cat("\nNegative partial effect:\n")
+  print(as.data.frame(x$neg.fit))
+}
+  
+
+#' @title Default printing method for a qgcomppartialavg object
+#' @exportS3Method base::print
+print.qgcomppartialavg_boot <- function(x,
+                                   ...){
+  cat(paste0("\nEstimates for M=",x$M, ", prop.train=", x$prop.train, "(", x$B, " bootstrap iterations)"))
+  cat("\n Bootstrap standard errors:\n")
+  cat("\n  Positive partial effect:\n")
+  print(x$sd_psi_positive)
+  cat("\n   Negative partial effect:\n")
+  print(x$sd_psi_negative)
+  #
+  cat("\n Bootstrap quantiles:\n")
+  cat("\n  Positive partial effect:\n")
+  print(data.frame(lower95=as.numeric(x$q025_psi_positive), upper95=as.numeric(x$q975_psi_positive)))
+  cat("\n   Negative partial effect:\n")
+  print(data.frame(lower95=as.numeric(x$q025_psi_negative), upper95=as.numeric(x$q975_psi_negative)))
+}
+
+
 
 
 
