@@ -365,7 +365,7 @@ qgcomp.cox.noboot <- function (f, data, expnms = NULL, q = 4, breaks = NULL,
   m <- match(c("f", "data", "weights", "offset", "cluster"), names(thecall), 0L)
   #m <- match(c("f", "data", "weights", "offset"), names(thecall), 0L)
   hasweights = ("weights" %in% names(thecall))
-  hascluster = ("weights" %in% names(thecall))
+  hascluster = ("cluster" %in% names(thecall))
   thecall <- thecall[c(1L, m)]
   thecall$drop.unused.levels <- TRUE
   thecall$na.action <- identity

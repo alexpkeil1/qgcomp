@@ -160,18 +160,18 @@ splitres5
 }
 }
 \seealso{
-Other qgcomp_methods: 
-\code{\link{qgcomp.cch.noboot}()},
-\code{\link{qgcomp.cox.boot}()},
-\code{\link{qgcomp.cox.noboot}()},
-\code{\link{qgcomp.glm.boot}()},
-\code{\link{qgcomp.glm.ee}()},
-\code{\link{qgcomp.glm.noboot}()},
-\code{\link{qgcomp.hurdle.boot}()},
-\code{\link{qgcomp.hurdle.noboot}()},
-\code{\link{qgcomp.multinomial.boot}()},
-\code{\link{qgcomp.multinomial.noboot}()},
-\code{\link{qgcomp.zi.boot}()},
-\code{\link{qgcomp.zi.noboot}()}
+Other qgcomp_methods:
+\code{\link[=qgcomp.cch.noboot]{qgcomp.cch.noboot()}},
+\code{\link[=qgcomp.cox.boot]{qgcomp.cox.boot()}},
+\code{\link[=qgcomp.cox.noboot]{qgcomp.cox.noboot()}},
+\code{\link[=qgcomp.glm.boot]{qgcomp.glm.boot()}},
+\code{\link[=qgcomp.glm.ee]{qgcomp.glm.ee()}},
+\code{\link[=qgcomp.glm.noboot]{qgcomp.glm.noboot()}},
+\code{\link[=qgcomp.hurdle.boot]{qgcomp.hurdle.boot()}},
+\code{\link[=qgcomp.hurdle.noboot]{qgcomp.hurdle.noboot()}},
+\code{\link[=qgcomp.multinomial.boot]{qgcomp.multinomial.boot()}},
+\code{\link[=qgcomp.multinomial.noboot]{qgcomp.multinomial.noboot()}},
+\code{\link[=qgcomp.zi.boot]{qgcomp.zi.boot()}},
+\code{\link[=qgcomp.zi.noboot]{qgcomp.zi.noboot()}}
 }
 \concept{qgcomp_methods}
