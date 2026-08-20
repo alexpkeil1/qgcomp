@@ -6,6 +6,10 @@
 \usage{
 \method{print}{qgcomppartialavg}(x, ...)
 }
+\arguments{
+\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg}
+#' function}
+}
 \description{
 Default printing method for a qgcomppartialavg object
 }

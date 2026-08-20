@@ -6,6 +6,10 @@
 \usage{
 \method{print}{qgcomppartialavg_boot}(x, ...)
 }
+\arguments{
+\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg_bootci}
+function}
+}
 \description{
 Default printing method for a qgcomppartialavg object
 }
