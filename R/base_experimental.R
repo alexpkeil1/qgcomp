@@ -322,8 +322,8 @@ pointwisebound.coxhr.boot <- function (x, pointwiseref = 1, alpha = 0.05) {
 
 #' @title Default printing method for a qgcomppartialavg object
 #' @exportS3Method base::print
-#' @param x "qgcompfit" object from `.qgcomp.partials_avg`
-#' #' function
+#' @param x "qgcompfit" object from `.qgcomp.partials_avg` function
+#' @param ... Unused
 print.qgcomppartialavg <- function(x,
                                    ...){
   cat(paste0("\nEstimates for M=",x$M, ", prop.train=", x$prop.train))
@@ -337,8 +337,9 @@ print.qgcomppartialavg <- function(x,
 
 #' @title Default printing method for a qgcomppartialavg object
 #' @exportS3Method base::print
-#' @param x "qgcompfit" object from `.qgcomp.partials_avg_bootci`
-#' function
+#' @param x "qgcompfit" object from `.qgcomp.partials_avg_bootci` function
+#' @param ... Unused
+#' 
 print.qgcomppartialavg_boot <- function(x,
                                    ...){
   cat(paste0("\nEstimates for M=",x$M, ", prop.train=", x$prop.train, "(", x$B, " bootstrap iterations)"))

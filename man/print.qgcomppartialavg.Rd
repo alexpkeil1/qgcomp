@@ -7,8 +7,9 @@
 \method{print}{qgcomppartialavg}(x, ...)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg}
-#' function}
+\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg} function}
+
+\item{...}{Unused}
 }
 \description{
 Default printing method for a qgcomppartialavg object

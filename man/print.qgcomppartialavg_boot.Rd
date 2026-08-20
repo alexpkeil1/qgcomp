@@ -7,8 +7,9 @@
 \method{print}{qgcomppartialavg_boot}(x, ...)
 }
 \arguments{
-\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg_bootci}
-function}
+\item{x}{"qgcompfit" object from \code{.qgcomp.partials_avg_bootci} function}
+
+\item{...}{Unused}
 }
 \description{
 Default printing method for a qgcomppartialavg object
