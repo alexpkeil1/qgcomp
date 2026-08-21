@@ -209,7 +209,7 @@ pointwisebound.coxhr.boot <- function (x, pointwiseref = 1, alpha = 0.05) {
 ){
   thecall <- match.call(expand.dots = TRUE)
   if(!(fun %in% c("qgcomp.glm.noboot", "qgcomp.cox.noboot", "qgcomp.zi.noboot")))
-    throw("`fun` argument must be string: 'qgcomp.glm.noboot', 'qgcomp.cox.noboot', or 'qgcomp.zi.noboot'")
+    stop("`fun` argument must be string: 'qgcomp.glm.noboot', 'qgcomp.cox.noboot', or 'qgcomp.zi.noboot'")
   if(!("q" %in% names(thecall)))
     message("The package authors recommend setting `q=NULL` and 'pre-quantizing' the data using the `quantize` function")
 
