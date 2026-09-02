@@ -799,13 +799,14 @@ msm_multinomial_fit <- function(f,
 #'  B = 5, # set to higher values in real examples
 #'  MCsize = 100,  # set to higher values in small samples
 #'  )
-#'
+#' \dontrun{
 #' rr2 = qgcomp.multinomial.noboot(
 #'  f0, 
 #'  expnms = mixture,
 #'  q=4, 
 #'  data = smallmetals
 #'  )
+#'  }
 #'  
 #'  ### 5: Create summary qgcomp object for nice printing ####
 #'  
@@ -830,6 +831,7 @@ msm_multinomial_fit <- function(f,
 #'   data = qdat
 #'  )
 #'  
+#' \dontrun{
 #'  rr_sim2 = qgcomp.multinomial.boot(
 #'   y~x1+x2+x3+x4, 
 #'   expnms = c("x1", "x2", "x3", "x4"),
@@ -837,6 +839,7 @@ msm_multinomial_fit <- function(f,
 #'   data = qdat,
 #'   B=1
 #'  )
+#'  }
 
 #'
 qgcomp.multinomial.boot <- function(
