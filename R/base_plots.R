@@ -214,7 +214,7 @@
   pright <- c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=x$pos.weights, v=names(x$pos.weights)),
-                  fill=gray(poscolwt)),
+                  fill=gray(poscolwt), width=0.89),
     scale_y_continuous(name="Positive weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75)),
     scale_x_discrete(limits=nms, breaks=nms, labels=nms, drop=FALSE, position="top"),
     geom_hline(aes(yintercept=0)),
@@ -223,7 +223,7 @@
   pleft <-  c(list(
     stat_identity(aes(x=v, y=w), position = "identity", geom="bar", 
                   data=data.frame(w=x$neg.weights, v=names(x$neg.weights)),
-                  fill=gray(1-poscolwt)), 
+                  fill=gray(1-poscolwt), width=0.89), 
     scale_y_continuous(trans="reverse", name="Negative weights", expand=c(0.000,0.000), breaks=c(0.25, 0.5, 0.75), limits=c(1,0),labels = waiver()),
     scale_x_discrete(name="Variable", limits=nms, breaks=nms, labels=nms, drop=FALSE),
     geom_hline(aes(yintercept=0)),
